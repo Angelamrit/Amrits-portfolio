@@ -10,9 +10,9 @@ import { Section } from "@/components/ui/Section";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
 
 const credentials = [
-  { label: "Michelin Guide", value: "Listed", note: "New York City" },
+  { label: "The Infatuation", value: "8.6", note: "Reviewed, August 2024" },
   { label: "Michelin", value: "Bib Gourmand", note: "Angel Indian Restaurant" },
-  { label: "Vikas Khanna", value: "“Pride of India”", note: "On Angel's expansion" },
+  { label: "Vikas Khanna", value: "“Pride of India”", note: "At the new room's opening, 2025" },
 ];
 
 export function Voices() {

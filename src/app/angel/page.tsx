@@ -113,7 +113,7 @@ export default function AngelPage() {
           <RevealGroup className="mt-8 grid gap-6 lg:grid-cols-2">
             {restaurant.locations.map((loc, i) => (
               <RevealItem key={loc.name}>
-                <SpotlightCard as="article" className="group relative h-full overflow-hidden p-3" tilt={2}>
+                <SpotlightCard as="article" id={loc.kind} className="group relative h-full scroll-mt-28 overflow-hidden p-3" tilt={2}>
                   <div className="relative overflow-hidden rounded-[calc(var(--radius-frame)-0.25rem)]">
                     <ImageFrame image={loc.image} ratio="16/9" hover reveal="none" rounded={false} sizes="(min-width: 1024px) 50vw, 100vw" />
                     <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-t from-surface-2 via-transparent to-transparent" />
