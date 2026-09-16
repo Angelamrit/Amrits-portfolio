@@ -13,7 +13,7 @@ export const chef: ChefProfile = {
     "Amrit Pal Singh grew up in Pathankot, a small city in the foothills of Punjab. His mother, a housewife, cooked for the family every day; his father served as an officer in the Indian Army. It was at her stove that he learned the rule he still cooks by: simple but good. No excess, no shortcuts, just enough spice to let each ingredient taste like itself.",
     "He left India for Australia to study the food industry formally, then made his way to New York City. There he honed his craft in two of the city's most celebrated Indian kitchens, Rahi and Adda, learning how tradition and precision could share the same plate.",
     "In October 2019 he opened Angel Indian Restaurant in Jackson Heights, Queens, with almost nothing: a six-burner stove, one tandoor and a fridge. It was a two-person operation. Amrit cooked, took the orders and cleaned the floors himself. The neighbourhood answered immediately, and Angel paid its own rent in the very first month.",
-    "Named after his daughter, Angel is predominantly vegetarian and 100% Halal, and its menu moves from comforting street food to complex regional delicacies. The restaurant earned a place in the Michelin Guide and a Michelin Bib Gourmand, and legendary chef Vikas Khanna publicly called Amrit “one of the finest Indian chefs in the U.S.”, describing Angel's expansion as a “pride of India.”",
+    "Named after his daughter, Angel is predominantly vegetarian and 100% Halal, and its menu moves from comforting street food to complex regional delicacies. The restaurant earned a Michelin Bib Gourmand in 2021, and when the new dining room opened in July 2025 the Michelin-starred chef Vikas Khanna called it “the pride of India” and Amrit “possibly one of the finest Indian chefs in the U.S.”",
     "Today Chef Amrit leads a team of more than twenty. His new upscale location is a formal, dinner-only dining room with a full bar and a curated chef's tasting menu alongside the house specialties that made Angel famous.",
   ],
   portrait: images.chefPortrait,
@@ -106,9 +106,9 @@ export const chef: ChefProfile = {
     { title: "Bib Gourmand", issuer: "Michelin Guide", note: "Angel Indian Restaurant" },
     { title: "Michelin Guide listing", issuer: "Michelin Guide", note: "New York City" },
     {
-      title: "“One of the finest Indian chefs in the U.S.”",
+      title: "“This is the pride of India.”",
       issuer: "Chef Vikas Khanna",
-      note: "Also called Angel's expansion a “pride of India”",
+      note: "Speaking at the opening of Angel's new dining room, July 2025",
     },
   ],
 };
