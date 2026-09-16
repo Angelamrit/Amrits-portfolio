@@ -198,11 +198,15 @@ export type Article = {
 export type PressItem = {
   id: string;
   outlet: string;
-  kind: "award" | "listing" | "quote" | "article";
+  kind: "award" | "listing" | "quote" | "article" | "video";
   headline: string;
   excerpt?: string;
   date?: string;
   url?: string;
+  /** Flagship items get the large feature treatment on /press. */
+  tier?: "flagship" | "strong" | "minor";
+  /** true when `excerpt` is quoted verbatim from the source, not a summary. */
+  verbatim?: boolean;
 };
 
 export type Testimonial = {

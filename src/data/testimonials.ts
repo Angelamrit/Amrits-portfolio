@@ -11,9 +11,9 @@ export const testimonials: Testimonial[] = [];
 export const voices = [
   {
     id: "vikas-khanna",
-    quote: "One of the finest Indian chefs in the U.S.",
+    quote: "This is the pride of India. Possibly one of the finest Indian chefs in the U.S.",
     author: "Chef Vikas Khanna",
     role: "Michelin-starred chef and author",
-    context: "Publicly describing Chef Amrit and calling Angel's expansion a “pride of India”",
+    context: "Speaking at the opening of Angel's new dining room, July 2025",
   },
 ];

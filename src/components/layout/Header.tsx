@@ -36,7 +36,7 @@ function buildPanels(): MegaPanelData[] {
       ctaHref: "/angel",
       note: `${restaurant.features.slice(0, 3).join(" · ")}`,
       items: restaurant.locations.map((loc) => ({
-        href: "/angel",
+        href: `/angel#${loc.kind}`,
         name: loc.name,
         blurb: loc.highlights.join(" · "),
         meta: loc.kind === "original" ? "Since October 2019" : "New dining room",

@@ -2,13 +2,13 @@
 
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
+import { ArrowUpRight, FileText } from "lucide-react";
 import type { DietaryTag, ImageAsset } from "@/types/content";
 import { cn } from "@/lib/cn";
 import { Badge, DietaryBadges } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { SpotlightCard } from "@/components/ui/SpotlightCard";
 
 export type ResolvedCourse = {
   title: string;
@@ -22,7 +22,9 @@ export type ResolvedCourse = {
 export type ResolvedMenu = {
   slug: string;
   name: string;
+  kind: "tasting" | "specialties" | "event";
   courseLabel: string;
+  courseCount: number;
   intro: string;
   notes: string[];
   venue: string;
@@ -32,52 +34,86 @@ export type ResolvedMenu = {
 };
 
 const ease = [0.16, 1, 0.3, 1] as const;
+const INTERVAL = 5200;
+const nn = (i: number) => String(i + 1).padStart(2, "0");
 
+const enquiryHref = (kind: ResolvedMenu["kind"]) => (kind === "tasting" ? "/contact?experience=tasting-menu" : "/contact?experience=private-dining");
+
+/**
+ * Menus as a printed menu card beside a large dish image. Hover, focus or tap
+ * any course and the image crossfades to that dish; it also auto-advances
+ * with a gold progress line until the visitor interacts.
+ */
 export function MenuSwitcher({ menus }: { menus: ResolvedMenu[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const reduce = useReducedMotion();
   const fromUrl = params.get("menu");
-  const validFromUrl = menus.find((m) => m.slug === fromUrl)?.slug;
+  const validFromUrl = menus.find((mn) => mn.slug === fromUrl)?.slug;
+
   const [active, setActive] = useState(validFromUrl ?? menus[0].slug);
   const [prevUrl, setPrevUrl] = useState(fromUrl);
+  const [course, setCourse] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const reduce = useReducedMotion();
 
-  /** The course whose dish is on show: pointer hover (desktop) or a tap (touch). */
-  const [hovered, setHovered] = useState<number | null>(null);
-  const [pinned, setPinned] = useState<number | null>(null);
-
-  const clearCourse = () => {
-    setHovered(null);
-    setPinned(null);
-  };
-
+  // Follow later ?menu= changes (e.g. the hero tiles or the header menu).
   if (fromUrl !== prevUrl) {
     setPrevUrl(fromUrl);
     if (validFromUrl) {
       setActive(validFromUrl);
-      clearCourse();
+      setCourse(0);
     }
   }
 
   const select = (slug: string) => {
+    if (slug === active) return;
     setActive(slug);
-    clearCourse();
+    setCourse(0);
     router.replace(`${pathname}?menu=${slug}`, { scroll: false });
   };
 
-  const menu = menus.find((m) => m.slug === active) ?? menus[0];
+  const menu = menus.find((mn) => mn.slug === active) ?? menus[0];
+  const current = menu.courses[Math.min(course, menu.courses.length - 1)];
+  const image = current.image ?? menu.image;
 
-  const shownIndex = hovered ?? pinned;
-  const shownCourse = shownIndex !== null ? menu.courses[shownIndex] : undefined;
-  const dish = shownCourse?.image;
-  const frame = dish ?? menu.image;
-  const badge = dish && shownIndex !== null ? `Course ${String(shownIndex + 1).padStart(2, "0")}` : menu.courseLabel;
+  /* auto-advance through the courses */
+  useEffect(() => {
+    if (paused || reduce) return;
+    const t = window.setInterval(() => setCourse((c) => (c + 1) % menu.courses.length), INTERVAL);
+    return () => window.clearInterval(t);
+  }, [paused, reduce, menu.courses.length, active]);
+
+  /* sliding gold indicator under the menu tabs */
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [ind, setInd] = useState({ left: 0, width: 0, ready: false });
+  useEffect(() => {
+    const measure = () => {
+      const list = tabsRef.current;
+      const target = list?.querySelector<HTMLElement>(`[data-tab="${active}"]`);
+      if (!list || !target) return;
+      const lr = list.getBoundingClientRect();
+      const tr = target.getBoundingClientRect();
+      setInd({ left: tr.left - lr.left, width: tr.width, ready: true });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [active]);
 
   return (
-    <div>
-      <div role="tablist" aria-label="Menu" className="glass inline-flex max-w-full flex-wrap gap-1 rounded-[1.4rem] p-1.5 sm:rounded-pill">
-        {menus.map((mn) => {
+    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      {/* ---------- menu tabs ---------- */}
+      <div ref={tabsRef} role="tablist" aria-label="Menus" className="glass relative grid gap-1 rounded-[1.6rem] p-1.5 sm:grid-cols-3 sm:rounded-pill">
+        <span
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-y-1.5 z-[1] hidden rounded-pill bg-gradient-to-r from-gold-light via-gold to-gold-deep shadow-[0_10px_30px_-10px_rgba(226,189,108,0.9)] transition-all duration-500 ease-luxe sm:block",
+            ind.ready ? "opacity-100" : "opacity-0",
+          )}
+          style={{ left: ind.left, width: ind.width }}
+        />
+        {menus.map((mn, i) => {
           const selected = mn.slug === active;
           return (
             <button
@@ -85,255 +121,221 @@ export function MenuSwitcher({ menus }: { menus: ResolvedMenu[] }) {
               role="tab"
               type="button"
               id={`tab-${mn.slug}`}
+              data-tab={mn.slug}
               aria-selected={selected}
               aria-controls={`panel-${mn.slug}`}
               onClick={() => select(mn.slug)}
               className={cn(
-                "relative rounded-pill px-5 py-3 font-sans text-[0.68rem] font-semibold uppercase tracking-[0.2em] transition-colors duration-300",
-                selected ? "text-charcoal" : "text-fg/65 hover:text-fg",
+                "relative z-[2] flex items-center gap-4 rounded-pill px-5 py-3.5 text-left transition-colors duration-500 ease-luxe",
+                selected ? "text-charcoal" : "text-fg/70 hover:text-fg",
+                selected && "bg-gradient-to-r from-gold-light via-gold to-gold-deep sm:bg-none",
               )}
             >
-              {selected && (
-                <m.span
-                  layoutId="menu-tab"
-                  aria-hidden
-                  className="absolute inset-0 rounded-pill bg-gradient-to-r from-gold-light via-gold to-gold-deep shadow-[0_10px_30px_-10px_rgba(201,169,98,0.8)]"
-                  transition={{ type: "spring", stiffness: 320, damping: 32 }}
-                />
-              )}
-              <span className="relative">{mn.name}</span>
+              <span className={cn("font-display text-2xl leading-none", selected ? "text-charcoal" : "text-gold-gradient")}>{nn(i)}</span>
+              <span className="min-w-0">
+                <span className="block truncate font-display text-lg leading-tight">{mn.name}</span>
+                <span className={cn("eyebrow mt-1 block truncate text-[0.5rem]", selected ? "text-charcoal/70" : "text-muted")}>
+                  {mn.courseLabel} · {mn.venue}
+                </span>
+              </span>
             </button>
           );
         })}
       </div>
 
+      {/* ---------- menu body ---------- */}
       <AnimatePresence mode="wait">
         <m.div
           key={menu.slug}
           role="tabpanel"
           id={`panel-${menu.slug}`}
           aria-labelledby={`tab-${menu.slug}`}
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.5, ease }}
           className="mt-12 grid gap-10 lg:grid-cols-12 lg:gap-14"
         >
-          <div className="lg:col-span-4">
-            <div className="mx-auto w-full max-w-sm sm:max-w-md lg:max-w-none lg:sticky lg:top-32">
-              <div className="relative">
-                <span aria-hidden className="orb orb-gold -left-[20%] -top-[20%] size-[70%] opacity-50" />
-
-                {/* The frame beside the courses: the menu photograph, or the dish being pointed at. */}
-                <div className="border-gradient relative aspect-[4/5] overflow-hidden rounded-frame bg-sand shadow-glow-lg">
+          {/* dish showcase */}
+          <div className="lg:col-span-5">
+            <div className="lg:sticky lg:top-32">
+              <div className="glass-strong border-gradient relative overflow-hidden rounded-[2rem] p-3 shadow-glow-lg">
+                <span aria-hidden className="orb orb-gold -right-[20%] -top-[25%] size-[70%] opacity-50" />
+                <div className="tone-dark relative aspect-[4/5] overflow-hidden rounded-[1.25rem] bg-sand">
                   <AnimatePresence initial={false}>
                     <m.div
-                      key={frame.src}
+                      key={`${menu.slug}-${image.src}`}
                       className="absolute inset-0"
-                      initial={{ opacity: 0, scale: reduce ? 1 : 1.08 }}
+                      initial={{ opacity: 0, scale: 1.06 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 1 }}
-                      transition={{ duration: 0.7, ease }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.9, ease }}
                     >
-                      <Image
-                        src={frame.src}
-                        alt={frame.alt}
-                        fill
-                        sizes="(min-width: 1024px) 33vw, 100vw"
-                        quality={78}
-                        className="object-cover"
-                      />
-                      {!reduce && (
-                        <m.span
-                          aria-hidden
-                          className="pointer-events-none absolute inset-y-0 w-1/3 -skew-x-[18deg] bg-gradient-to-r from-transparent via-gold-light/35 to-transparent"
-                          initial={{ left: "-45%" }}
-                          animate={{ left: "125%" }}
-                          transition={{ duration: 0.95, ease }}
-                        />
+                      <Image src={image.src} alt={image.alt} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
+                    </m.div>
+                  </AnimatePresence>
+                  <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-brown-deep/95 via-brown-deep/25 to-transparent" />
+                  <Badge tone="solid" className="absolute left-4 top-4 z-[2]">
+                    {menu.courseLabel}
+                  </Badge>
+                  <span aria-hidden className="pointer-events-none absolute right-4 top-0 hidden select-none font-display text-[7rem] leading-none text-outline-gold sm:block md:text-[9rem]">
+                    {nn(course)}
+                  </span>
+                  <AnimatePresence mode="wait" initial={false}>
+                    <m.div
+                      key={`copy-${menu.slug}-${course}`}
+                      className="absolute inset-x-0 bottom-0 p-6 md:p-7"
+                      initial={{ opacity: 0, y: 14 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.45, ease }}
+                    >
+                      <p className="eyebrow text-[0.58rem] text-gold-light">
+                        Course {nn(course)} · {current.title}
+                      </p>
+                      <p className={cn("mt-2 font-display text-display-sm font-light", current.status === "draft" ? "italic text-fg/80" : "text-gold-gradient")}>{current.name}</p>
+                      {current.description && <p className="mt-2 max-w-sm text-sm leading-relaxed text-fg/75">{current.description}</p>}
+                      {current.tags.length > 0 && (
+                        <div className="mt-3">
+                          <DietaryBadges tags={current.tags} />
+                        </div>
                       )}
                     </m.div>
                   </AnimatePresence>
-
-                  <AnimatePresence>
-                    {dish && shownCourse && (
-                      <m.figcaption
-                        key="dish-caption"
-                        initial={{ opacity: 0, y: 18 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 12 }}
-                        transition={{ duration: 0.45, ease }}
-                        className="absolute inset-x-0 bottom-0 z-[2] bg-gradient-to-t from-brown-deep via-brown-deep/75 to-transparent p-5 pt-20"
-                      >
-                        <p className="eyebrow text-[0.55rem] text-gold-light/80">{shownCourse.title}</p>
-                        <p className="mt-1.5 font-display text-display-sm font-light text-gold-light">{shownCourse.name}</p>
-                      </m.figcaption>
-                    )}
-                  </AnimatePresence>
                 </div>
-
-                <Badge tone="solid" className="absolute left-4 top-4 z-[3]">
-                  <AnimatePresence mode="wait" initial={false}>
-                    <m.span
-                      key={badge}
-                      initial={{ opacity: 0, y: -6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 6 }}
-                      transition={{ duration: 0.25, ease }}
-                      className="block"
-                    >
-                      {badge}
-                    </m.span>
-                  </AnimatePresence>
-                </Badge>
               </div>
-              <p className="eyebrow mt-6 text-[0.6rem] text-gold">{menu.venue}</p>
-              <p className="mt-3 text-sm leading-relaxed text-fg/70">{menu.intro}</p>
-              <ul className="mt-5 space-y-1.5 text-xs text-muted">
+
+              <dl className="mt-4 grid grid-cols-3 gap-3">
+                {[
+                  { k: "Courses", v: String(menu.courseCount) },
+                  { k: "Kitchen", v: "100% Halal" },
+                  { k: "Style", v: menu.kind === "tasting" ? "Tasting" : menu.kind === "specialties" ? "Family style" : "Bespoke" },
+                ].map((f) => (
+                  <div key={f.k} className="glass rounded-frame px-4 py-3.5">
+                    <dt className="eyebrow text-[0.5rem] text-muted">{f.k}</dt>
+                    <dd className="mt-1.5 font-display text-lg leading-none text-gold-gradient md:text-xl">{f.v}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              <ul className="mt-4 space-y-1.5 text-xs text-muted">
                 {menu.notes.map((n) => (
                   <li key={n} className="flex gap-2">
-                    <span aria-hidden className="mt-1.5 size-1 shrink-0 rounded-full bg-gold" />
+                    <span aria-hidden className="mt-1.5 size-1 shrink-0 rounded-full bg-gold shadow-[0_0_8px_rgba(226,189,108,0.9)]" />
                     {n}
                   </li>
                 ))}
               </ul>
-              {menu.pdfUrl && (
-                <Button href={menu.pdfUrl} variant="link" className="mt-6" external>
-                  Download full menu PDF
-                </Button>
-              )}
             </div>
           </div>
 
-          <div className="lg:col-span-8">
-            <p className="eyebrow mb-4 flex items-center gap-2 text-[0.6rem] text-gold-light/80">
-              <span aria-hidden className="size-1 rounded-full bg-gold shadow-[0_0_8px_rgba(226,189,108,0.9)]" />
-              Tap a course to see the dish
-            </p>
-            <ol className="space-y-3">
-              {menu.courses.map((course, i) => {
-                const hasImage = Boolean(course.image);
-                const lit = shownIndex === i && hasImage;
-                const open = pinned === i && hasImage;
+          {/* printed menu card */}
+          <div className="lg:col-span-7">
+            <article className="glass-strong border-gradient relative overflow-hidden rounded-[2rem] p-6 md:p-10">
+              <span aria-hidden className="orb orb-gold -left-[25%] -top-[30%] size-[55%] opacity-35" />
+              <span aria-hidden className="orb orb-ember -bottom-[30%] -right-[20%] size-[55%] opacity-40" />
+              <div className="relative">
+                <header className="text-center">
+                  <p className="eyebrow text-[0.58rem] text-gold-light/80">{menu.venue}</p>
+                  <h2 className="mt-4 font-display text-display-md font-light text-gold-gradient">{menu.name}</h2>
+                  <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-fg/65">{menu.intro}</p>
+                  <div aria-hidden className="mt-7 flex items-center justify-center gap-3">
+                    <span className="hairline-center block h-px w-20" />
+                    <span className="size-1.5 rotate-45 bg-gold shadow-[0_0_12px_rgba(226,189,108,0.9)]" />
+                    <span className="hairline-center block h-px w-20" />
+                  </div>
+                </header>
 
-                const onEnter = (e: ReactPointerEvent<HTMLButtonElement>) => {
-                  if (e.pointerType === "mouse") setHovered(i);
-                };
-                const onLeave = (e: ReactPointerEvent<HTMLButtonElement>) => {
-                  if (e.pointerType === "mouse") setHovered((h) => (h === i ? null : h));
-                };
-
-                return (
-                  <li key={`${menu.slug}-${i}`}>
-                    <SpotlightCard
-                      className={cn(
-                        "group relative overflow-hidden transition-all duration-500 ease-luxe",
-                        course.status === "draft" && "opacity-80",
-                        lit && "border-gold/60 shadow-glow",
-                      )}
-                      tilt={2}
-                    >
-                      <div className="relative grid gap-4 p-4 sm:grid-cols-[5.5rem_1fr] sm:gap-6 md:p-5">
-                        <div className="relative aspect-square w-[5.5rem] overflow-hidden rounded-xl bg-sand sm:w-auto">
-                          {course.image ? (
-                            <Image
-                              src={course.image.src}
-                              alt={course.image.alt}
-                              fill
-                              sizes="120px"
-                              className={cn(
-                                "object-cover transition-transform duration-[1200ms] ease-luxe",
-                                lit ? "scale-[1.12]" : "group-hover:scale-[1.06]",
-                              )}
-                            />
-                          ) : (
-                            <div className="grid h-full place-items-center font-display text-3xl text-gold-gradient">?</div>
+                <ol className="mt-6 divide-y divide-line" aria-label={`${menu.name} courses`}>
+                  {menu.courses.map((c, i) => {
+                    const on = i === course;
+                    const draft = c.status === "draft";
+                    return (
+                      <li key={`${menu.slug}-${i}`}>
+                        <button
+                          type="button"
+                          onMouseEnter={() => setCourse(i)}
+                          onFocus={() => setCourse(i)}
+                          onClick={() => setCourse(i)}
+                          aria-pressed={on}
+                          className={cn(
+                            "group relative grid w-full grid-cols-[2.25rem_1fr] items-center gap-4 py-4 pl-3 text-left transition-colors duration-500 ease-luxe sm:grid-cols-[2.75rem_1fr_auto] md:py-5",
+                            on ? "text-fg" : "text-fg/60 hover:text-fg",
                           )}
-                          <span className="absolute left-1.5 top-1.5 z-[2] rounded-md bg-brown-deep/80 px-1.5 py-0.5 font-display text-sm text-gold-light backdrop-blur">
-                            {String(i + 1).padStart(2, "0")}
+                        >
+                          <span
+                            aria-hidden
+                            className={cn(
+                              "absolute inset-y-3 left-0 w-0.5 rounded-full bg-gradient-to-b from-gold-light to-gold shadow-[0_0_12px_rgba(226,189,108,0.9)] transition-opacity duration-500",
+                              on ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                          <span className={cn("font-display text-2xl leading-none transition-colors duration-500", on ? "text-gold-gradient" : "text-fg/35")}>{nn(i)}</span>
+                          <span className="min-w-0">
+                            <span className="eyebrow block text-[0.52rem] text-muted">{c.title}</span>
+                            <span className="mt-1 flex items-baseline gap-3">
+                              <span
+                                className={cn(
+                                  "font-display text-xl leading-tight transition-transform duration-500 ease-luxe md:text-2xl",
+                                  on && "translate-x-1",
+                                  draft && "italic text-fg/60",
+                                )}
+                              >
+                                {c.name}
+                              </span>
+                              <span aria-hidden className="hidden min-w-6 flex-1 border-b border-dotted border-fg/20 sm:block" />
+                            </span>
+                            {draft && (
+                              <Badge tone="gold" className="mt-2">
+                                To be confirmed with Chef
+                              </Badge>
+                            )}
                           </span>
-                          {hasImage && (
+                          <span className="hidden items-center gap-3 sm:flex">
+                            <DietaryBadges tags={c.tags} />
                             <span
-                              aria-hidden
                               className={cn(
-                                "pointer-events-none absolute inset-0 rounded-xl border transition-colors duration-500 ease-luxe",
-                                lit ? "border-gold-light/70" : "border-transparent",
-                              )}
-                            />
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="eyebrow text-[0.6rem] text-muted">{course.title}</p>
-                          <div className="mt-1.5 flex flex-wrap items-center gap-3">
-                            <h3
-                              className={cn(
-                                "font-display text-display-sm font-light transition-colors duration-500",
-                                course.status === "draft" ? "italic text-fg/60" : lit ? "text-gold-light" : "text-fg",
+                                "grid size-9 shrink-0 place-items-center rounded-full border transition-all duration-500 ease-luxe",
+                                on ? "border-accent bg-accent text-gold-light shadow-glow" : "border-line text-fg/40 group-hover:border-accent",
                               )}
                             >
-                              {course.name}
-                            </h3>
-                            {course.status === "draft" && <Badge tone="gold">To be confirmed with Chef</Badge>}
-                          </div>
-                          {course.description && <p className="mt-2 max-w-lg text-sm leading-relaxed text-fg/65">{course.description}</p>}
-                          {course.tags.length > 0 && (
-                            <div className="mt-3">
-                              <DietaryBadges tags={course.tags} />
-                            </div>
+                              <ArrowUpRight aria-hidden className="size-4" strokeWidth={1.5} />
+                            </span>
+                          </span>
+                          {on && !reduce && !paused && (
+                            <m.span
+                              key={`progress-${menu.slug}-${course}`}
+                              aria-hidden
+                              className="absolute bottom-0 left-0 h-px bg-accent"
+                              initial={{ width: "0%" }}
+                              animate={{ width: "100%" }}
+                              transition={{ duration: INTERVAL / 1000, ease: "linear" }}
+                            />
                           )}
-                        </div>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ol>
 
-                        {hasImage && (
-                          <button
-                            type="button"
-                            aria-pressed={open}
-                            aria-label={`Show a photograph of ${course.name}`}
-                            onClick={() => setPinned((p) => (p === i ? null : i))}
-                            onPointerEnter={onEnter}
-                            onPointerLeave={onLeave}
-                            onFocus={() => setHovered(i)}
-                            onBlur={() => setHovered((h) => (h === i ? null : h))}
-                            className="absolute inset-0 z-[4] cursor-pointer"
-                          />
-                        )}
-                      </div>
-
-                      {/* Below lg the frame above has scrolled away, so the dish opens in place. */}
-                      <AnimatePresence initial={false}>
-                        {open && course.image && (
-                          <m.div
-                            key="inline-dish"
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.5, ease }}
-                            className="overflow-hidden lg:hidden"
-                          >
-                            <div className="relative m-4 mt-0 aspect-[16/10] overflow-hidden rounded-xl bg-sand md:m-5 md:mt-0">
-                              <Image
-                                src={course.image.src}
-                                alt={course.image.alt}
-                                fill
-                                sizes="(min-width: 640px) 60vw, 92vw"
-                                quality={78}
-                                className="object-cover"
-                              />
-                              <div
-                                aria-hidden
-                                className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brown-deep/90 to-transparent p-4 pt-12"
-                              />
-                              <p className="absolute inset-x-0 bottom-0 p-4 font-display text-xl font-light text-gold-light">
-                                {course.name}
-                              </p>
-                            </div>
-                          </m.div>
-                        )}
-                      </AnimatePresence>
-                    </SpotlightCard>
-                  </li>
-                );
-              })}
-            </ol>
+                <footer className="mt-8 flex flex-col gap-5 border-t border-line pt-7 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="max-w-xs text-xs leading-relaxed text-muted">
+                    {menu.kind === "event" ? "Fully customisable around your guests, the season and your setting." : "Menus change with the season and the market."}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-4">
+                    {menu.pdfUrl && (
+                      <Button href={menu.pdfUrl} variant="link" external icon={false}>
+                        <FileText aria-hidden className="mr-2 inline size-3.5" strokeWidth={1.5} />
+                        Menu PDF
+                      </Button>
+                    )}
+                    <Button href={enquiryHref(menu.kind)} size="sm">
+                      {menu.kind === "tasting" ? "Enquire about the tasting menu" : "Request this menu"}
+                    </Button>
+                  </div>
+                </footer>
+              </div>
+            </article>
           </div>
         </m.div>
       </AnimatePresence>
