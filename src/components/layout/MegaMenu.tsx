@@ -73,7 +73,7 @@ export function MegaMenu({ panel, onNavigate }: { panel: MegaPanelData; onNaviga
             )}
           >
             {panel.items.map((item, i) => (
-              <li key={item.href}>
+              <li key={item.name}>
                 <Link
                   href={item.href}
                   onClick={onNavigate}

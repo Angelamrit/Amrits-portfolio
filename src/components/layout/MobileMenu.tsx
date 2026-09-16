@@ -72,8 +72,11 @@ export function MobileMenu({ open, onClose, items }: Props) {
             </button>
           </div>
 
-          <nav className="relative z-[2] flex flex-1 flex-col justify-center px-5 sm:px-8" aria-label="Mobile">
-            <ul className="space-y-1">
+          {/* Scrolls rather than centres when the list is taller than the
+              screen — a phone in landscape has ~375px of height for it.
+              `my-auto` on the list keeps it centred when there is room. */}
+          <nav className="relative z-[2] flex flex-1 flex-col overflow-y-auto overscroll-contain px-5 py-2 sm:px-8" aria-label="Mobile">
+            <ul className="my-auto space-y-1">
               {items.map((item, i) => (
                 <m.li
                   key={item.href}

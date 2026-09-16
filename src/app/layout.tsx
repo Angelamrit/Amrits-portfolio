@@ -5,6 +5,7 @@ import { site } from "@/data/site";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { personJsonLd, restaurantJsonLd } from "@/lib/seo/jsonld";
 import { Providers } from "@/components/layout/Providers";
+import { Backdrop } from "@/components/layout/Backdrop";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SkipLink } from "@/components/layout/SkipLink";
@@ -37,19 +38,20 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0908",
+  themeColor: "#2c1b12",
   colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const jsonLd = [personJsonLd(), restaurantJsonLd()];
   return (
-    <html lang="en" className={`${cormorant.variable} ${manrope.variable} h-full`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${cormorant.variable} ${manrope.variable} h-full`}>
       <body className="flex min-h-full flex-col">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
         />
+        <Backdrop />
         <Providers>
           <SkipLink />
           <Header />

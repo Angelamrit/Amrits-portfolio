@@ -20,9 +20,9 @@ import { StatRow } from "@/components/ui/Stat";
  */
 export function AngelRestaurant() {
   return (
-    <section id="angel" className="tone-dark relative scroll-mt-20 overflow-hidden bg-brown-deep py-section grain">
+    <section id="angel" className="tone-dark relative scroll-mt-20 overflow-hidden surface-brown-deep py-section grain">
       <Parallax amount={80}>
-        <ImageFrame image={restaurant.heroImage} ratio="fill" reveal="none" sizes="100vw" quality={60} imgClassName="opacity-45" />
+        <ImageFrame image={restaurant.heroImage} ratio="fill" reveal="none" sizes="100vw" quality={65} imgClassName="opacity-45" />
       </Parallax>
       <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-b from-brown-deep via-brown-deep/55 to-brown-deep" />
       <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-r from-brown-deep/95 via-brown-deep/50 to-brown-deep/10" />

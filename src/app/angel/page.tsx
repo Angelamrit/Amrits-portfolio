@@ -44,6 +44,8 @@ export default function AngelPage() {
         }
         lead={restaurant.tagline}
         image={restaurant.heroImage}
+        cinematicImage
+        imageFocal="left"
       >
         <div className="flex flex-wrap gap-4">
           {venue.resyUrl && <Button href={venue.resyUrl}>Reserve via Resy</Button>}
@@ -115,7 +117,7 @@ export default function AngelPage() {
               <RevealItem key={loc.name}>
                 <SpotlightCard as="article" className="group relative h-full overflow-hidden p-3" tilt={2}>
                   <div className="relative overflow-hidden rounded-[calc(var(--radius-frame)-0.25rem)]">
-                    <ImageFrame image={loc.image} ratio="16/9" hover reveal="none" rounded={false} sizes="(min-width: 1024px) 50vw, 100vw" />
+                    <ImageFrame image={loc.image} ratio="16/9" hover sheen reveal="curtain" rounded={false} sizes="(min-width: 1024px) 50vw, 100vw" />
                     <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-t from-surface-2 via-transparent to-transparent" />
                     <Badge tone="solid" className="absolute left-4 top-4 z-[2]">
                       {loc.kind === "original" ? "Since October 2019" : "New upscale location"}
@@ -194,7 +196,7 @@ export default function AngelPage() {
                 {signatureDishes.map((dish, i) => (
                   <RevealItem key={dish.id}>
                     <SpotlightCard as="article" className="group h-full overflow-hidden p-3" tilt={2}>
-                      <ImageFrame image={dish.image} ratio="4/3" hover reveal="none" sizes="(min-width: 1024px) 25vw, 50vw" />
+                      <ImageFrame image={dish.image} ratio="4/3" hover sheen reveal="curtain" sizes="(min-width: 1024px) 25vw, 50vw" />
                       <div className="p-3 pt-4">
                         <p className="eyebrow text-[0.6rem] text-muted">
                           {String(i + 1).padStart(2, "0")} · {dish.tagline}
@@ -226,7 +228,7 @@ export default function AngelPage() {
                 <p className="mt-6 max-w-sm text-sm leading-relaxed text-fg/55">Only genuine, publicly documented recognition appears here.</p>
               </Reveal>
               <div className="mt-10 hidden lg:block">
-                <ImageFrame image={restaurant.barImage} ratio="4/5" glow sizes="30vw" className="max-w-sm" />
+                <ImageFrame image={restaurant.barImage} ratio="4/5" glow drift sheen reveal="curtain" sizes="30vw" className="max-w-sm" />
               </div>
             </div>
             <div className="lg:col-span-7 lg:col-start-6">

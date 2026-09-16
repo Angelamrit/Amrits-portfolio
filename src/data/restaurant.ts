@@ -39,10 +39,10 @@ export const restaurant: RestaurantProfile = {
       description:
         "A sleek, formal, dinner-only dining room with a full bar and a curated chef's tasting menu served alongside the house specialties. The expansion Chef Vikas Khanna called a “pride of India.”",
       highlights: ["Chef's tasting menu", "Full bar and cocktails", "Reservations via Resy"],
-      image: images.diningRoomDark,
+      image: images.angelDiningRoom,
     },
   ],
-  heroImage: images.diningRoomDark,
+  heroImage: images.angelDiningRoom,
   storyImage: images.kitchenLine,
   barImage: images.bar,
   thenNow: {
@@ -52,7 +52,7 @@ export const restaurant: RestaurantProfile = {
       caption: "Six burners, one tandoor, one fridge and a two-person team.",
     },
     after: {
-      image: images.diningRoomDark,
+      image: images.angelDiningRoom,
       label: "Today",
       caption: "A Michelin Bib Gourmand, twenty-plus staff and a new upscale dining room.",
     },

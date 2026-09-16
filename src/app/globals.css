@@ -10,10 +10,28 @@
   --fg: #2a1a10;
   --fg-muted: #5a3d27;
   --accent: #3d2313;
+  --on-accent: #f6efe2;
   --line: rgba(42, 26, 16, 0.16);
   --pattern-line: rgba(42, 26, 16, 0.08);
   --accent-grad: linear-gradient(100deg, #2a1a10 0%, #6d4623 45%, #2a1a10 100%);
   --accent-shimmer: linear-gradient(100deg, #3d2313 0%, #8a5c2f 30%, #3d2313 45%, #6d4623 70%, #3d2313 100%);
+
+  /* Buttons invert against the surface: chocolate on oak, gold on chocolate.
+     A gold button on a gold page is the one combination that disappears. */
+  --btn-fill: linear-gradient(135deg, #3a2618 0%, #241610 30%, #33221a 52%, #1a110c 78%, #2b1c14 100%);
+  --btn-fill-hover: linear-gradient(135deg, #4b3320 0%, #2f1e14 30%, #432c20 52%, #241710 78%, #382519 100%);
+  --btn-label: #f4ecda;
+  --btn-ring: rgba(226, 189, 108, 0.45);
+  --btn-ring-hover: rgba(240, 217, 160, 0.9);
+  --btn-glow: rgba(38, 20, 8, 0.55);
+  --btn-glow-hover: rgba(214, 178, 108, 0.42);
+  --btn-soft-bg: linear-gradient(160deg, rgba(255, 250, 238, 0.42), rgba(255, 238, 208, 0.2));
+  --btn-soft-label: #2a1a10;
+  --btn-soft-ring: rgba(58, 32, 12, 0.38);
+  --btn-soft-ring-hover: rgba(58, 32, 12, 0.8);
+  --btn-soft-inset: rgba(255, 255, 255, 0.5);
+  --btn-soft-glint: rgba(255, 255, 255, 0.6);
+  --btn-soft-glow: rgba(52, 28, 11, 0.45);
 }
 
 @theme {
@@ -40,27 +58,37 @@
   --color-gold-deep: #a57a3b;
   --color-gold-glow: rgba(226, 189, 108, 0.35);
 
-  /* ---- Typography ---- */
+  /*
+    ---- Typography ----
+    Every fluid step is written as `clamp(floor, rem + vw, ceiling)` rather than
+    `clamp(floor, vw, ceiling)`. With a bare vw term the line only starts moving
+    once the viewport is wide enough to beat the floor, so a plain 6vw display
+    size sat pinned at its 44px floor on every phone AND on iPad portrait —
+    tablets got phone-sized headings in twice the width. The rem offset makes
+    each step interpolate from 375px upward; the numbers are chosen so the
+    phone floor and the desktop ceiling both land where they did before, and
+    only the middle (tablet and small laptop) changes.
+  */
   --font-display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
   --font-sans: var(--font-manrope), "Manrope", system-ui, sans-serif;
 
-  --text-display-xl: clamp(3.75rem, 10vw, 9rem);
+  --text-display-xl: clamp(3.75rem, 1.9rem + 7.89vw, 9rem);
   --text-display-xl--line-height: 0.92;
-  --text-display-lg: clamp(2.75rem, 6vw, 5.5rem);
+  --text-display-lg: clamp(2.75rem, 1.8rem + 4.03vw, 5.5rem);
   --text-display-lg--line-height: 0.98;
-  --text-display-md: clamp(2.125rem, 4vw, 3.5rem);
+  --text-display-md: clamp(2.125rem, 1.62rem + 2.15vw, 3.5rem);
   --text-display-md--line-height: 1.05;
-  --text-display-sm: clamp(1.5rem, 2.4vw, 2.125rem);
+  --text-display-sm: clamp(1.5rem, 1.27rem + 0.96vw, 2.125rem);
   --text-display-sm--line-height: 1.15;
-  --text-lead: clamp(1.0625rem, 1.3vw, 1.3125rem);
+  --text-lead: clamp(1.0625rem, 0.99rem + 0.32vw, 1.3125rem);
   --text-lead--line-height: 1.6;
   --text-eyebrow: 0.6875rem;
   --text-eyebrow--line-height: 1;
   --text-eyebrow--letter-spacing: 0.28em;
 
   /* ---- Rhythm ---- */
-  --spacing-section: clamp(5rem, 10vw, 9rem);
-  --spacing-section-sm: clamp(3rem, 6vw, 5rem);
+  --spacing-section: clamp(5rem, 3.6rem + 6vw, 9rem);
+  --spacing-section-sm: clamp(3rem, 2.2rem + 3.4vw, 5rem);
   --container-content: 80rem;
   --container-prose: 42rem;
   --container-wide: 100rem;
@@ -136,10 +164,25 @@
   --fg: #f6efe2;
   --fg-muted: #c9b391;
   --accent: #e2bd6c;
+  --on-accent: #1f130d;
   --line: rgba(246, 239, 226, 0.1);
   --pattern-line: rgba(246, 239, 226, 0.04);
   --accent-grad: linear-gradient(100deg, #f5e4b8 0%, #e2bd6c 45%, #b3884a 100%);
   --accent-shimmer: linear-gradient(100deg, #e2bd6c 0%, #f8ebc4 30%, #e2bd6c 45%, #a57a3b 70%, #e2bd6c 100%);
+  --btn-fill: linear-gradient(135deg, #a87c40 0%, #cba263 18%, #e8d29c 34%, #c69a55 52%, #a87c40 74%, #c09355 100%);
+  --btn-fill-hover: linear-gradient(135deg, #b98b49 0%, #dbb273 18%, #f4e2b2 34%, #d6a962 52%, #b98b49 74%, #d0a462 100%);
+  --btn-label: #1c1208;
+  --btn-ring: rgba(250, 230, 182, 0.75);
+  --btn-ring-hover: rgba(255, 244, 214, 0.95);
+  --btn-glow: rgba(112, 80, 36, 0.55);
+  --btn-glow-hover: rgba(214, 172, 100, 0.55);
+  --btn-soft-bg: linear-gradient(160deg, rgba(44, 27, 18, 0.78), rgba(31, 19, 13, 0.66));
+  --btn-soft-label: #f6efe2;
+  --btn-soft-ring: rgba(226, 189, 108, 0.3);
+  --btn-soft-ring-hover: rgba(240, 217, 160, 0.85);
+  --btn-soft-inset: rgba(246, 239, 226, 0.12);
+  --btn-soft-glint: rgba(240, 217, 160, 0.32);
+  --btn-soft-glow: rgba(226, 189, 108, 0.45);
   color: var(--fg);
 }
 
@@ -148,10 +191,25 @@
   --fg: #2a1a10;
   --fg-muted: #5a3d27;
   --accent: #3d2313;
+  --on-accent: #f6efe2;
   --line: rgba(42, 26, 16, 0.16);
   --pattern-line: rgba(42, 26, 16, 0.08);
   --accent-grad: linear-gradient(100deg, #2a1a10 0%, #6d4623 45%, #2a1a10 100%);
   --accent-shimmer: linear-gradient(100deg, #3d2313 0%, #8a5c2f 30%, #3d2313 45%, #6d4623 70%, #3d2313 100%);
+  --btn-fill: linear-gradient(135deg, #3a2618 0%, #241610 30%, #33221a 52%, #1a110c 78%, #2b1c14 100%);
+  --btn-fill-hover: linear-gradient(135deg, #4b3320 0%, #2f1e14 30%, #432c20 52%, #241710 78%, #382519 100%);
+  --btn-label: #f4ecda;
+  --btn-ring: rgba(226, 189, 108, 0.45);
+  --btn-ring-hover: rgba(240, 217, 160, 0.9);
+  --btn-glow: rgba(38, 20, 8, 0.55);
+  --btn-glow-hover: rgba(214, 178, 108, 0.42);
+  --btn-soft-bg: linear-gradient(160deg, rgba(255, 250, 238, 0.42), rgba(255, 238, 208, 0.2));
+  --btn-soft-label: #2a1a10;
+  --btn-soft-ring: rgba(58, 32, 12, 0.38);
+  --btn-soft-ring-hover: rgba(58, 32, 12, 0.8);
+  --btn-soft-inset: rgba(255, 255, 255, 0.5);
+  --btn-soft-glint: rgba(255, 255, 255, 0.6);
+  --btn-soft-glow: rgba(52, 28, 11, 0.45);
   color: var(--fg);
 }
 
@@ -159,6 +217,10 @@
   html {
     scroll-behavior: smooth;
     color-scheme: dark;
+    /* A guard against a stray decorative element opening a sideways scroll on
+       a narrow screen. `clip` rather than `hidden`: `hidden` would make this a
+       scroll container and break every `position: sticky` on the site. */
+    overflow-x: clip;
   }
   html.lenis,
   html.lenis body {
@@ -172,10 +234,9 @@
   }
   body {
     @apply bg-bg text-fg font-sans antialiased;
-    background-image:
-      radial-gradient(120% 80% at 20% 0%, rgba(255, 228, 170, 0.22), transparent 55%),
-      radial-gradient(90% 70% at 90% 100%, rgba(80, 45, 20, 0.35), transparent 60%);
-    background-attachment: fixed;
+    /* Plain oak on the canvas; the lit backdrop itself is <Backdrop />. This is
+       what shows in the overscroll bounce beyond the fixed layer. */
+    background-image: linear-gradient(180deg, #bb8d53 0%, #a87b44 60%, #96693a 100%);
     font-feature-settings: "ss01", "cv11";
   }
   h1,
@@ -258,6 +319,21 @@
   --line: rgba(246, 239, 226, 0.1);
   --accent-grad: linear-gradient(100deg, #f5e4b8 0%, #e2bd6c 45%, #b3884a 100%);
   --accent-shimmer: linear-gradient(100deg, #e2bd6c 0%, #f8ebc4 30%, #e2bd6c 45%, #a57a3b 70%, #e2bd6c 100%);
+  --on-accent: #1f130d;
+  --btn-fill: linear-gradient(135deg, #a87c40 0%, #cba263 18%, #e8d29c 34%, #c69a55 52%, #a87c40 74%, #c09355 100%);
+  --btn-fill-hover: linear-gradient(135deg, #b98b49 0%, #dbb273 18%, #f4e2b2 34%, #d6a962 52%, #b98b49 74%, #d0a462 100%);
+  --btn-label: #1c1208;
+  --btn-ring: rgba(250, 230, 182, 0.75);
+  --btn-ring-hover: rgba(255, 244, 214, 0.95);
+  --btn-glow: rgba(112, 80, 36, 0.55);
+  --btn-glow-hover: rgba(214, 172, 100, 0.55);
+  --btn-soft-bg: linear-gradient(160deg, rgba(44, 27, 18, 0.78), rgba(31, 19, 13, 0.66));
+  --btn-soft-label: #f6efe2;
+  --btn-soft-ring: rgba(226, 189, 108, 0.3);
+  --btn-soft-ring-hover: rgba(240, 217, 160, 0.85);
+  --btn-soft-inset: rgba(246, 239, 226, 0.12);
+  --btn-soft-glint: rgba(240, 217, 160, 0.32);
+  --btn-soft-glow: rgba(226, 189, 108, 0.45);
   color: var(--fg);
   background: linear-gradient(160deg, rgba(44, 27, 18, 0.74), rgba(31, 19, 13, 0.62));
   border: 1px solid rgba(226, 189, 108, 0.22);
@@ -273,6 +349,21 @@
   --line: rgba(246, 239, 226, 0.1);
   --accent-grad: linear-gradient(100deg, #f5e4b8 0%, #e2bd6c 45%, #b3884a 100%);
   --accent-shimmer: linear-gradient(100deg, #e2bd6c 0%, #f8ebc4 30%, #e2bd6c 45%, #a57a3b 70%, #e2bd6c 100%);
+  --on-accent: #1f130d;
+  --btn-fill: linear-gradient(135deg, #a87c40 0%, #cba263 18%, #e8d29c 34%, #c69a55 52%, #a87c40 74%, #c09355 100%);
+  --btn-fill-hover: linear-gradient(135deg, #b98b49 0%, #dbb273 18%, #f4e2b2 34%, #d6a962 52%, #b98b49 74%, #d0a462 100%);
+  --btn-label: #1c1208;
+  --btn-ring: rgba(250, 230, 182, 0.75);
+  --btn-ring-hover: rgba(255, 244, 214, 0.95);
+  --btn-glow: rgba(112, 80, 36, 0.55);
+  --btn-glow-hover: rgba(214, 172, 100, 0.55);
+  --btn-soft-bg: linear-gradient(160deg, rgba(44, 27, 18, 0.78), rgba(31, 19, 13, 0.66));
+  --btn-soft-label: #f6efe2;
+  --btn-soft-ring: rgba(226, 189, 108, 0.3);
+  --btn-soft-ring-hover: rgba(240, 217, 160, 0.85);
+  --btn-soft-inset: rgba(246, 239, 226, 0.12);
+  --btn-soft-glint: rgba(240, 217, 160, 0.32);
+  --btn-soft-glow: rgba(226, 189, 108, 0.45);
   color: var(--fg);
   background: linear-gradient(160deg, rgba(44, 27, 18, 0.88), rgba(31, 19, 13, 0.78));
   border: 1px solid rgba(226, 189, 108, 0.3);
@@ -408,4 +499,606 @@
 @utility text-outline-gold {
   color: transparent;
   -webkit-text-stroke: 1px color-mix(in oklab, var(--accent) 60%, transparent);
+}
+
+/*
+  ---- Luxury surfaces ----
+  These replace the flat paint (bg-bg / bg-brown) the page used to sit on.
+  The gold surface is a window onto <Backdrop />; the two brown surfaces are
+  opaque chapters that cut into it.
+*/
+
+/*
+  The lit sheet of oak behind the whole site, worn by <Backdrop />.
+
+  Cocoa body text sits on this, so the whole stack is kept inside a narrow
+  luminance band — roughly #b08149 at its deepest, which still clears 4.5:1
+  against --fg. Depth therefore comes from warmth (honey → amber → bronze)
+  and from the bloom, never from letting the oak go dark. The dark drama on
+  this site belongs to the brown surfaces.
+*/
+@utility backdrop-oak {
+  background-color: var(--color-bg);
+  background-image:
+    /* pendant light, upper left */
+    radial-gradient(78% 60% at 12% 0%, rgba(255, 242, 212, 0.48), transparent 62%),
+    /* second gleam, upper right */
+    radial-gradient(62% 48% at 94% 10%, rgba(255, 222, 168, 0.32), transparent 64%),
+    /* bronze warmth, lower right */
+    radial-gradient(70% 55% at 88% 102%, rgba(146, 84, 34, 0.15), transparent 66%),
+    /* bronze warmth, lower left */
+    radial-gradient(55% 45% at -6% 98%, rgba(132, 74, 30, 0.14), transparent 66%),
+    linear-gradient(168deg, #c99f68 0%, #bd8f57 30%, #b5864c 64%, #b08149 100%);
+}
+
+/*
+  Honey-oak panelling. Deliberately unpainted: the colour and the light come
+  from the fixed body backdrop underneath, so any number of gold surfaces can
+  stack without a seam. What this adds is *material* — a woven sheen that
+  scrolls with the content and soft shadow down both edges, so the oak reads
+  as a lit panel rather than a flat fill.
+*/
+@utility surface-gold {
+  background-image:
+    repeating-linear-gradient(135deg, rgba(255, 246, 222, 0.055) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(45deg, rgba(58, 32, 12, 0.045) 0 1px, transparent 1px 9px);
+
+  /* Shadow down both edges, desktop only: that is where the content column
+     leaves margin to spare. On narrow screens text runs to the edge, so the
+     oak stays at full brightness there. */
+  @media (width >= 64rem) {
+    background-image:
+      repeating-linear-gradient(135deg, rgba(255, 246, 222, 0.055) 0 1px, transparent 1px 9px),
+      repeating-linear-gradient(45deg, rgba(58, 32, 12, 0.045) 0 1px, transparent 1px 9px),
+      radial-gradient(26% 100% at -6% 50%, rgba(62, 33, 12, 0.26), transparent 74%),
+      radial-gradient(26% 100% at 106% 50%, rgba(62, 33, 12, 0.26), transparent 74%);
+  }
+}
+
+/*
+  Chocolate panelling, gold spilling in from above and bronze pooling below.
+  Both brown ramps hold their midpoint close to the flat colour they replace
+  (--color-brown / --color-brown-deep) so the cards that sit on them keep the
+  separation they were designed with; the depth is added at the edges, which
+  also lets two brown sections meet without a seam.
+*/
+@utility surface-brown {
+  background-color: var(--color-brown);
+  background-image:
+    repeating-linear-gradient(135deg, rgba(246, 239, 226, 0.025) 0 1px, transparent 1px 9px),
+    radial-gradient(95% 50% at 50% 0%, rgba(226, 189, 108, 0.13), transparent 60%),
+    radial-gradient(75% 50% at 50% 100%, rgba(146, 80, 30, 0.18), transparent 66%),
+    linear-gradient(180deg, #1e1210 0%, #2a1911 30%, #2e1c13 50%, #281810 76%, #1e1210 100%);
+}
+
+/* The deepest surface: hero, interludes, the closing call to action */
+@utility surface-brown-deep {
+  background-color: var(--color-brown-deep);
+  background-image:
+    repeating-linear-gradient(135deg, rgba(246, 239, 226, 0.02) 0 1px, transparent 1px 9px),
+    radial-gradient(85% 48% at 50% -4%, rgba(226, 189, 108, 0.12), transparent 60%),
+    radial-gradient(70% 50% at 50% 104%, rgba(126, 66, 24, 0.2), transparent 66%),
+    linear-gradient(180deg, #150d08 0%, #1f130d 30%, #241610 50%, #1d120c 76%, #150d08 100%);
+}
+
+/*
+  ---- Buttons ----
+  Each variant reads the tone variables above, so the same <Button> inverts
+  itself against whatever surface it lands on. The motion is shared: a 2px
+  lift, a rim that brightens, and one thing that travels — the specular band
+  sliding across the filled button, a glint across the secondary, a fill that
+  wipes in behind the outline, a rule that draws itself under the link.
+*/
+
+/*
+  Filled, and finished like metal rather than painted a flat colour: espresso
+  lacquer with an ivory label on oak, deep antique gold with an espresso label
+  on brown. Both fills carry a specular band, and the bevel comes from a bright
+  inset along the top edge against a dark one against the bottom.
+
+  How deep the gold can go is set by its own label: the espresso label needs
+  every stop to stay at or above roughly #a67a3e to clear 4.5:1, so the darkest
+  stop sits at #a87c40 and the highlight stays a warm #e8d29c rather than going
+  white. Deeper than that and the text starts to fail where the shadow stops
+  fall; a lighter label is not the way out, because it then fails on the
+  specular band instead.
+
+  The separation is carried by a crisp 1px rim and a tight bloom, not by a wide
+  halo — a thick gold aura is what made the first gold button read as loud.
+*/
+@utility btn-primary {
+  color: var(--btn-label);
+  background-image: var(--btn-fill);
+  border: 1px solid var(--btn-ring);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    0 1px 0 rgba(0, 0, 0, 0.22),
+    0 14px 34px -14px var(--btn-glow);
+
+  /*
+    Hover fades in a brighter cut of the same metal, over-sized so its specular
+    band can travel across the face — the light moving over the surface, rather
+    than a white wash laid on top of it. It lives on the pseudo-element so it
+    can time itself (gradients do not interpolate, and the button's own
+    transition belongs to the lift).
+  */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image: var(--btn-fill-hover);
+    background-size: 220% 100%;
+    background-position: 8% center;
+    opacity: 0;
+    transition:
+      opacity 0.45s var(--ease-luxe),
+      background-position 1.1s var(--ease-luxe);
+  }
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--btn-ring-hover);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+      0 0 0 1px color-mix(in oklab, var(--btn-glow-hover) 70%, transparent),
+      0 0 24px -6px var(--btn-glow-hover),
+      0 22px 46px -18px var(--btn-glow-hover);
+  }
+  &:hover::before {
+    opacity: 1;
+    background-position: 92% center;
+  }
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/* Outlined, with a tinted body so the shape is legible before you reach it. */
+@utility btn-outline {
+  color: var(--fg);
+  border: 1px solid color-mix(in oklab, var(--accent) 65%, transparent);
+  background-color: color-mix(in oklab, var(--accent) 10%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--fg) 12%, transparent);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.6s var(--ease-luxe);
+  }
+  &:hover {
+    color: var(--on-accent);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 18px 40px -16px color-mix(in oklab, var(--accent) 55%, transparent);
+  }
+  &:hover::before {
+    transform: scaleX(1);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/*
+  The secondary. It inverts opposite to `btn-primary` rather than alongside it:
+  frosted ivory on the oak pages, chocolate glass on the brown sections. That
+  keeps the two apart — a dark lacquer pill next to a pale frosted one — where
+  reusing the `glass` panel would have made both of them dark on oak.
+*/
+@utility btn-glass {
+  color: var(--btn-soft-label);
+  background: var(--btn-soft-bg);
+  border: 1px solid var(--btn-soft-ring);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 var(--btn-soft-inset),
+    0 14px 34px -18px rgba(20, 10, 5, 0.55);
+
+  /* The glint lives here rather than in the markup so it can pick up the tone. */
+  &::before {
+    content: "";
+    position: absolute;
+    top: -20%;
+    bottom: -20%;
+    left: 0;
+    width: 33%;
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, var(--btn-soft-glint), transparent);
+    transform: translateX(-200%) skewX(-18deg);
+    transition: transform 0.9s var(--ease-luxe);
+  }
+  &:hover {
+    border-color: var(--btn-soft-ring-hover);
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 1px 0 var(--btn-soft-inset),
+      0 0 0 1px color-mix(in oklab, var(--btn-soft-glow) 45%, transparent),
+      0 22px 50px -18px var(--btn-soft-glow);
+  }
+  &:hover::before {
+    transform: translateX(400%) skewX(-18deg);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/* Text link: a faint rule always, a full-strength one drawn in on hover. */
+@utility btn-link {
+  color: var(--fg);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background: color-mix(in oklab, var(--accent) 32%, transparent);
+  }
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.55s var(--ease-luxe);
+  }
+  &:hover {
+    color: var(--accent);
+  }
+  &:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   NEIGHBOURHOOD MAP
+   A drawn map of the blocks around Angel: 37th Avenue and Roosevelt Avenue
+   running east–west, the numbered streets crossing them, the elevated line
+   and the 74 St–Broadway station, with the restaurant pinned on 37th Avenue
+   between 75th and 76th.
+
+   Two boxes. `.nmap-frame` takes whatever shape the card gives it and holds the
+   chrome that has to stay in the corners. `.nmap` is the drawing itself, locked
+   to 3:2 and scaled to cover the frame the way `object-fit: cover` covers an
+   image box — so the streets keep their angles and the pin keeps its corner of
+   the grid at any card height, and only the overspill is cropped.
+
+   Inside the drawing every position is a percentage and every size is `cqw`
+   with a clamp, so it scales as one piece. Those custom properties have to sit
+   on the children, since an element cannot read its own container units.
+
+   Streets are hairlines rotated about their left edge. The pin and the station
+   badge are anchored on their intersection and pulled back by half their own
+   size, so they stay on the street whatever the map measures.
+---------------------------------------------------------------------------- */
+.nmap-frame {
+  container-type: size;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 70% 26%, rgba(226, 189, 108, 0.2), rgba(0, 0, 0, 0) 36%),
+    linear-gradient(135deg, #17100b 0%, #2c1b12 54%, #150e09 100%);
+}
+
+.nmap {
+  container-type: inline-size;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* Cover the frame at 3:2, but never overspill sideways by more than a
+     sixth each way — past that the cropping would start eating 76th Street. */
+  width: clamp(100cqw, 150cqh, 135cqw);
+  height: clamp(66.6667cqw, 100cqh, 90cqw);
+  transform: translate(-50%, -50%);
+}
+
+/* Survey grid. It belongs to the frame, not the drawing, so it reaches the
+   card's edges even where the drawing stops short of them. */
+.nmap-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(226, 189, 108, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(226, 189, 108, 0.09) 1px, transparent 1px);
+  background-size: clamp(22px, 8cqw, 42px) clamp(22px, 8cqw, 42px);
+}
+
+/* Vignette: above the streets, below the pin, so the labels hold up. */
+.nmap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(ellipse at 52% 42%, rgba(0, 0, 0, 0) 30%, rgba(21, 14, 9, 0.72) 94%);
+}
+
+/* ---- Avenues (east-west) ---- */
+.nmap-road {
+  position: absolute;
+  height: 1px;
+  transform-origin: 0 center;
+  background: rgba(226, 189, 108, 0.5);
+  box-shadow: 0 0 14px rgba(226, 189, 108, 0.16);
+}
+
+.nmap-road::after {
+  content: "";
+  position: absolute;
+  top: clamp(3px, 1cqw, 8px);
+  left: 0;
+  right: 0;
+  border-top: 1px dashed rgba(226, 189, 108, 0.16);
+}
+
+.nmap-road b {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(4px, 1.3cqw, 9px);
+  transform: translateX(-50%);
+  font-family: var(--font-sans);
+  font-size: clamp(6px, 1.55cqw, 10px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  color: rgba(240, 217, 160, 0.75);
+  white-space: nowrap;
+}
+
+.nmap-37 {
+  top: 34%;
+  left: -6%;
+  width: 112%;
+  transform: rotate(-6deg);
+}
+
+.nmap-roosevelt {
+  top: 82%;
+  left: -8%;
+  width: 116%;
+  height: 2px;
+  background: rgba(226, 189, 108, 0.6);
+  transform: rotate(-6deg);
+}
+
+.nmap-broadway {
+  top: 108%;
+  left: 6%;
+  width: 100%;
+  transform: rotate(-30deg);
+}
+
+/* The midpoint is where the station badge sits; slide these two west of it. */
+.nmap-roosevelt b,
+.nmap-broadway b {
+  left: 24%;
+}
+
+/* ---- Numbered streets (north-south) ---- */
+.nmap-st {
+  position: absolute;
+  top: -26%;
+  height: 152%;
+  width: 1px;
+  transform: rotate(8deg);
+  background: rgba(226, 189, 108, 0.32);
+}
+
+/* Between the two avenues, clear of their labels. */
+.nmap-st b {
+  position: absolute;
+  top: 52%;
+  left: clamp(3px, 1cqw, 7px);
+  writing-mode: vertical-rl;
+  font-family: var(--font-sans);
+  font-size: clamp(5px, 1.35cqw, 9px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  color: rgba(240, 217, 160, 0.55);
+}
+
+.nmap-73 { left: 30%; }
+.nmap-74 { left: 48%; }
+.nmap-75 { left: 66%; }
+.nmap-76 { left: 84%; }
+
+/* ---- The elevated line, running over Roosevelt ---- */
+.nmap-line {
+  --dash: clamp(10px, 2.6cqw, 30px);
+  position: absolute;
+  top: 83.4%;
+  left: -8%;
+  width: 116%;
+  height: clamp(2px, 0.8cqw, 5px);
+  transform-origin: 0 center;
+  transform: rotate(-6deg);
+  background: repeating-linear-gradient(
+    90deg,
+    #9a4f21 0,
+    #9a4f21 var(--dash),
+    rgba(0, 0, 0, 0) var(--dash),
+    rgba(0, 0, 0, 0) calc(var(--dash) * 1.32)
+  );
+  filter: drop-shadow(0 0 5px rgba(154, 79, 33, 0.75));
+}
+
+/* ---- 74 St-Broadway, at Roosevelt and 74th ---- */
+.nmap-station {
+  --disc: clamp(11px, 2.9cqw, 22px);
+  position: absolute;
+  z-index: 2;
+  top: 74.2%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: clamp(1px, 0.45cqw, 4px);
+  transform: translate(-50%, -50%);
+}
+
+.nmap-station i {
+  display: grid;
+  place-items: center;
+  width: var(--disc);
+  height: var(--disc);
+  border-radius: 999px;
+  border: 1px solid rgba(246, 239, 226, 0.34);
+  background: #9a4f21;
+  color: #f6efe2;
+  font-family: var(--font-sans);
+  font-size: clamp(5px, 1.45cqw, 10px);
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.nmap-station b {
+  margin-left: clamp(3px, 0.9cqw, 8px);
+  font-family: var(--font-sans);
+  font-size: clamp(5px, 1.4cqw, 9px);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: rgba(246, 239, 226, 0.66);
+  white-space: nowrap;
+}
+
+/* ---- Angel ---- */
+.nmap-pin {
+  --pin: clamp(30px, 8cqw, 54px);
+  --ring: clamp(52px, 13.9cqw, 94px);
+  position: absolute;
+  z-index: 3;
+  top: 22.3%;
+  left: 68%;
+  margin-top: calc(var(--pin) / -2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+}
+
+/* Two rings, half a cycle apart, centred on the disc. */
+.nmap-pin::before,
+.nmap-pin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(var(--pin) / 2);
+  width: var(--ring);
+  height: var(--ring);
+  margin: calc(var(--ring) / -2);
+  border-radius: 999px;
+  border: 1px solid rgba(226, 189, 108, 0.45);
+  animation: nmap-pulse 2.6s ease-out infinite;
+}
+
+.nmap-pin::after {
+  animation-delay: 1.3s;
+}
+
+.nmap-pin i {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: var(--pin);
+  height: var(--pin);
+  border-radius: 999px;
+  /* The same struck-metal gold as the buttons, so the pin reads as the one
+     lit object on the map rather than a flat swatch. */
+  background: var(--btn-fill);
+  color: #1c1208;
+  box-shadow:
+    0 0 0 1px rgba(255, 244, 214, 0.55),
+    0 0 clamp(16px, 5cqw, 36px) rgba(226, 189, 108, 0.5);
+}
+
+.nmap-pin b {
+  margin-top: clamp(7px, 2cqw, 12px);
+  font-family: var(--font-sans);
+  font-size: clamp(7px, 1.9cqw, 13px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.22em;
+  color: #f0d9a0;
+}
+
+.nmap-pin small {
+  margin-top: clamp(3px, 0.9cqw, 5px);
+  font-family: var(--font-sans);
+  font-size: clamp(5px, 1.35cqw, 9px);
+  line-height: 1;
+  letter-spacing: 0.12em;
+  color: rgba(246, 239, 226, 0.58);
+  white-space: nowrap;
+}
+
+/* ---- Frame chrome: pinned to the card corners, so it is never cropped ---- */
+.nmap-borough {
+  position: absolute;
+  top: clamp(12px, 3.4cqw, 30px);
+  left: clamp(12px, 3.4cqw, 30px);
+  font-family: var(--font-display);
+  font-size: clamp(26px, 10cqw, 76px);
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: 0.04em;
+  color: rgba(246, 239, 226, 0.055);
+  text-transform: uppercase;
+}
+
+.nmap-scale {
+  position: absolute;
+  z-index: 4;
+  top: clamp(12px, 3.4cqw, 26px);
+  right: clamp(12px, 3.4cqw, 26px);
+  font-family: var(--font-sans);
+  font-size: clamp(6px, 1.4cqw, 9px);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: rgba(246, 239, 226, 0.3);
+  text-transform: uppercase;
+}
+
+.nmap-coords {
+  position: absolute;
+  z-index: 4;
+  bottom: clamp(12px, 3.4cqw, 26px);
+  right: clamp(12px, 3.4cqw, 26px);
+  display: flex;
+  align-items: center;
+  gap: clamp(4px, 1.2cqw, 8px);
+  font-family: var(--font-sans);
+  font-size: clamp(6px, 1.4cqw, 9px);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: rgba(240, 217, 160, 0.62);
+  text-transform: uppercase;
+}
+
+.nmap-coords::before {
+  content: "";
+  width: clamp(3px, 0.8cqw, 5px);
+  height: clamp(3px, 0.8cqw, 5px);
+  border-radius: 999px;
+  background: var(--color-gold);
+  box-shadow: 0 0 8px var(--color-gold);
+  animation: var(--animate-pulse-glow);
+}
+
+@keyframes nmap-pulse {
+  0% { opacity: 0; transform: scale(0.45); }
+  30% { opacity: 0.65; }
+  100% { opacity: 0; transform: scale(1.15); }
 }

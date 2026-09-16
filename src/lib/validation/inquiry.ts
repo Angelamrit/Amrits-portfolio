@@ -22,7 +22,10 @@ const optionalText = (max: number) =>
 
 export const inquirySchema = z.object({
   name: z.string().trim().min(2, "Please tell us your name.").max(80),
-  email: z.email("Please enter a valid email address."),
+  // The cap matters beyond the form: the address becomes a rate-limit key, and
+  // an unbounded one lets a flood of long addresses inflate that map. 254 is
+  // the longest address SMTP actually permits.
+  email: z.email("Please enter a valid email address.").max(254),
   phone: optionalText(40),
   eventDate: z
     .string()

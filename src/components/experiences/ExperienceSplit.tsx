@@ -13,9 +13,9 @@ export function ExperienceSplit({ experience, index }: { experience: Experience;
     <article id={experience.slug} className="relative scroll-mt-28 py-14 md:py-20">
       <Container>
         <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-16">
-          <div className={cn("relative lg:col-span-5", flip ? "lg:order-2 lg:col-start-8" : "lg:order-1")}>
+          <div className={cn("relative mx-auto w-full max-w-sm sm:max-w-md lg:max-w-none lg:col-span-5", flip ? "lg:order-2 lg:col-start-8" : "lg:order-1")}>
             <span aria-hidden className="orb orb-gold -left-[20%] -top-[20%] size-[70%] opacity-50" />
-            <ImageFrame image={experience.image} ratio="4/5" glow sizes="(min-width: 1024px) 40vw, 100vw" className="relative" />
+            <ImageFrame image={experience.image} ratio="4/5" glow sizes="(min-width: 1024px) 40vw, (min-width: 640px) 28rem, 100vw" className="relative" />
             <span
               aria-hidden
               className="pointer-events-none absolute -bottom-6 -right-2 select-none font-display text-[6rem] leading-none text-outline-gold md:text-[8rem]"

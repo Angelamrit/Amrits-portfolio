@@ -33,12 +33,12 @@ export function MeetTheChef() {
         <div className="mt-16 grid gap-16 lg:grid-cols-12 lg:gap-20">
           {/* Portrait */}
           <div className="lg:col-span-5">
-            <div className="relative lg:sticky lg:top-32">
+            <div className="relative mx-auto w-full max-w-sm sm:max-w-md lg:max-w-none lg:sticky lg:top-32">
               <span aria-hidden className="pointer-events-none absolute -left-6 -top-20 select-none font-display text-[11rem] leading-none text-outline-gold md:-left-10 md:text-[15rem]">
                 01
               </span>
               <span aria-hidden className="orb orb-gold -left-[20%] -top-[10%] size-[80%] opacity-60" />
-              <ImageFrame image={chef.portrait} ratio="4/5" glow sizes="(min-width: 1024px) 40vw, 100vw" className="relative" />
+              <ImageFrame image={chef.portrait} ratio="4/5" glow sizes="(min-width: 1024px) 40vw, (min-width: 640px) 28rem, 100vw" className="relative" />
 
               <Reveal delay={0.3} className="absolute -right-4 top-8 md:-right-8">
                 <div className="glass-strong rounded-2xl px-5 py-4 shadow-glow">

@@ -29,6 +29,22 @@ export function PlatingSequence({ sequence = platingSequence }: { sequence?: Ima
   const [phase, setPhase] = useState(0);
   const reduce = useReducedMotion();
 
+  /*
+    Phones and tablets get the still version. The scrub pins the page for 340vh
+    and preloads all 48 frames (~2.8MB) to drive a canvas — on a touch device
+    that is a long stretch of momentum scrolling against a pinned stage, paid
+    for over mobile data. Starts false so the desktop render and the server
+    render agree, then flips after mount; the preload below waits for it.
+  */
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px), (pointer: coarse)");
+    const update = () => setCompact(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
   const { scrollYProgress } = useScroll({ target: wrapRef, offset: ["start start", "end end"] });
   const frameIndex = useTransform(scrollYProgress, [0, 1], [0, sequence.count - 1]);
   const barScale = useTransform(scrollYProgress, [0, 1], [0, 1]);
@@ -56,7 +72,7 @@ export function PlatingSequence({ sequence = platingSequence }: { sequence?: Ima
   // Preload every frame once the section approaches the viewport.
   useEffect(() => {
     const el = wrapRef.current;
-    if (!el || reduce) return;
+    if (!el || reduce || compact) return;
     let cancelled = false;
     const io = new IntersectionObserver(
       ([entry]) => {
@@ -86,7 +102,7 @@ export function PlatingSequence({ sequence = platingSequence }: { sequence?: Ima
       cancelled = true;
       io.disconnect();
     };
-  }, [sequence, reduce, draw]);
+  }, [sequence, reduce, compact, draw]);
 
   // Size the canvas to the stage (capped DPR keeps memory sane on phones).
   useEffect(() => {
@@ -116,16 +132,22 @@ export function PlatingSequence({ sequence = platingSequence }: { sequence?: Ima
 
   const current = sequence.phases[phase];
 
-  /* Reduced motion: a still of the finished dish and the four captions, no pinning. */
-  if (reduce) {
+  /* Still of the finished dish and the four captions, no pinning. */
+  if (reduce || compact) {
     return (
-      <section id="plating" className="tone-dark relative overflow-hidden bg-brown-deep py-section">
+      <section id="plating" className="tone-dark relative overflow-hidden surface-brown-deep py-section">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={frameSrc(sequence, sequence.count - 1)} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
+        <img
+          src={frameSrc(sequence, sequence.count - 1)}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover opacity-60"
+        />
         <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-brown-deep via-brown-deep/60 to-brown-deep/30" />
         <Container className="relative z-[2]">
           <Eyebrow>Interlude · The plating</Eyebrow>
-          <ol className="mt-10 grid gap-8 md:grid-cols-4">
+          <ol className="mt-10 grid gap-8 sm:grid-cols-2 sm:gap-10 md:grid-cols-4 md:gap-8">
             {sequence.phases.map((ph, i) => (
               <li key={ph.title}>
                 <p className="eyebrow text-[0.58rem] text-gold-light">
@@ -142,7 +164,7 @@ export function PlatingSequence({ sequence = platingSequence }: { sequence?: Ima
   }
 
   return (
-    <section id="plating" ref={wrapRef} className="tone-dark relative bg-brown-deep" style={{ height: "340vh" }} aria-label="A dish being plated">
+    <section id="plating" ref={wrapRef} className="tone-dark relative surface-brown-deep" style={{ height: "340vh" }} aria-label="A dish being plated">
       <div ref={stageRef} className="sticky top-0 h-[100svh] overflow-hidden">
         <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-hidden />
         <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-brown-deep/85 via-brown-deep/30 to-transparent" />

@@ -9,7 +9,7 @@ export const nav: NavItem[] = [
   { label: "The Chef", href: "/about" },
   { label: "Angel", href: "/angel" },
   { label: "Experiences", href: "/experiences" },
-  { label: "Menus", href: "/menus" },
+  { label: "Menu", href: "/menus" },
   { label: "Gallery", href: "/gallery" },
   { label: "Press", href: "/press" },
   // Journal moves into the header once the first articles are published.

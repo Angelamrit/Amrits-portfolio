@@ -91,7 +91,10 @@ export function SignatureName({ name, className }: { name: string; className?: s
     el.style.setProperty("--my", `${e.clientY - r.top}px`);
   };
 
-  const type = "whitespace-nowrap font-display text-[clamp(3rem,10.5vw,10.5rem)] font-light leading-[0.9] tracking-[-0.02em]";
+  // The 3rem floor was wider than a 320px screen once the name is set on one
+  // nowrap line, so it clipped mid-word; 2.25rem fits and the vw term takes
+  // over by ~360px, leaving every larger size exactly as it was.
+  const type = "whitespace-nowrap font-display text-[clamp(2.25rem,10.5vw,10.5rem)] font-light leading-[0.9] tracking-[-0.02em]";
 
   return (
     <div ref={ref} onMouseMove={onMove} aria-hidden className={`group/sig relative select-none overflow-hidden mask-fade-b ${className ?? ""}`}>
