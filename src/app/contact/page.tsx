@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { chef } from "@/data/chef";
+import { images } from "@/data/images";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { BookingWizard } from "@/components/contact/BookingWizard";
 import { Container } from "@/components/ui/Container";
-import { Eyebrow } from "@/components/ui/Eyebrow";
-import { Heading, Em } from "@/components/ui/Heading";
-import { Orbs } from "@/components/ui/Orbs";
-import { Reveal } from "@/components/ui/Reveal";
+import { Em } from "@/components/ui/Heading";
+import { PageHero } from "@/components/ui/PageHero";
+import { Section } from "@/components/ui/Section";
+import { StatRow } from "@/components/ui/Stat";
 
 export const metadata: Metadata = buildMetadata({
   title: "Contact & Booking",
@@ -16,26 +18,28 @@ export const metadata: Metadata = buildMetadata({
 
 export default function ContactPage() {
   return (
-    <section className="relative overflow-hidden bg-bg pt-36 pb-section md:pt-44">
-      <Orbs variant="mixed" pattern />
-      <Container className="relative z-[2]">
-        <div className="max-w-3xl">
-          <Reveal>
-            <Eyebrow>Contact / Book</Eyebrow>
-            <Heading as="h1" size="lg" className="mt-8">
-              Let&rsquo;s plan something <Em shimmer>memorable.</Em>
-            </Heading>
-            <p className="mt-8 max-w-xl text-lead text-fg/70">
-              Seven quick questions, one at a time. Your answers build a first menu suggestion as you go, and Chef Amrit reads every enquiry personally.
-            </p>
-          </Reveal>
-        </div>
-        <div className="mt-14">
+    <>
+      <PageHero
+        eyebrow="Contact / Book"
+        title={
+          <>
+            Let&rsquo;s plan something <Em shimmer>memorable.</Em>
+          </>
+        }
+        lead="Seven quick questions, one at a time. Chef Amrit reads every enquiry personally and replies within two working days."
+        image={images.tableCandles}
+        cinematicImage
+      >
+        <StatRow stats={chef.stats} glass className="max-w-xl" />
+      </PageHero>
+
+      <Section tone="base" className="lg:pt-48" orbs="subtle">
+        <Container>
           <Suspense fallback={<div className="h-96" aria-busy="true" />}>
             <BookingWizard />
           </Suspense>
-        </div>
-      </Container>
-    </section>
+        </Container>
+      </Section>
+    </>
   );
 }

@@ -6,9 +6,9 @@ type Tone = "base" | "raised" | "deep" | "ivory" | "transparent";
 type Padding = "default" | "tight" | "none";
 
 const tones: Record<Tone, string> = {
-  base: "bg-bg tone-gold",
-  raised: "bg-brown tone-dark",
-  deep: "bg-brown-deep tone-dark",
+  base: "surface-gold tone-gold",
+  raised: "surface-brown tone-dark",
+  deep: "surface-brown-deep tone-dark",
   ivory: "bg-ivory tone-gold",
   transparent: "",
 };

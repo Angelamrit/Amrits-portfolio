@@ -30,10 +30,13 @@ export function StickyBookCta() {
       <Link
         href="/contact"
         tabIndex={show ? 0 : -1}
-        className="flex items-center justify-between rounded-pill bg-gradient-to-r from-gold-light via-gold to-gold-deep px-6 py-4 font-sans text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-charcoal shadow-[0_18px_40px_-10px_rgba(201,169,98,0.8)]"
+        // `relative overflow-hidden` because btn-primary paints its hover metal
+        // in an inset ::before that has to be clipped to the pill.
+        className="tone-dark btn-primary relative flex items-center justify-between gap-4 overflow-hidden rounded-pill px-6 py-4 font-sans text-[0.68rem] font-semibold uppercase tracking-[0.22em] transition-all duration-500 ease-luxe"
       >
-        Request a Private Experience
-        <ArrowUpRight className="size-4" strokeWidth={1.75} />
+        {/* Positioned so they paint above btn-primary's inset ::before. */}
+        <span className="relative">Request a Private Experience</span>
+        <ArrowUpRight className="relative size-4 shrink-0" strokeWidth={1.75} />
       </Link>
     </div>
   );

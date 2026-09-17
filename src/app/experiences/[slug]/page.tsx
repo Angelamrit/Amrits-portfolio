@@ -23,6 +23,15 @@ import { SpotlightCard } from "@/components/ui/SpotlightCard";
 
 type Params = { slug: string };
 
+/**
+ * The six experiences are the whole set and they are known at build time, so a
+ * request for any other slug is answered with a real 404 by the router rather
+ * than rendered on demand. Without this, `notFound()` below still shows the
+ * right page but only after rendering it, and the response goes out as a 200
+ * — a soft 404 — while every distinct made-up slug earns its own cache entry.
+ */
+export const dynamicParams = false;
+
 export function generateStaticParams(): Params[] {
   return experiences.map((e) => ({ slug: e.slug }));
 }

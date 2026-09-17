@@ -32,6 +32,9 @@ export function SpotlightCard<T extends ElementType = "div">({
   const onMove = (e: MouseEvent<HTMLElement>) => {
     const el = ref.current;
     if (!el) return;
+    // A tap fires one mousemove and often no mouseleave, which would leave the
+    // card tilted and its spotlight frozen mid-surface until the next render.
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     const r = el.getBoundingClientRect();
     const x = e.clientX - r.left;
     const y = e.clientY - r.top;

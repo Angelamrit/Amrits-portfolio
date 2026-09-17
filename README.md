@@ -14,7 +14,7 @@ cp .env.example .env.local   # optional, see below
 npm run dev                  # http://localhost:3000
 ```
 
-Other scripts: `npm run build`, `npm run start`, `npm run lint`, `npm run typecheck`.
+Other scripts: `npm run build`, `npm run start`, `npm run lint`, `npm run typecheck`, `npm test`.
 
 > The `dev` and `start` scripts pass `--dns-result-order=ipv4first` to Node. Some Windows/ISP setups resolve IPv6 first and stall for ~10 s, which makes remote image optimisation time out.
 
@@ -76,7 +76,45 @@ All images are stock placeholders stored in `public/images/placeholders/` and fl
 | `INQUIRY_TO_EMAIL` | Where enquiries are sent (comma-separated allowed) |
 | `INQUIRY_FROM_EMAIL` | Verified sender, e.g. `Chef Amrit Pal Singh <inquiries@yourdomain.com>` |
 
-Without `RESEND_API_KEY` and `INQUIRY_TO_EMAIL`, enquiries are logged to the server console as `[inquiry:dry-run]` and the visitor still sees the success state.
+Values are validated in `src/lib/env.ts`. A malformed value (a misspelled address, a site URL that is not absolute) throws immediately, wherever it is found. A *missing* value only warns, because taking the whole site down over the mailer would be worse than the problem it reports.
+
+What that means in practice:
+
+- **In development**, with no `RESEND_API_KEY` / `INQUIRY_TO_EMAIL`, enquiries are logged to the console as `[inquiry:dry-run]` and the visitor sees the success state. This is what lets the form be worked on without credentials.
+- **In production**, the same gap prints a banner at server startup (from `src/instrumentation.ts`) and the form stops claiming success: the guest is told it could not be sent and asked to telephone instead. An enquiry is never silently lost.
+
+## Caching
+
+Every route here is static, so Next already serves the pages themselves with `Cache-Control: s-maxage=31536000`, and its own build output from `/_next/static` as `immutable`. Two gaps were left, and `next.config.ts` closes both:
+
+| What | Before | Now |
+|---|---|---|
+| `/public` files (`/images`, `/sequences`, `/video`) | `max-age=0` — revalidated on every visit | `public, max-age=604800, stale-while-revalidate=2592000` |
+| Optimized images from `/_next/image` | 4 hours (the default `minimumCacheTTL`) | 7 days, matching the upstream file |
+
+Seven days rather than a year because these filenames carry no content hash: an `immutable` year would strand a browser on an old photo when a new one is dropped in. A week self-corrects without needing a CDN purge, and the `stale-while-revalidate` window keeps the swap invisible to whoever is on the site at the time. The same value drives the optimizer, whose cache has no invalidation hook at all — which is the reason not to reach for a longer one.
+
+Photography is nearly all of this site's weight, so this is the caching change that matters. If a CDN is put in front of the origin later, it needs no extra configuration to benefit; it only needs to pass the `rsc` request header and keep `_rsc` in its cache key.
+
+## Security
+
+- **Headers** — CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` and the two Cross-Origin policies, set for every path in `next.config.ts`. The CSP keeps `'unsafe-inline'` for scripts; the comment above it explains why locking that down needs a per-request nonce, which would force every page to render dynamically.
+- **No remote images.** `images.remotePatterns` is empty and must stay that way unless a real remote source appears. A hostname listed there turns `/_next/image` into an open image proxy for that host, on this domain.
+- **The enquiry form** is the only input the site accepts, and is treated accordingly: sanitising, then server-side validation with Zod, then two tiers of rate limit, with a honeypot field and a minimum fill time. `src/lib/inquiry/submit.ts` explains each decision at the point it is made.
+- **Secrets** live only in the environment, never in `src/data`. `.env*` is gitignored; `.env.example` documents what is needed.
+
+One limitation to know about: the rate limiter counts in the server's own memory (`src/lib/rate-limit.ts`). On a single long-lived Node process that is exactly right. On a serverless platform, or across several instances, each worker keeps its own counts and the effective limit is multiplied by the number of live workers. If the site is deployed that way, swap the body of `rateLimit` for a shared store — Upstash Redis or Vercel KV — which is all the signature was designed to allow.
+
+## Tests
+
+```bash
+npm test          # once
+npm run test:watch
+```
+
+No test framework and no new dependencies: Node runs the TypeScript sources directly, and `test/alias-hook.mjs` teaches its loader the `@/*` alias so the tests import the application modules unchanged rather than a copy of them. Requires Node 24 or newer.
+
+The suite covers the parts where being wrong is expensive rather than merely visible — the sanitiser's defence against forged lines in the enquiry email, both tiers of rate limit (including that one address cannot be used to mail-bomb a third party), the bot traps, and that a production server never reports an undelivered enquiry as sent. `.github/workflows/ci.yml` runs lint, typecheck, tests and a build on every push and pull request.
 
 ## Feature assets to supply
 
@@ -91,5 +129,5 @@ Without `RESEND_API_KEY` and `INQUIRY_TO_EMAIL`, enquiries are logged to the ser
 - Confirm the two draft courses on the tasting menu and the dessert on the event menu with Chef.
 - Confirm the Resy listing URL in `site.ts` and add social handles.
 - Replace placeholder photography.
-- Set the environment variables on Vercel and send a test enquiry.
+- Set the environment variables on the host and send a test enquiry. Check the startup logs: an unconfigured mailer announces itself there.
 - Add real guest testimonials (with permission) and un-hide the Testimonials nav item.

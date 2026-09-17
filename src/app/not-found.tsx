@@ -6,7 +6,7 @@ import { Orbs } from "@/components/ui/Orbs";
 
 export default function NotFound() {
   return (
-    <section className="relative flex min-h-[70vh] items-center overflow-hidden bg-bg pt-32 pb-24">
+    <section className="relative flex min-h-[70vh] items-center overflow-hidden surface-gold pt-32 pb-24">
       <Orbs variant="mixed" pattern />
       <Container className="relative z-[2]">
         <Eyebrow>404</Eyebrow>

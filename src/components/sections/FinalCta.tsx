@@ -24,7 +24,7 @@ export function FinalCta({
   body = "Private dinners, celebrations, corporate events and residencies, cooked by Chef Amrit and served with the care that earned Angel its Bib Gourmand.",
 }: Props) {
   return (
-    <section id="book" className="relative overflow-hidden bg-brown-deep tone-dark py-section">
+    <section id="book" className="relative overflow-hidden surface-brown-deep tone-dark py-section">
       <ImageFrame image={images.tableCandles} ratio="fill" reveal="fade" vignette sizes="100vw" quality={65} imgClassName="opacity-35" />
       <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-r from-brown-deep via-brown-deep/70 to-brown-deep/30" />
       <Orbs variant="gold" className="z-[1]" />

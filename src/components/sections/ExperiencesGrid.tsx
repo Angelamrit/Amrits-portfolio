@@ -1,15 +1,20 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { experiences } from "@/data/experiences";
+import { images } from "@/data/images";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
+import { FilmstripFrame } from "@/components/ui/FilmstripFrame";
 import { Heading, Em } from "@/components/ui/Heading";
 import { ImageFrame } from "@/components/ui/ImageFrame";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Section } from "@/components/ui/Section";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
+
+/* The weekly personal-chef card cycles through a short reel of home-kitchen moments. */
+const personalChefReel = [images.homeKitchen, images.chopping, images.choppingHerbs, images.prepOverhead];
 
 /* Bento layout: 6 columns */
 const layout = [
@@ -54,7 +59,11 @@ export function ExperiencesGrid() {
             <RevealItem key={exp.slug} className={cn("relative", layout[i])}>
               <SpotlightCard as="article" glass={false} tilt={3} className="tone-dark group relative h-full overflow-hidden bg-surface-2">
                 <Link href={`/experiences/${exp.slug}`} className="absolute inset-0 z-[4]" aria-label={exp.name} />
-                <ImageFrame image={exp.image} ratio="fill" reveal="none" hover sizes="(min-width: 768px) 50vw, 100vw" imgClassName="opacity-90" />
+                {exp.slug === "personal-chef" ? (
+                  <FilmstripFrame images={personalChefReel} sizes="(min-width: 768px) 50vw, 100vw" />
+                ) : (
+                  <ImageFrame image={exp.image} ratio="fill" reveal="none" hover sizes="(min-width: 768px) 50vw, 100vw" imgClassName="opacity-90" />
+                )}
                 <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-t from-brown-deep via-brown-deep/40 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 z-[2] flex items-end justify-between gap-4 p-6 md:p-7">
                   <div>

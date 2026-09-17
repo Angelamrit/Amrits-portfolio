@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 /** Linked from the enquiry auto-reply email: the chef's video message and what happens next. */
 export default function ThankYouPage() {
   return (
-    <section className="relative overflow-hidden bg-bg pt-36 pb-section md:pt-44">
+    <section className="relative overflow-hidden surface-gold pt-36 pb-section md:pt-44">
       <Orbs variant="mixed" pattern />
       <Container className="relative z-[2]">
         <div className="grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">

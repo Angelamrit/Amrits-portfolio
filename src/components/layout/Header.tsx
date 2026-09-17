@@ -64,7 +64,7 @@ function buildPanels(): MegaPanelData[] {
     },
     {
       key: "/menus",
-      eyebrow: "Menus",
+      eyebrow: "Menu",
       title: "Course by",
       accent: "course.",
       blurb: "Two menus served at Angel, and one framework designed around your private event.",

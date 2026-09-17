@@ -27,7 +27,7 @@ export const gallery: GalleryItem[] = [
   { id: "g13", image: images.prepOverhead, category: "behind-the-scenes", caption: "Prep, overhead", span: "wide" },
   { id: "g14", image: images.kitchenLine, category: "behind-the-scenes", caption: "The line" },
   { id: "g15", image: images.tableSetting, category: "private-dining", caption: "Set for eight" },
-  { id: "g16", image: images.diningRoomDark, category: "private-dining", caption: "The new dining room", span: "wide" },
+  { id: "g16", image: images.angelDiningRoom, category: "private-dining", caption: "The new dining room", span: "wide" },
   { id: "g17", image: images.bar, category: "private-dining", caption: "The bar" },
   { id: "g18", image: images.toast, category: "events", caption: "A toast" },
   { id: "g19", image: images.banquet, category: "events", caption: "Dressed for a wedding", span: "wide" },

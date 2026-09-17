@@ -1,16 +1,17 @@
 import Link from "next/link";
-import { ArrowUpRight, Award, MapPin } from "lucide-react";
-import type { ReactNode } from "react";
+import { ArrowUpRight, Award } from "lucide-react";
 import { site } from "@/data/site";
 import { visibleNav } from "@/data/nav";
 import { chef } from "@/data/chef";
 import { images } from "@/data/images";
 import { Button } from "@/components/ui/Button";
+import { CardHeader } from "@/components/ui/CardHeader";
 import { Container } from "@/components/ui/Container";
 import { Embers } from "@/components/ui/Embers";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Em } from "@/components/ui/Heading";
 import { ImageFrame } from "@/components/ui/ImageFrame";
+import { NeighborhoodMap } from "@/components/ui/NeighborhoodMap";
 import { Medallion } from "@/components/ui/Medallion";
 import { Orbs } from "@/components/ui/Orbs";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
@@ -40,23 +41,6 @@ function FacebookIcon({ className }: { className?: string }) {
   );
 }
 
-/** Eyebrow title and a glowing icon disc that brightens with the card. */
-function CardHeader({ id, title, icon }: { id?: string; title: string; icon: ReactNode }) {
-  return (
-    <div className="relative flex items-center justify-between gap-4">
-      <h3 id={id} className="eyebrow">
-        {title}
-      </h3>
-      <span
-        aria-hidden
-        className="grid size-11 shrink-0 place-items-center rounded-full border border-gold/30 bg-gold/10 text-gold shadow-[0_0_24px_-6px_rgba(226,189,108,0.7)] transition-all duration-500 ease-luxe group-hover/card:border-gold/70 group-hover/card:bg-gold/20 group-hover/card:text-gold-light group-hover/card:shadow-glow"
-      >
-        {icon}
-      </span>
-    </div>
-  );
-}
-
 export function Footer() {
   const { restaurant, social } = site;
   const year = new Date().getFullYear();
@@ -71,7 +55,7 @@ export function Footer() {
 
       {/* The dining room at night, barely there, fading out before the cards begin. */}
       <div aria-hidden className="mask-fade-b absolute inset-x-0 top-0 h-[72%]">
-        <ImageFrame image={images.diningRoomDark} ratio="fill" reveal="fade" sizes="100vw" quality={65} imgClassName="opacity-[0.14] saturate-[0.8]" />
+        <ImageFrame image={images.angelDiningRoom} ratio="fill" reveal="fade" sizes="100vw" quality={65} imgClassName="opacity-[0.14] saturate-[0.8]" />
         <div className="absolute inset-0 bg-gradient-to-b from-brown/60 via-transparent to-brown-deep" />
       </div>
       <div aria-hidden className="panel-pattern absolute inset-0" />
@@ -115,16 +99,16 @@ export function Footer() {
         {/* ---- Visit · Explore · Recognition ---- */}
         <RevealGroup className="mt-16 grid gap-4 md:grid-cols-2 lg:mt-20 lg:grid-cols-12">
           <RevealItem className="md:col-span-2 lg:col-span-5">
-            <SpotlightCard as="section" aria-labelledby="footer-visit" className="group/card relative flex h-full flex-col overflow-hidden p-7 md:p-9">
-              <span aria-hidden className="orb orb-gold -right-[30%] -top-[35%] size-[75%] opacity-40" />
-              <CardHeader id="footer-visit" title="Visit Angel" icon={<MapPin className="size-4" strokeWidth={1.5} />} />
-              <address className="relative mt-8 not-italic">
-                <p className="font-display text-display-sm font-light leading-tight text-fg">{restaurant.address.street}</p>
-                <p className="mt-2 font-display text-2xl font-light leading-tight text-gold-gradient md:text-3xl">
-                  {restaurant.address.city}, {restaurant.address.region} {restaurant.address.postal}
-                </p>
-              </address>
-              <div className="relative mt-auto flex flex-wrap items-center justify-between gap-4 pt-10">
+            <SpotlightCard
+              as="section"
+              tilt={2}
+              aria-label={`${restaurant.name}, ${restaurant.address.street}, ${restaurant.address.city}`}
+              className="group/card relative flex h-full min-h-[22rem] flex-col overflow-hidden p-0 sm:min-h-[26rem] md:min-h-[28rem] lg:min-h-0"
+            >
+              {/* flex-1: the map takes whatever height the row gives the card,
+                  which is set by the Explore column beside it. */}
+              <NeighborhoodMap className="flex-1" />
+              <div className="relative mt-auto flex flex-wrap items-center justify-between gap-4 border-t border-line px-7 py-5 md:px-8">
                 <p className="eyebrow text-[0.55rem] text-fg/50">{restaurant.hours}</p>
                 {restaurant.mapsUrl && (
                   <Button href={restaurant.mapsUrl} variant="link">
@@ -196,7 +180,7 @@ export function Footer() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={label}
-                      className="grid size-10 place-items-center rounded-full border border-fg/12 text-fg/70 transition-all duration-500 ease-luxe hover:border-gold/60 hover:text-gold-light hover:shadow-glow"
+                      className="grid size-11 place-items-center rounded-full border border-fg/12 text-fg/70 transition-all duration-500 ease-luxe hover:border-gold/60 hover:text-gold-light hover:shadow-glow"
                     >
                       <Icon className="size-4" />
                     </a>

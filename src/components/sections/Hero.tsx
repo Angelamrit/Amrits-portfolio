@@ -16,7 +16,7 @@ const credentials = [
 
 export function Hero() {
   return (
-    <section id="hero" className="relative flex min-h-[100svh] items-end overflow-hidden bg-brown-deep tone-dark grain" aria-label="Introduction">
+    <section id="hero" className="relative flex min-h-[100svh] items-end overflow-hidden surface-brown-deep tone-dark grain" aria-label="Introduction">
       {/* The hero photograph stays exactly as it is; only a very slow cinematic drift is added. */}
       <ImageFrame
         image={chef.heroImage}

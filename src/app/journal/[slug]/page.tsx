@@ -20,6 +20,16 @@ type Params = { slug: string };
 
 const visibleArticles = () => filterPlaceholders(articles).filter((a) => a.status === "published" || showPlaceholders);
 
+/**
+ * Only the articles the chef has approved get a route at all. This is what
+ * makes the draft gate real: with on-demand params allowed, a draft's URL
+ * still answered 200, and `generateMetadata` below served its title, excerpt
+ * and cover image into the page head before the body was withheld — so an
+ * unapproved piece leaked through link previews. Turning the slug list into
+ * the complete set means the router refuses the request outright.
+ */
+export const dynamicParams = false;
+
 export function generateStaticParams(): Params[] {
   return visibleArticles().map((a) => ({ slug: a.slug }));
 }
@@ -42,7 +52,7 @@ export default async function ArticlePage({ params }: { params: Promise<Params> 
 
   return (
     <>
-      <header className="relative overflow-hidden bg-bg pt-36 pb-12 md:pt-44">
+      <header className="relative overflow-hidden surface-gold pt-36 pb-12 md:pt-44">
         <Orbs variant="mixed" pattern />
         <Container className="relative z-[2]">
           <div className="mx-auto max-w-3xl">
@@ -66,7 +76,7 @@ export default async function ArticlePage({ params }: { params: Promise<Params> 
         </Container>
       </header>
 
-      <div className="bg-bg">
+      <div className="surface-gold">
         <Container>
           <div className="mx-auto max-w-5xl">
             <ImageFrame image={article.cover} ratio="21/9" glow priority sizes="(min-width: 1024px) 64rem, 100vw" />

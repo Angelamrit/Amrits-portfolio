@@ -3,16 +3,17 @@
 import { startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, m } from "motion/react";
-import { Check, ChevronLeft, Minus, Plus } from "lucide-react";
+import { Check, ChevronLeft, ClipboardList, MapPin, Minus, Plus, Sparkles } from "lucide-react";
 import { submitInquiry, type InquiryState } from "@/app/contact/actions";
 import { budgetLabels, budgetOptions, experienceLabels, experienceOptions, type InquiryField } from "@/lib/validation/inquiry";
 import { experiences } from "@/data/experiences";
-import { menuBySlug } from "@/data/menus";
-import { dishById } from "@/data/dishes";
+import { process as bookingProcess } from "@/data/process";
 import { site } from "@/data/site";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
+import { CardHeader } from "@/components/ui/CardHeader";
 import { Input, Textarea } from "@/components/ui/Field";
+import { SpotlightCard } from "@/components/ui/SpotlightCard";
 import { InquirySuccess } from "./InquirySuccess";
 
 /* ------------------------------------------------------------------ */
@@ -43,7 +44,7 @@ const steps = [
   { key: "dietary", label: "Dietary", title: "Any dietary needs?", hint: "Angel's kitchen is predominantly vegetarian and 100% Halal by default. Add anything else the chef should know." },
   { key: "budget", label: "Budget", title: "What's your budget?", hint: "This helps Chef Amrit design the right scale of menu, staffing and service. Nothing is fixed at this stage." },
   { key: "details", label: "Details", title: "How do we reach you?", hint: "Chef Amrit's team replies personally within two working days." },
-  { key: "review", label: "Review", title: "Your estimated menu", hint: "A first suggestion, based on what you've told us. The final menu is designed together in the consultation." },
+  { key: "review", label: "Review", title: "Review & send", hint: "Check the details below, then send them to Chef Amrit. He reads every enquiry personally and replies within two working days." },
 ] as const;
 
 const fieldStep: Record<InquiryField, number> = {
@@ -70,62 +71,6 @@ const experienceBlurb: Record<Experience, string> = {
 
 const ease = [0.16, 1, 0.3, 1] as const;
 const emailOk = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
-
-/* ------------------------------------------------------------------ */
-/* Estimated menu                                                      */
-/* ------------------------------------------------------------------ */
-
-type Suggestion = { title: string; style: string; menuSlug: string; courses: string[]; notes: string[] };
-
-function coursesOf(slug: string) {
-  const menu = menuBySlug(slug);
-  if (!menu) return [];
-  return menu.courses.map((c) => c.name ?? (c.dishId ? dishById(c.dishId)?.name : undefined) ?? (c.status === "draft" ? "Chef's seasonal course" : c.title));
-}
-
-export function suggestMenu(experience: Experience | "", guests: number, tags: string[]): Suggestion | null {
-  if (!experience) return null;
-  const intimate = guests > 0 && guests <= 12;
-  let s: Suggestion;
-  switch (experience) {
-    case "tasting-menu":
-      s = { title: "Chef's Tasting Menu", style: "Seven courses in the new dining room at Angel.", menuSlug: "tasting", courses: coursesOf("tasting"), notes: [] };
-      break;
-    case "private-dining":
-      s = intimate
-        ? { title: "Chef's Tasting Menu, at your table", style: "Seven courses cooked in your kitchen and served one by one.", menuSlug: "tasting", courses: coursesOf("tasting"), notes: [] }
-        : { title: "Private Event Menu", style: "Four movements, served family style at the table.", menuSlug: "private-event", courses: coursesOf("private-event"), notes: [] };
-      break;
-    case "dinner-parties":
-      s = intimate
-        ? { title: "Chef's Tasting Menu, at your table", style: "Seven courses with shared plates from the tandoor to open.", menuSlug: "tasting", courses: coursesOf("tasting"), notes: ["Cocktail pairings and a bar can be added."] }
-        : { title: "Private Event Menu", style: "Four movements built around shared plates and a slow-cooked centrepiece.", menuSlug: "private-event", courses: coursesOf("private-event"), notes: ["Cocktail pairings and a bar can be added."] };
-      break;
-    case "corporate-events":
-      s = { title: "Private Event Menu", style: guests > 60 ? "Passed street-food bites, then stations timed around your agenda." : "Four movements, timed around your agenda.", menuSlug: "private-event", courses: coursesOf("private-event"), notes: ["Dedicated coordinator, invoicing and documentation included."] };
-      break;
-    case "weddings":
-      s = { title: "Wedding Menu, stations and family style", style: "A chaat station to welcome, the tandoor, then a grand slow-cooked biryani.", menuSlug: "private-event", courses: ["Chaat station to welcome", "From the tandoor, with fresh breads", "Regional delicacies, served family style", "Grand vegetable dum biryani", "Sweet & chai"], notes: ["Tasting session included before the day."] };
-      break;
-    case "villa-yacht-dining":
-      s = { title: "Residency Menus", style: "Daily menus built from the house specialties, planned around provisioning on location.", menuSlug: "house-specialties", courses: coursesOf("house-specialties"), notes: ["Breakfasts, lunches and dinners designed as one unhurried story."] };
-      break;
-    case "personal-chef":
-      s = { title: "Weekly Personal Chef Plan", style: "A rotating plan of home-style Punjabi cooking, prepared, labelled and stored in your kitchen.", menuSlug: "house-specialties", courses: coursesOf("house-specialties"), notes: ["Menus rotate weekly around your preferences and health goals."] };
-      break;
-    default:
-      s = { title: "Private Event Menu", style: "A flexible four-movement framework, designed around your occasion.", menuSlug: "private-event", courses: coursesOf("private-event"), notes: [] };
-  }
-  const t = tags.map((x) => x.toLowerCase());
-  if (t.some((x) => x.startsWith("vegan"))) s.notes.push("Vegan versions of the paneer courses, with tofu or seasonal vegetables.");
-  if (t.some((x) => x.startsWith("gluten"))) s.notes.push("Breads swapped for rice; chaat prepared gluten-free.");
-  if (t.some((x) => x.startsWith("nut"))) s.notes.push("Nut-free preparation throughout.");
-  if (t.some((x) => x.startsWith("dairy"))) s.notes.push("Dairy-free gravies and desserts.");
-  if (t.some((x) => x.startsWith("jain"))) s.notes.push("No onion or garlic in any gravy.");
-  if (guests > 100) s.notes.push("A chaat station and passed bites for the welcome, given the number of guests.");
-  s.notes.push("Predominantly vegetarian. 100% Halal.");
-  return s;
-}
 
 /* ------------------------------------------------------------------ */
 /* Small building blocks                                               */
@@ -184,34 +129,6 @@ function Row({ label, value }: { label: string; value?: string }) {
   );
 }
 
-function EstimatedMenu({ suggestion, compact = false }: { suggestion: Suggestion; compact?: boolean }) {
-  return (
-    <div className={cn("rounded-frame border border-gold/40 bg-gold/[0.06] p-5", !compact && "md:p-7")}>
-      <p className="eyebrow text-[0.58rem] text-gold-light">Estimated menu</p>
-      <p className={cn("mt-2 font-display font-light text-gold-gradient", compact ? "text-2xl" : "text-display-sm")}>{suggestion.title}</p>
-      <p className="mt-2 text-sm text-fg/70">{suggestion.style}</p>
-      <ol className={cn("mt-4 space-y-1.5", compact && "hidden sm:block")}>
-        {suggestion.courses.map((c, i) => (
-          <li key={`${c}-${i}`} className="grid grid-cols-[1.5rem_1fr] gap-2 text-sm">
-            <span className="font-display text-gold-gradient">{String(i + 1).padStart(2, "0")}</span>
-            <span className="text-fg/85">{c}</span>
-          </li>
-        ))}
-      </ol>
-      {!compact && (
-        <ul className="mt-4 space-y-1 border-t border-line pt-4 text-xs text-fg/60">
-          {suggestion.notes.map((n) => (
-            <li key={n} className="flex gap-2">
-              <span aria-hidden className="mt-1.5 size-1 shrink-0 rounded-full bg-gold" />
-              {n}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* The wizard                                                          */
 /* ------------------------------------------------------------------ */
@@ -229,6 +146,7 @@ export function BookingWizard() {
   const [attempted, setAttempted] = useState(false);
   const [serverErrors, setServerErrors] = useState<Partial<Record<InquiryField, string>>>({});
   const mountedAt = useRef(0);
+  const honeypot = useRef<HTMLInputElement>(null);
   const [data, setData] = useState<Data>({
     experience: presetExperience,
     guests: 8,
@@ -273,7 +191,6 @@ export function BookingWizard() {
 
   const today = new Date().toISOString().slice(0, 10);
   const chosen = experiences.find((e) => e.slug === data.experience);
-  const suggestion = useMemo(() => suggestMenu(data.experience, data.guests, data.dietaryTags), [data.experience, data.guests, data.dietaryTags]);
 
   /* per-step client validation */
   const errors = useMemo(() => {
@@ -319,7 +236,7 @@ export function BookingWizard() {
     fd.set("dietary", [data.dietaryTags.join(", "), data.dietary.trim()].filter(Boolean).join(". "));
     if (data.budget) fd.set("budget", data.budget);
     fd.set("message", data.message);
-    fd.set("company", "");
+    fd.set("company", honeypot.current?.value ?? "");
     fd.set("startedAt", String(mountedAt.current));
     startTransition(() => action(fd));
   };
@@ -345,6 +262,14 @@ export function BookingWizard() {
           className="glass-strong border-gradient relative overflow-hidden rounded-[2rem] p-6 md:p-10"
         >
           <span aria-hidden className="orb orb-gold -right-[15%] -top-[40%] size-[55%] opacity-40" />
+
+          {/* Honeypot. Off-screen rather than `hidden`, since a bot that reads
+              the computed style will skip a field it can tell is not rendered.
+              A guest never reaches it: no label, no tab stop, hidden from AT. */}
+          <div aria-hidden className="absolute left-[-9999px] top-0 h-px w-px overflow-hidden">
+            <input ref={honeypot} type="text" name="company" tabIndex={-1} autoComplete="off" defaultValue="" />
+          </div>
+
           <div className="relative">
             {/* progress */}
             <div className="flex items-center justify-between gap-4">
@@ -492,7 +417,6 @@ export function BookingWizard() {
                   {/* 6 · Review */}
                   {step === 6 && (
                     <div className="mt-8 space-y-6">
-                      {suggestion && <EstimatedMenu suggestion={suggestion} />}
                       <dl>
                         <Row label="Occasion" value={data.experience ? experienceLabels[data.experience] : undefined} />
                         <Row label="Guests" value={String(data.guests)} />
@@ -502,6 +426,17 @@ export function BookingWizard() {
                         <Row label="Budget" value={data.budget ? budgetLabels[data.budget] : undefined} />
                         <Row label="Contact" value={`${data.name} · ${data.email}${data.phone ? ` · ${data.phone}` : ""}`} />
                       </dl>
+                      <div className="rounded-frame border border-gold/30 bg-gold/[0.05] p-5 md:p-6">
+                        <p className="eyebrow text-[0.58rem] text-gold-light">What happens next</p>
+                        <ol className="mt-4 grid gap-4 sm:grid-cols-3">
+                          {bookingProcess.slice(0, 3).map((s) => (
+                            <li key={s.step} className="flex items-start gap-3">
+                              <span className="font-display text-xl leading-none text-gold-gradient">{String(s.step).padStart(2, "0")}</span>
+                              <span className="text-sm leading-tight text-fg/80">{s.title}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
                       {state.status === "error" && state.formError && (
                         <p className="text-sm text-red-300" role="alert">
                           {state.formError}
@@ -540,9 +475,9 @@ export function BookingWizard() {
       {/* ------------------------------------------------ live summary */}
       <aside className="lg:col-span-5">
         <div className="space-y-4 lg:sticky lg:top-32">
-          <div className="glass rounded-frame p-6">
-            <p className="eyebrow text-[0.6rem] text-muted">Your enquiry so far</p>
-            <dl className="mt-4">
+          <SpotlightCard as="section" aria-labelledby="wizard-summary" className="group/card p-6 md:p-7">
+            <CardHeader id="wizard-summary" title="Your enquiry so far" icon={<ClipboardList className="size-4" strokeWidth={1.5} />} />
+            <dl className="mt-5">
               <Row label="Occasion" value={data.experience ? experienceLabels[data.experience] : undefined} />
               <Row label="Guests" value={step >= 1 || data.guests ? String(data.guests) : undefined} />
               <Row label="Date" value={data.eventDate || undefined} />
@@ -550,24 +485,27 @@ export function BookingWizard() {
               <Row label="Dietary" value={data.dietaryTags.length ? data.dietaryTags.join(", ") : undefined} />
               <Row label="Budget" value={data.budget ? budgetLabels[data.budget] : undefined} />
             </dl>
-          </div>
+          </SpotlightCard>
 
-          <AnimatePresence>
-            {suggestion && step >= 1 && step < 6 && (
-              <m.div key="suggest" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.5, ease }}>
-                <EstimatedMenu suggestion={suggestion} compact />
-              </m.div>
-            )}
-          </AnimatePresence>
+          <SpotlightCard as="section" aria-labelledby="wizard-process" className="group/card p-6 md:p-7">
+            <CardHeader id="wizard-process" title="How it works" icon={<Sparkles className="size-4" strokeWidth={1.5} />} />
+            <ol className="mt-5 space-y-3.5">
+              {bookingProcess.map((s) => (
+                <li key={s.step} className="flex items-baseline gap-3">
+                  <span className="font-display text-sm text-gold-gradient">{String(s.step).padStart(2, "0")}</span>
+                  <span className="font-display text-base leading-tight text-fg/85">{s.title}</span>
+                </li>
+              ))}
+            </ol>
+          </SpotlightCard>
 
-          <div className="glass rounded-frame p-6">
-            <p className="eyebrow text-[0.6rem] text-muted">Response time</p>
-            <p className="mt-2 text-sm text-fg/70">Within two working days. For urgent dates, mention it in your message.</p>
-            <p className="eyebrow mt-5 text-[0.6rem] text-muted">Or dine at the restaurant</p>
-            <p className="mt-2 text-sm text-fg/70">
+          <SpotlightCard as="section" aria-labelledby="wizard-visit" className="group/card p-6 md:p-7">
+            <CardHeader id="wizard-visit" title="Prefer to dine in?" icon={<MapPin className="size-4" strokeWidth={1.5} />} />
+            <p className="mt-4 text-sm text-fg/70">
               {site.restaurant.name}, {site.restaurant.address.street}, {site.restaurant.address.city}
             </p>
-            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+            <p className="mt-2 text-xs text-muted">{site.restaurant.hours} · Replies within two working days</p>
+            <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
               <Button href="/angel" variant="link">
                 About Angel
               </Button>
@@ -577,7 +515,7 @@ export function BookingWizard() {
                 </Button>
               )}
             </div>
-          </div>
+          </SpotlightCard>
         </div>
       </aside>
     </div>
