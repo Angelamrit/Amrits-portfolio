@@ -26,7 +26,7 @@ import { SpotlightCard } from "@/components/ui/SpotlightCard";
 export const metadata: Metadata = buildMetadata({
   title: "Menus",
   description:
-    "The Chef's Tasting Menu, House Specialties and Private Event Menu by Chef Amrit Pal Singh: predominantly vegetarian, 100% Halal, rooted in Punjab.",
+    "The Chef's Tasting Menu, House Specialties and Private Event Menu by Chef Amrit Pal Singh: predominantly vegetarian, 100% Halal, rooted in India.",
   path: "/menus",
 });
 
@@ -100,7 +100,14 @@ export default function MenusPage() {
               </Reveal>
               <Reveal delay={0.4}>
                 <div className="mt-10 flex flex-wrap gap-4">
-                  <Button href="/contact">Request a bespoke menu</Button>
+                  {site.restaurant.menuUrl && (
+                    <Button href={site.restaurant.menuUrl} external>
+                      View the full menu at Angel
+                    </Button>
+                  )}
+                  <Button href="/contact" variant="glass">
+                    Request a bespoke menu
+                  </Button>
                   {site.restaurant.resyUrl && (
                     <Button href={site.restaurant.resyUrl} variant="outline">
                       Reserve at Angel via Resy
@@ -110,7 +117,7 @@ export default function MenusPage() {
               </Reveal>
             </div>
             <Reveal delay={0.35} className="hidden lg:col-span-4 lg:flex lg:justify-end">
-              <Medallion text="Predominantly Vegetarian · 100% Halal · Punjab · " size={200} className="text-gold-light">
+              <Medallion text="Predominantly Vegetarian · 100% Halal · India · " size={200} className="text-gold-light">
                 <span className="block text-center font-display leading-none">
                   <span className="block text-[0.5rem] uppercase tracking-[0.3em] text-fg/60">Angel</span>
                   <span className="mt-1 block text-2xl text-gold-gradient">Menus</span>
@@ -159,6 +166,13 @@ export default function MenusPage() {
           <Suspense fallback={<div className="h-96" aria-busy="true" />}>
             <MenuSwitcher menus={resolved} />
           </Suspense>
+          {site.restaurant.menuUrl && (
+            <Reveal delay={0.1} className="mt-12 flex justify-center">
+              <Button href={site.restaurant.menuUrl} external>
+                View the full menu at Angel
+              </Button>
+            </Reveal>
+          )}
         </Container>
       </Section>
 

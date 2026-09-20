@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Award, Mail } from "lucide-react";
-import { press, pressOutlets, pressStats } from "@/data/press";
+import { Award, Beer, GlassWater, Mail, Martini, Wine } from "lucide-react";
+import { barLaunch, press, pressOutlets, pressStats } from "@/data/press";
+import { site } from "@/data/site";
 import { images } from "@/data/images";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { PressWall } from "@/components/press/PressWall";
@@ -29,6 +30,8 @@ export const metadata: Metadata = buildMetadata({
 const michelin = press.find((p) => p.id === "michelin-bib-gourmand");
 const khanna = press.find((p) => p.id === "michelin-vikas-khanna");
 const wall = press.filter((p) => p.id !== "michelin-bib-gourmand" && p.id !== "michelin-vikas-khanna");
+
+const barIcon = { wine: Wine, cocktails: Martini, beer: Beer, mocktails: GlassWater } as const;
 
 export default function PressPage() {
   return (
@@ -75,6 +78,68 @@ export default function PressPage() {
           </div>
         </Container>
       </section>
+
+      {/* ---------- restaurant news: the bar launch ---------- */}
+      <Section tone="raised" orbs="gold" pattern divider>
+        <Container>
+          <div className="max-w-2xl">
+            <Reveal>
+              <Eyebrow>Restaurant News · {barLaunch.date}</Eyebrow>
+              <Heading as="h2" size="lg" className="mt-8">
+                The bar is <Em shimmer>open.</Em>
+              </Heading>
+              <p className="mt-6 text-sm leading-relaxed text-fg/65">
+                A full bar joins the kitchen — wine, cocktails and beer built to sit alongside Chef Amrit&rsquo;s menu, not compete with it.
+              </p>
+            </Reveal>
+          </div>
+
+          {/* The quote and the four offerings share one row, so the cards line
+              up with the quote card rather than floating beside the heading. */}
+          <div className="mt-12 grid gap-6 lg:grid-cols-12 lg:gap-8">
+            <div className="flex flex-col lg:col-span-5">
+              <Reveal delay={0.1} className="flex-1">
+                <blockquote className="glass border-gradient relative flex h-full flex-col justify-center rounded-[1.5rem] p-7">
+                  <span aria-hidden className="pointer-events-none block font-display text-4xl leading-none text-gold-gradient opacity-40">
+                    &ldquo;
+                  </span>
+                  <p className="mt-2 font-display text-xl leading-snug text-fg/85 italic">{barLaunch.quote}</p>
+                  <cite className="mt-4 block text-[0.65rem] font-semibold tracking-[0.15em] text-gold-light not-italic uppercase">
+                    Chef Amrit Pal Singh
+                  </cite>
+                </blockquote>
+              </Reveal>
+              <Reveal delay={0.15}>
+                {site.restaurant.resyUrl && (
+                  <Button href={site.restaurant.resyUrl} external className="mt-6">
+                    Reserve a table
+                  </Button>
+                )}
+              </Reveal>
+            </div>
+
+            <RevealGroup delay={0.15} className="grid grid-cols-2 gap-3 lg:col-span-7">
+              {barLaunch.offerings.map((o) => {
+                const Icon = barIcon[o.kind];
+                return (
+                  <RevealItem key={o.kind}>
+                    <SpotlightCard className="h-full p-4 md:p-5" tilt={2}>
+                      <span aria-hidden className="orb orb-gold -right-[35%] -top-[45%] size-[50%] opacity-20" />
+                      <div className="relative">
+                        <span className="grid size-8 place-items-center rounded-full border border-gold/40 bg-gold/10">
+                          <Icon aria-hidden className="size-3.5 text-gold" strokeWidth={1.5} />
+                        </span>
+                        <p className="mt-3 font-display text-base text-fg">{o.label}</p>
+                        <p className="mt-1.5 text-xs leading-relaxed text-fg/60">{o.blurb}</p>
+                      </div>
+                    </SpotlightCard>
+                  </RevealItem>
+                );
+              })}
+            </RevealGroup>
+          </div>
+        </Container>
+      </Section>
 
       {/* ---------- the award ---------- */}
       {michelin && (

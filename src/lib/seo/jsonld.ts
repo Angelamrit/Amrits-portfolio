@@ -9,7 +9,7 @@ export function personJsonLd() {
     jobTitle: "Owner & Head Chef",
     description: chef.shortBio,
     url: site.url,
-    birthPlace: { "@type": "Place", name: "Pathankot, Punjab, India" },
+    birthPlace: { "@type": "Place", name: "Pathankot, India" },
     award: ["Michelin Bib Gourmand (Angel Indian Restaurant)"],
     worksFor: {
       "@type": "Restaurant",
@@ -32,7 +32,7 @@ export function restaurantJsonLd() {
     "@type": "Restaurant",
     name: site.restaurant.name,
     url: new URL("/angel", site.url).toString(),
-    servesCuisine: ["Indian", "Punjabi", "Vegetarian"],
+    servesCuisine: ["Indian", "North Indian", "Vegetarian"],
     address: {
       "@type": "PostalAddress",
       streetAddress: site.restaurant.address.street,

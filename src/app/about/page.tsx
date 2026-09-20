@@ -21,7 +21,7 @@ import { StatRow } from "@/components/ui/Stat";
 export const metadata: Metadata = buildMetadata({
   title: "The Chef · Amrit Pal Singh",
   description:
-    "From a mother's kitchen in Pathankot, Punjab, to a Michelin Bib Gourmand in Jackson Heights: the story, philosophy, training and recognition of Chef Amrit Pal Singh.",
+    "From a mother's kitchen in Pathankot, India, to a Michelin Bib Gourmand in Jackson Heights: the story, philosophy, training and recognition of Chef Amrit Pal Singh.",
   path: "/about",
 });
 

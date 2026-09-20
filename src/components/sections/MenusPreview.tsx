@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { menus } from "@/data/menus";
 import { dishById } from "@/data/dishes";
+import { site } from "@/data/site";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -34,11 +35,13 @@ export function MenusPreview() {
               </p>
             </Reveal>
           </div>
-          <Reveal delay={0.2}>
-            <Button href="/menus" variant="glass">
-              Explore all menus
-            </Button>
-          </Reveal>
+          {site.restaurant.menuUrl && (
+            <Reveal delay={0.2}>
+              <Button href={site.restaurant.menuUrl} external>
+                Full menu at Angel
+              </Button>
+            </Reveal>
+          )}
         </div>
 
         <RevealGroup className="mt-16 grid gap-6 lg:grid-cols-3">

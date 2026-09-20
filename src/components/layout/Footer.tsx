@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Award } from "lucide-react";
+import { ArrowUpRight, Code2, Compass, Globe } from "lucide-react";
 import { site } from "@/data/site";
 import { visibleNav } from "@/data/nav";
 import { chef } from "@/data/chef";
@@ -16,9 +16,34 @@ import { Medallion } from "@/components/ui/Medallion";
 import { Orbs } from "@/components/ui/Orbs";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
-import { Stat } from "@/components/ui/Stat";
 import { Wordmark } from "./Wordmark";
 import { BackToTop, LocalTime, SignatureName } from "./FooterClient";
+
+/**
+ * The two credit cards that replaced the single "Recognition" card: one for
+ * the restaurant's own web presence, one for the studio that built this site.
+ * Not sourced from `site` data since neither is about the chef himself.
+ */
+const externalLinkCards = [
+  {
+    id: "angel",
+    title: "Angel Indian Restaurant",
+    icon: Globe,
+    links: [
+      { kind: "web", label: "Official website", href: "https://www.angelindianrestaurant.com/" },
+      { kind: "instagram", label: "Instagram", href: "https://www.instagram.com/angel_indian_restaurant" },
+    ],
+  },
+  {
+    id: "studio",
+    title: "Aceva Tech",
+    icon: Code2,
+    links: [
+      { kind: "web", label: "Website", href: "https://acevatech.com/" },
+      { kind: "instagram", label: "Instagram", href: "https://www.instagram.com/acevatechnology" },
+    ],
+  },
+] as const;
 
 /* Lucide dropped its brand glyphs in v1, so the two social marks live here as plain strokes. */
 const socialSvg = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" } as const;
@@ -120,41 +145,91 @@ export function Footer() {
           </RevealItem>
 
           <RevealItem className="lg:col-span-3">
-            <SpotlightCard as="nav" aria-label="Footer" className="group/card h-full p-7 md:p-8">
-              <CardHeader title="Explore" icon={<ArrowUpRight className="size-4" strokeWidth={1.5} />} />
-              <ul className="mt-5 divide-y divide-line">
-                {visibleNav.map((item, i) => (
-                  <li key={item.href}>
-                    <Link href={item.href} className="group/link flex items-center justify-between gap-4 py-2.5">
-                      <span className="flex items-baseline gap-3">
-                        <span className="font-sans text-[0.55rem] font-semibold tracking-[0.2em] text-gold/50 transition-colors duration-500 group-hover/link:text-gold">
+            <SpotlightCard as="nav" aria-label="Footer" className="group/card relative h-full overflow-hidden p-7 md:p-8">
+              <span aria-hidden className="orb orb-gold -right-[35%] -top-[30%] size-[75%] opacity-25" />
+              <div className="relative">
+                <CardHeader title="Explore" icon={<Compass className="size-4" strokeWidth={1.5} />} />
+                {/* No dividers: the rows are separated by space and lit on hover
+                    instead, which keeps the resting state quiet. */}
+                <ul className="mt-5 grid gap-0.5">
+                  {visibleNav.map((item, i) => (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className="group/link relative flex items-center gap-3 overflow-hidden rounded-[0.9rem] px-3 py-2 transition-colors duration-500 ease-luxe hover:bg-gold/[0.07]"
+                      >
+                        {/* Gold rule that grows out of the left edge on hover. */}
+                        <span
+                          aria-hidden
+                          className="absolute left-0 top-1/2 h-0 w-px -translate-y-1/2 rounded-full bg-gradient-to-b from-gold-light to-gold-deep shadow-[0_0_10px_rgba(226,189,108,0.9)] transition-all duration-500 ease-luxe group-hover/link:h-1/2"
+                        />
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute inset-y-0 -left-2/3 w-2/3 -skew-x-12 bg-gradient-to-r from-transparent via-gold/15 to-transparent transition-all duration-700 ease-luxe group-hover/link:left-full"
+                        />
+                        <span className="relative font-display text-sm italic text-gold-gradient opacity-60 transition-opacity duration-500 ease-luxe group-hover/link:opacity-100">
                           {String(i + 1).padStart(2, "0")}
                         </span>
-                        <span className="font-display text-xl leading-none text-fg/85 transition-all duration-500 ease-luxe group-hover/link:translate-x-1 group-hover/link:text-gold-light">
+                        <span className="relative font-display text-xl leading-none text-fg/85 transition-all duration-500 ease-luxe group-hover/link:translate-x-0.5 group-hover/link:text-gold-light">
                           {item.label}
                         </span>
-                      </span>
-                      <ArrowUpRight
-                        aria-hidden
-                        className="size-3.5 -translate-x-1.5 text-gold-light opacity-0 transition-all duration-500 ease-luxe group-hover/link:translate-x-0 group-hover/link:opacity-100"
-                        strokeWidth={1.75}
-                      />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+                        <ArrowUpRight
+                          aria-hidden
+                          className="relative ml-auto size-3.5 -translate-x-1.5 text-gold-light opacity-0 transition-all duration-500 ease-luxe group-hover/link:translate-x-0 group-hover/link:opacity-100"
+                          strokeWidth={1.75}
+                        />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </SpotlightCard>
           </RevealItem>
 
-          <RevealItem className="lg:col-span-4">
-            <SpotlightCard as="section" aria-labelledby="footer-recognition" className="group/card flex h-full flex-col p-7 md:p-8">
-              <CardHeader id="footer-recognition" title="Recognition" icon={<Award className="size-4" strokeWidth={1.5} />} />
-              <div className="my-auto grid grid-cols-3 gap-4 py-8">
-                {chef.stats.map((s) => (
-                  <Stat key={s.label} {...s} />
-                ))}
-              </div>
-            </SpotlightCard>
+          <RevealItem className="flex flex-col gap-4 lg:col-span-4">
+            {externalLinkCards.map((card) => (
+              <SpotlightCard
+                key={card.id}
+                as="nav"
+                aria-label={card.title}
+                className="group/card flex flex-1 flex-col justify-center p-6 md:p-7"
+              >
+                <CardHeader title={card.title} icon={<card.icon className="size-4" strokeWidth={1.5} />} />
+                <ul className="mt-5 grid gap-2.5">
+                  {card.links.map((link) => (
+                    <li key={link.label}>
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group/link relative flex items-center gap-3 overflow-hidden rounded-[1.15rem] border border-gold/20 bg-gold/[0.04] px-3.5 py-3 transition-all duration-500 ease-luxe hover:border-gold/55 hover:bg-gold/[0.09] hover:shadow-glow"
+                      >
+                        {/* A band of light that crosses the tile on hover. */}
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute inset-y-0 -left-2/3 w-2/3 -skew-x-12 bg-gradient-to-r from-transparent via-gold/20 to-transparent transition-all duration-700 ease-luxe group-hover/link:left-full"
+                        />
+                        <span className="relative grid size-9 shrink-0 place-items-center rounded-full border border-gold/40 bg-gold/10 text-gold shadow-[0_0_18px_-8px_rgba(226,189,108,0.8)] transition-all duration-500 ease-luxe group-hover/link:border-gold group-hover/link:bg-gradient-to-br group-hover/link:from-gold-light group-hover/link:to-gold-deep group-hover/link:text-charcoal group-hover/link:shadow-glow">
+                          {link.kind === "instagram" ? (
+                            <InstagramIcon className="size-4" />
+                          ) : (
+                            <Globe aria-hidden className="size-4" strokeWidth={1.5} />
+                          )}
+                        </span>
+                        <span className="relative font-display text-base leading-none text-fg/85 transition-colors duration-500 ease-luxe group-hover/link:text-gold-light">
+                          {link.label}
+                        </span>
+                        <ArrowUpRight
+                          aria-hidden
+                          className="relative ml-auto size-3.5 -translate-x-1.5 text-gold-light opacity-0 transition-all duration-500 ease-luxe group-hover/link:translate-x-0 group-hover/link:opacity-100"
+                          strokeWidth={1.75}
+                        />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </SpotlightCard>
+            ))}
           </RevealItem>
         </RevealGroup>
 

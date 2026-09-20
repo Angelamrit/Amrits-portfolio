@@ -10,7 +10,7 @@ import { Section } from "@/components/ui/Section";
 /** The statement, split into phrases. Gold phrases are the ones to remember. */
 const phrases: { text: string; gold?: boolean }[] = [
   { text: "Simple but good.", gold: true },
-  { text: "Punjabi roots, bold flavours, and nothing on the plate that does not need to be there." },
+  { text: "Indian roots, bold flavours, and nothing on the plate that does not need to be there." },
   { text: "From a mother's kitchen in Pathankot" },
   { text: "to a Michelin Bib Gourmand in Queens,", gold: true },
   { text: "every dish still follows that one rule." },

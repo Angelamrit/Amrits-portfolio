@@ -230,6 +230,24 @@ export const pressOutlets = [
   "Culinary Backstreets",
 ];
 
+/**
+ * The full bar launch, announced on angelindianrestaurant.com/full-bar-launch
+ * (2 January 2026). First-party restaurant news, not third-party press — kept
+ * separate from `press` above so the coverage wall stays "what the critics
+ * wrote." Paraphrased from the release; the `quote` line is Chef Amrit's own
+ * wording, copied exactly.
+ */
+export const barLaunch = {
+  date: "January 2026",
+  quote: "The addition of our full bar allows us to complete the dining experience.",
+  offerings: [
+    { kind: "wine" as const, label: "Wine", blurb: "Whites and reds chosen to sit with the spice, not fight it." },
+    { kind: "cocktails" as const, label: "Cocktails", blurb: "House syrups and fresh spice alongside the classics, done properly." },
+    { kind: "beer" as const, label: "Beer", blurb: "Local and imported, built for the tandoor and the biryani." },
+    { kind: "mocktails" as const, label: "Mocktails", blurb: "Non-alcoholic, no less considered." },
+  ],
+};
+
 /** Credentials strip. Genuine facts only. */
 export const pressMarquee = [
   "MICHELIN Bib Gourmand · 2021 New York selection",

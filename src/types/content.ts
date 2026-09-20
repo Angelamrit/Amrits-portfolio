@@ -28,6 +28,8 @@ export type SiteConfig = {
     phone?: string;
     resyUrl?: string;
     mapsUrl?: string;
+    /** The restaurant's own full menu, with prices, on angelindianrestaurant.com. */
+    menuUrl?: string;
     hours: string;
     notes: string[];
   };

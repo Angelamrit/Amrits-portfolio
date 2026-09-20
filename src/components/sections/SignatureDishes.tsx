@@ -1,4 +1,5 @@
 import { signatureDishes } from "@/data/dishes";
+import { site } from "@/data/site";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -24,15 +25,17 @@ export function SignatureDishes() {
             </Reveal>
             <Reveal delay={0.2}>
               <p className="mt-8 max-w-xl text-lead text-fg/65">
-                Predominantly vegetarian and 100% Halal, from Punjabi street food to slow-cooked tradition. Hover or tap a dish to see it.
+                Predominantly vegetarian and 100% Halal, from Indian street food to slow-cooked tradition. Hover or tap a dish to see it.
               </p>
             </Reveal>
           </div>
-          <Reveal delay={0.25}>
-            <Button href="/menus" variant="glass">
-              See the full menus
-            </Button>
-          </Reveal>
+          {site.restaurant.menuUrl && (
+            <Reveal delay={0.25}>
+              <Button href={site.restaurant.menuUrl} external>
+                Full menu at Angel
+              </Button>
+            </Reveal>
+          )}
         </div>
 
         <Reveal delay={0.2} className="mt-16">

@@ -157,10 +157,15 @@ export default function AngelPage() {
                 </Heading>
               </Reveal>
             </div>
-            <Reveal delay={0.2}>
+            <Reveal delay={0.2} className="flex flex-wrap gap-3">
               <Button href="/menus" variant="glass">
                 Explore the menus
               </Button>
+              {site.restaurant.menuUrl && (
+                <Button href={site.restaurant.menuUrl} external>
+                  Full menu at Angel
+                </Button>
+              )}
             </Reveal>
           </div>
 
