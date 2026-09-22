@@ -1,7 +1,7 @@
 "use client";
 
 import { startTransition, useActionState, useOptimistic, useState } from "react";
-import { Check, LoaderCircle, Send, Trash2 } from "lucide-react";
+import { Check, ChevronDown, LoaderCircle, Mail, Send, Trash2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { idleState, type EditorState } from "@/lib/content/state";
 import type { BookingNote, BookingStatus } from "@/lib/bookings/bookings";
@@ -12,7 +12,7 @@ import {
   removeBooking,
 } from "@/app/admin/(dashboard)/bookings/actions";
 import { relativeTime } from "../format";
-import { statusLabel, statusStyle } from "./status";
+import { statusLabel, statusStyle, suggestLabel } from "./status";
 
 /**
  * The interactive parts of a booking: moving it along, writing notes about it,
@@ -245,5 +245,108 @@ export function CopyValue({ value, label }: { value: string; label: string }) {
         <path d="M5 15V5a2 2 0 0 1 2-2h10" />
       </svg>
     </button>
+  );
+}
+
+/**
+ * One tap to move a booking to the status it most likely belongs in — the
+ * suggestion comes from `attentionFor`. Used on list rows and on the booking
+ * page, so the obvious next step never needs the booking opened first.
+ */
+export function QuickStatus({
+  id,
+  to,
+  className,
+}: {
+  id: string;
+  to: BookingStatus;
+  className?: string;
+}) {
+  const [state, action, pending] = useActionState<EditorState, FormData>(changeBookingStatus, idleState);
+  const done = state.status === "saved";
+
+  return (
+    <button
+      type="button"
+      disabled={pending || done}
+      title={state.status === "error" ? state.message : undefined}
+      onClick={() => {
+        const data = new FormData();
+        data.set("id", id);
+        data.set("status", to);
+        startTransition(() => action(data));
+      }}
+      className={cn(
+        "relative z-10 inline-flex shrink-0 items-center gap-1.5 rounded-pill border px-3 py-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em] transition-all duration-300 disabled:cursor-default",
+        state.status === "error"
+          ? "border-[#e59a93]/50 text-[#eeb3ad]"
+          : cn(statusStyle[to].pill, "hover:shadow-[0_0_18px_-6px_currentColor]"),
+        className,
+      )}
+    >
+      {pending ? (
+        <LoaderCircle aria-hidden className="size-3 animate-spin" strokeWidth={2.2} />
+      ) : done ? (
+        <Check aria-hidden className="size-3" strokeWidth={2.4} />
+      ) : (
+        <span aria-hidden className={cn("size-1.5 rounded-pill", statusStyle[to].dot)} />
+      )}
+      {state.status === "error" ? "Try again" : done ? statusLabel[to] : suggestLabel[to]}
+    </button>
+  );
+}
+
+export type ReplyTemplate = { key: string; label: string; hint: string; href: string };
+
+/**
+ * "Reply by email", with the three replies a chef actually sends ready-written:
+ * an acknowledgement, a confirmation and a polite decline. Each opens in the
+ * chef's own mail program, addressed and referenced, to be edited before it
+ * goes — nothing is sent from here.
+ */
+export function ReplyMenu({ templates }: { templates: ReplyTemplate[] }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div
+      className="relative"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setOpen(false);
+      }}
+    >
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={() => setOpen((value) => !value)}
+        className="btn-primary inline-flex items-center gap-2 rounded-pill px-5 py-3 font-sans text-[0.68rem] font-semibold uppercase tracking-[0.16em]"
+      >
+        <Mail aria-hidden className="size-3.5" strokeWidth={1.8} />
+        Reply by email
+        <ChevronDown aria-hidden className={cn("size-3.5 transition-transform duration-300", open && "rotate-180")} strokeWidth={2} />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="glass-strong absolute right-0 top-full z-30 mt-2 w-72 overflow-hidden rounded-2xl border border-gold/25 p-1.5 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.8)]"
+        >
+          {templates.map((template) => (
+            <a
+              key={template.key}
+              role="menuitem"
+              href={template.href}
+              onClick={() => setOpen(false)}
+              className="block rounded-xl px-3.5 py-2.5 transition-colors duration-200 hover:bg-gold/10 focus-visible:bg-gold/10 focus-visible:outline-none"
+            >
+              <span className="block text-[0.86rem] text-fg">{template.label}</span>
+              <span className="mt-0.5 block text-[0.72rem] text-fg/45">{template.hint}</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

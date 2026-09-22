@@ -411,25 +411,41 @@
 }
 
 /* Ambient orbs */
+/*
+  Ambient orbs: soft pools of light behind the content.
+
+  These used to be a radial gradient with `filter: blur(80px)` on top, and
+  that filter was the single most expensive thing on the site. A blur that
+  large over an element up to 900px across, on a layer that is also animating,
+  has to be recomputed every frame the page scrolls or the orb moves. Measured
+  in the dashboard it held pages to roughly 8 frames a second (120ms a frame);
+  removing only the filter brought every page to a steady 60 (17ms), and the
+  public home page from ~230ms a frame to ~80ms.
+
+  The blur was almost invisible anyway: the gradient already fades to nothing.
+  What it contributed was a gentler fall-off, and that is reproduced here with
+  the stops themselves — a bell-shaped curve instead of a straight ramp — which
+  costs nothing to draw. The drift animation stays: moving a layer that has no
+  filter is a cheap compositor transform.
+*/
 @utility orb {
   position: absolute;
   border-radius: 999px;
-  filter: blur(80px);
   pointer-events: none;
   will-change: transform;
   animation: var(--animate-float);
 }
 
 @utility orb-gold {
-  background: radial-gradient(circle, rgba(255, 220, 150, 0.5), rgba(255, 220, 150, 0) 70%);
+  background: radial-gradient(circle, rgba(255, 220, 150, 0.5) 0%, rgba(255, 220, 150, 0.42) 18%, rgba(255, 220, 150, 0.27) 38%, rgba(255, 220, 150, 0.12) 55%, rgba(255, 220, 150, 0.035) 68%, rgba(255, 220, 150, 0.0) 78%);
 }
 
 @utility orb-ember {
-  background: radial-gradient(circle, rgba(120, 60, 25, 0.5), rgba(120, 60, 25, 0) 70%);
+  background: radial-gradient(circle, rgba(120, 60, 25, 0.5) 0%, rgba(120, 60, 25, 0.42) 18%, rgba(120, 60, 25, 0.27) 38%, rgba(120, 60, 25, 0.12) 55%, rgba(120, 60, 25, 0.035) 68%, rgba(120, 60, 25, 0.0) 78%);
 }
 
 @utility orb-ivory {
-  background: radial-gradient(circle, rgba(255, 240, 210, 0.2), rgba(255, 240, 210, 0) 70%);
+  background: radial-gradient(circle, rgba(255, 240, 210, 0.2) 0%, rgba(255, 240, 210, 0.168) 18%, rgba(255, 240, 210, 0.108) 38%, rgba(255, 240, 210, 0.048) 55%, rgba(255, 240, 210, 0.014) 68%, rgba(255, 240, 210, 0.0) 78%);
 }
 
 /* Fine grid pattern */

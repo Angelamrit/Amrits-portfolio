@@ -73,3 +73,65 @@ export function daysUntil(value: string | undefined, today: string): string | nu
   if (diff === -1) return "yesterday";
   return diff > 0 ? `in ${diff} days` : `${-diff} days ago`;
 }
+
+/** Whole days between two calendar days, `to - from`. */
+export function dayDiff(from: string, to: string): number {
+  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+}
+
+export type Attention = {
+  /** `act` asks for a change of status; `note` only points something out. */
+  tone: "act" | "note";
+  text: string;
+  /** The status the booking most likely belongs in now, offered as one tap. */
+  suggest?: BookingStatus;
+};
+
+/** A reply that has waited this many days is flagged as overdue. */
+const REPLY_DUE_DAYS = 2;
+
+/**
+ * What, if anything, is out of step with a booking's status.
+ *
+ * A status is set by hand and the calendar keeps moving underneath it, so a
+ * list quietly fills with "confirmed" dinners that happened last week and
+ * enquiries nobody answered. These rules catch exactly those, and each one
+ * suggests the status that would put it right — the chef confirms with a tap
+ * rather than the dashboard changing a record on its own.
+ */
+export function attentionFor(
+  booking: { status: BookingStatus; eventDate?: string; createdAt: number },
+  today: string,
+): Attention | null {
+  const dateGap = booking.eventDate ? dayDiff(today, booking.eventDate) : null;
+  const passed = dateGap !== null && dateGap < 0;
+
+  switch (booking.status) {
+    case "new": {
+      if (passed) return { tone: "act", text: "The date has passed without a reply", suggest: "declined" };
+      const received = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(booking.createdAt);
+      const waited = dayDiff(received, today);
+      if (waited >= REPLY_DUE_DAYS) return { tone: "act", text: `Waiting ${waited} days for a reply`, suggest: "contacted" };
+      return null;
+    }
+    case "contacted":
+      return passed ? { tone: "act", text: "The date passed before it was confirmed", suggest: "declined" } : null;
+    case "confirmed":
+      if (passed) return { tone: "act", text: "The event has happened", suggest: "completed" };
+      if (dateGap !== null && dateGap <= 3) return { tone: "note", text: `Coming up ${daysUntil(booking.eventDate, today)}` };
+      return null;
+    case "completed":
+      return dateGap !== null && dateGap > 0 ? { tone: "note", text: "Marked completed, but the date is still ahead" } : null;
+    default:
+      return null;
+  }
+}
+
+/** Labels for the one-tap buttons that apply a suggestion. */
+export const suggestLabel: Record<BookingStatus, string> = {
+  new: "Mark new",
+  contacted: "Mark contacted",
+  confirmed: "Mark confirmed",
+  completed: "Mark completed",
+  declined: "Mark declined",
+};
