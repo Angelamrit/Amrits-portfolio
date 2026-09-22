@@ -1,255 +1,230 @@
 import type { Metadata } from "next";
-import { Database, Eye, HardDriveDownload, ShieldCheck } from "lucide-react";
-import { getOverview, rangeFromKey } from "@/lib/analytics/aggregate";
-import { credentialKind } from "@/lib/admin/config";
-import { store } from "@/lib/store";
-import { BarList, ShareBars } from "@/components/admin/BarList";
-import { HourStrip } from "@/components/admin/HourStrip";
-import { LiveFeed } from "@/components/admin/LiveFeed";
-import { LivePulse } from "@/components/admin/LivePulse";
-import { PageHeading } from "@/components/admin/PageHeading";
+import Link from "next/link";
+import {
+  ArrowRight,
+  BarChart3,
+  CalendarCheck,
+  CalendarPlus,
+  CircleCheck,
+  Clock,
+  ImagePlus,
+  Inbox,
+  UtensilsCrossed,
+} from "lucide-react";
+import { getOverview } from "@/lib/analytics/aggregate";
+import { listBookings, summarise, todayInNewYork } from "@/lib/bookings/bookings";
+import { experienceLabels } from "@/lib/validation/inquiry";
 import { Panel } from "@/components/admin/Panel";
-import { RangeTabs } from "@/components/admin/RangeTabs";
-import { StatTile } from "@/components/admin/StatTile";
-import { TrafficChart } from "@/components/admin/TrafficChart";
-import { change, compact, countryName, duration, percent } from "@/components/admin/format";
+import { daysUntil, formatEventDate } from "@/components/admin/bookings/status";
+import { compact, relativeTime } from "@/components/admin/format";
 
-export const metadata: Metadata = { title: "Overview" };
+export const metadata: Metadata = { title: "Home" };
 
 /**
- * What the chef opens first: how many people came to the site, where they came
- * from and what they read.
+ * The first screen after signing in, and the answer to "what do I need to do?"
  *
- * Every figure on this page is computed from the site's own visit log. There
- * is no third-party analytics script anywhere on this site, which is why the
- * public pages carry no consent banner — nothing that identifies a visitor is
- * ever collected, and the log holds no cookie, no IP address and no name.
+ * Deliberately not a wall of charts. The chef opens this between services with
+ * a minute to spare, so it leads with the only things that need him — guests
+ * waiting for a reply and events coming up — then offers the handful of jobs
+ * he actually comes here to do as single taps. The visitor numbers are a
+ * glance at the bottom, with the full picture one click away.
  */
-export default async function OverviewPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ range?: string }>;
-}) {
-  const { range: requested } = await searchParams;
-  const range = rangeFromKey(requested);
-  const data = await getOverview(range.key);
-  // The instant the roll-up was taken, rather than a second reading of the
-  // clock: the live feed's relative times must agree with the range that was
-  // actually measured, and a render is not the place to read a clock.
-  const now = data.to;
 
-  const { totals, previous } = data;
-  const comparedTo = previous ? `vs previous ${range.label}` : undefined;
-  const spark = data.series.slice(-12).map((point) => point.views);
+function greeting(now: number): string {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: "America/New_York" }).format(now),
+  );
+  if (hour < 5) return "Good evening";
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
 
-  const hasVisits = totals.views > 0;
+const shortcuts = [
+  { href: "/admin/bookings/new", label: "Add a booking", sub: "Taken by phone", icon: CalendarPlus },
+  { href: "/admin/bookings", label: "All bookings", sub: "Reply, confirm, add notes", icon: CalendarCheck },
+  { href: "/admin/menus", label: "Edit a menu", sub: "Courses and wording", icon: UtensilsCrossed },
+  { href: "/admin/restaurant", label: "Opening hours", sub: "Address, phone, links", icon: Clock },
+  { href: "/admin/gallery", label: "Add photos", sub: "Upload and caption", icon: ImagePlus },
+  { href: "/admin/visitors", label: "Visitors", sub: "Who is on the site", icon: BarChart3 },
+];
+
+export default async function HomePage() {
+  const [bookings, day, week] = await Promise.all([listBookings(), getOverview("24h"), getOverview("7d")]);
+
+  const now = week.to;
+  const today = todayInNewYork(now);
+  const summary = summarise(bookings, now);
+
+  const waiting = bookings.filter((booking) => booking.status === "new").slice(0, 5);
+  const upcoming = bookings
+    .filter((booking) => booking.status === "confirmed" && booking.eventDate && booking.eventDate >= today)
+    .sort((a, b) => (a.eventDate ?? "").localeCompare(b.eventDate ?? ""))
+    .slice(0, 4);
+
+  const dateLine = new Date(now).toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "America/New_York",
+  });
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeading
-        eyebrow="Dashboard"
-        title="Overview"
-        description={`Who visited chefamritpalsingh.com in the last ${range.label}, and what they looked at.`}
-      >
-        <LivePulse count={data.liveVisitors} />
-        <RangeTabs active={range.key} />
-      </PageHeading>
+      <header>
+        <p className="eyebrow text-gold/75">{dateLine}</p>
+        <h1 className="mt-3 font-display text-display-md font-light leading-none text-fg">
+          {greeting(now)}, <em className="font-normal italic text-gold-gradient">Chef</em>
+        </h1>
+        <p className="mt-3 text-[0.92rem] text-fg/65">
+          {summary.awaitingReply === 0
+            ? "Every enquiry has been answered."
+            : `${summary.awaitingReply} ${summary.awaitingReply === 1 ? "guest is" : "guests are"} waiting for your reply.`}
+        </p>
+      </header>
 
-      {/* ---- The headline figures ------------------------------------- */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile
-          featured
-          label="Visitors"
-          value={compact(totals.visitors)}
-          comparedTo={comparedTo}
-          change={change(totals.visitors, previous?.visitors)}
-          hint={hasVisits ? "First period on record" : "Nothing recorded yet"}
-          spark={spark}
-          className="sm:col-span-2"
-        />
-        <StatTile
-          label="Page views"
-          value={compact(totals.views)}
-          comparedTo={comparedTo}
-          change={change(totals.views, previous?.views)}
-          hint={hasVisits ? "First period on record" : "Nothing recorded yet"}
-        />
-        <StatTile
-          label="Visits"
-          value={compact(totals.sessions)}
-          comparedTo={comparedTo}
-          change={change(totals.sessions, previous?.sessions)}
-          hint={hasVisits ? "First period on record" : "Nothing recorded yet"}
-        />
-      </div>
-
-      {/* ---- Traffic over time, with the engagement read beside it ----- */}
-      <div className="grid gap-4 xl:grid-cols-4">
+      <div className="grid gap-4 xl:grid-cols-5">
+        {/* ---- needs a reply ---- */}
         <Panel
-          title="Traffic"
-          hint={`Page views and visitors across the last ${range.label}.`}
+          title="Waiting for your reply"
           className="xl:col-span-3"
+          action={
+            summary.awaitingReply > 0 ? (
+              <Link
+                href="/admin/bookings?status=new"
+                className="inline-flex shrink-0 items-center gap-1.5 text-[0.7rem] uppercase tracking-[0.16em] text-gold-light/80 transition-colors hover:text-gold-light"
+              >
+                See all <ArrowRight aria-hidden className="size-3.5" strokeWidth={1.8} />
+              </Link>
+            ) : undefined
+          }
         >
-          <TrafficChart points={data.series} rangeLabel={range.label} />
+          {waiting.length === 0 ? (
+            <div className="flex items-center gap-4 rounded-xl border border-[#7fc39b]/25 bg-[#7fc39b]/[0.06] px-5 py-5">
+              <CircleCheck aria-hidden className="size-6 shrink-0 text-[#7fc39b]" strokeWidth={1.5} />
+              <p className="text-[0.9rem] text-fg/75">All caught up. New enquiries from the website appear here.</p>
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {waiting.map((booking) => (
+                <li key={booking.id}>
+                  <Link
+                    href={`/admin/bookings/${booking.id}`}
+                    className="group flex items-center gap-4 rounded-xl border border-gold/25 bg-gold/[0.05] px-4 py-3.5 transition-all duration-300 hover:border-gold/50 hover:bg-gold/[0.09]"
+                  >
+                    <span
+                      aria-hidden
+                      className="grid size-10 shrink-0 place-items-center rounded-full border border-gold/30 bg-gold/10 font-display text-[1.05rem] text-gold-light"
+                    >
+                      {booking.name.trim().charAt(0).toUpperCase()}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[0.95rem] font-medium text-fg">{booking.name}</span>
+                      <span className="block truncate text-[0.76rem] text-fg/50">
+                        {experienceLabels[booking.experience]} · {booking.guests} guests ·{" "}
+                        {formatEventDate(booking.eventDate)}
+                      </span>
+                    </span>
+                    <span className="hidden shrink-0 text-[0.72rem] text-fg/40 sm:block">
+                      {relativeTime(booking.createdAt, now)}
+                    </span>
+                    <ArrowRight
+                      aria-hidden
+                      className="size-4 shrink-0 text-gold/50 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-gold"
+                      strokeWidth={1.8}
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </Panel>
 
-        <Panel title="How they read" hint="Depth and length of a typical visit.">
-          <dl className="flex flex-col divide-y divide-fg/8">
-            <div className="flex items-baseline justify-between gap-4 pb-4">
-              <dt className="text-[0.82rem] text-fg/55">Pages per visit</dt>
-              <dd className="font-sans text-[1.3rem] font-semibold tnum text-fg">
-                {totals.viewsPerSession.toFixed(1)}
-              </dd>
+        {/* ---- coming up ---- */}
+        <Panel title="Coming up" className="xl:col-span-2">
+          {upcoming.length === 0 ? (
+            <div className="flex items-center gap-4 rounded-xl border border-dashed border-fg/12 px-5 py-5">
+              <Inbox aria-hidden className="size-6 shrink-0 text-fg/30" strokeWidth={1.5} />
+              <p className="text-[0.88rem] text-fg/50">No confirmed events yet.</p>
             </div>
-            <div className="flex items-baseline justify-between gap-4 py-4">
-              <dt className="text-[0.82rem] text-fg/55">Average visit</dt>
-              <dd className="font-sans text-[1.3rem] font-semibold tnum text-fg">
-                {duration(totals.avgSessionSeconds)}
-              </dd>
-            </div>
-            <div className="flex items-baseline justify-between gap-4 pt-4">
-              <dt className="text-[0.82rem] text-fg/55">
-                Left after one page
-                <span className="mt-0.5 block text-[0.7rem] text-fg/35">Lower is better</span>
-              </dt>
-              <dd className="font-sans text-[1.3rem] font-semibold tnum text-fg">
-                {hasVisits ? percent(totals.bounceRate) : "—"}
-              </dd>
-            </div>
-          </dl>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {upcoming.map((booking) => {
+                const date = new Date(`${booking.eventDate}T00:00:00Z`);
+                return (
+                  <li key={booking.id}>
+                    <Link
+                      href={`/admin/bookings/${booking.id}`}
+                      className="flex items-center gap-4 rounded-xl border border-fg/10 bg-fg/[0.03] px-4 py-3 transition-colors duration-300 hover:border-[#7fc39b]/40"
+                    >
+                      <span className="flex w-12 shrink-0 flex-col items-center rounded-lg border border-[#7fc39b]/30 bg-[#7fc39b]/[0.08] py-1.5">
+                        <span className="text-[0.58rem] uppercase tracking-[0.14em] text-[#9fd8b6]">
+                          {date.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" })}
+                        </span>
+                        <span className="font-sans text-[1.15rem] font-semibold leading-none text-fg">
+                          {date.getUTCDate()}
+                        </span>
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[0.9rem] text-fg">{booking.name}</span>
+                        <span className="block truncate text-[0.74rem] text-fg/45">
+                          {booking.guests} guests · {daysUntil(booking.eventDate, today)}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </Panel>
       </div>
 
-      {/* ---- Where they went and where they came from ------------------ */}
-      <div className="grid gap-4 xl:grid-cols-4">
-        <Panel title="Most-read pages" hint="Ranked by page views in this period." className="xl:col-span-2">
-          <BarList
-            rows={data.topPages.map((row) => ({
-              label: row.label,
-              value: row.views,
-              secondary: row.visitors,
-            }))}
-            emptyMessage="No pages have been opened in this period."
-          />
-        </Panel>
-
-        <Panel title="Where visitors came from" hint="The site that sent them. Direct means typed in or bookmarked.">
-          <BarList
-            rows={data.referrers.map((row) => ({
-              label: row.label,
-              display: row.label === "direct" ? "Direct" : row.label,
-              value: row.views,
-              secondary: row.visitors,
-            }))}
-            emptyMessage="No referrals recorded yet."
-          />
-        </Panel>
-
-        <Panel title="Devices" hint="What they were reading on.">
-          <ShareBars
-            rows={data.devices.map((row, index) => ({
-              label: row.device,
-              value: row.views,
-              share: row.share,
-              slot: (index + 1) as 1 | 2 | 3,
-            }))}
-            emptyMessage="Nothing recorded yet."
-          />
-        </Panel>
-      </div>
-
-      {/* ---- Rhythm of the day, and the last few arrivals -------------- */}
-      <div className="grid gap-4 xl:grid-cols-4">
-        <Panel
-          title="Hours of the day"
-          hint="Views by hour, UTC, across this period."
-          className="xl:col-span-2"
-          // The neighbouring panel is a list and sets the row height; without
-          // this the strip would sit against the top of a mostly empty card.
-          bodyClassName="flex flex-1 flex-col justify-center"
-        >
-          <HourStrip hours={data.hourly} />
-        </Panel>
-
-        <Panel
-          title="Latest visits"
-          hint="The most recent pages opened."
-          className="xl:col-span-2"
-          bodyClassName="pt-2"
-        >
-          <LiveFeed visits={data.recent} now={now} />
-        </Panel>
-      </div>
-
-      {data.countries.length > 0 && (
-        <div className="grid gap-4 xl:grid-cols-4">
-          <Panel title="Countries" hint="Where visitors connected from." className="xl:col-span-2">
-            <BarList
-              rows={data.countries.map((row) => ({
-                label: row.label,
-                display: countryName(row.label),
-                value: row.views,
-                secondary: row.visitors,
-              }))}
-              emptyMessage="No location data available from this host."
-            />
-          </Panel>
-        </div>
-      )}
-
-      {/* ---- What is running behind all of this ------------------------ */}
-      <Panel title="How this works" hint="The counter is part of this site — no third-party analytics.">
-        <ul className="grid gap-x-8 gap-y-5 sm:grid-cols-2 xl:grid-cols-4">
-          <li className="flex min-w-0 gap-3">
-            <ShieldCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-gold/70" strokeWidth={1.5} />
-            <span className="text-[0.82rem] leading-relaxed text-fg/60">
-              <span className="block text-fg/85">No cookies, no names</span>
-              Visitors are counted with a hash that is re-salted daily.
-            </span>
-          </li>
-          <li className="flex min-w-0 gap-3">
-            <Database aria-hidden className="mt-0.5 size-4 shrink-0 text-gold/70" strokeWidth={1.5} />
-            <span className="min-w-0 text-[0.82rem] leading-relaxed text-fg/60">
-              <span className="block text-fg/85">{store.kind}</span>
-              {/* A filesystem path has no spaces to break at, so it would push
-                  the panel off the side of a phone without `break-all`. The
-                  monospace face is what makes the wrap read as deliberate. */}
-              {store.location && (
-                <span className="mt-0.5 block break-all font-mono text-[0.7rem] text-fg/45">{store.location}</span>
-              )}
-            </span>
-          </li>
-          <li className="flex min-w-0 gap-3">
-            <Eye aria-hidden className="mt-0.5 size-4 shrink-0 text-gold/70" strokeWidth={1.5} />
-            <span className="text-[0.82rem] leading-relaxed text-fg/60">
-              <span className="block text-fg/85">History</span>
-              {data.trackingSince
-                ? `Counting since ${new Date(`${data.trackingSince}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}.`
-                : "Nothing recorded yet."}
-            </span>
-          </li>
-          <li className="flex min-w-0 gap-3">
-            <HardDriveDownload aria-hidden className="mt-0.5 size-4 shrink-0 text-gold/70" strokeWidth={1.5} />
-            <span className="text-[0.82rem] leading-relaxed text-fg/60">
-              <span className="block text-fg/85">Sign-in</span>
-              {credentialKind() === "hash" ? "Password stored as a scrypt hash." : "Password set in plain text — a hash is safer."}
-            </span>
-          </li>
+      {/* ---- the jobs, one tap each ---- */}
+      <section aria-labelledby="shortcuts">
+        <h2 id="shortcuts" className="eyebrow mb-3 text-fg/40">
+          Quick actions
+        </h2>
+        <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          {shortcuts.map(({ href, label, sub, icon: Icon }) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="glass border-gradient spotlight group flex h-full flex-col gap-3 rounded-frame p-4 transition-shadow duration-500 hover:shadow-glow sm:p-5"
+              >
+                <span className="grid size-10 place-items-center rounded-full border border-gold/25 bg-gold/10 text-gold transition-colors duration-300 group-hover:bg-gold/20">
+                  <Icon aria-hidden className="size-[1.1rem]" strokeWidth={1.6} />
+                </span>
+                <span>
+                  <span className="block text-[0.9rem] font-medium text-fg">{label}</span>
+                  <span className="mt-0.5 block text-[0.72rem] text-fg/45">{sub}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
         </ul>
+      </section>
 
-        {!store.durable && (
-          <p className="mt-6 flex items-start gap-3 rounded-xl border border-[#e59a93]/30 bg-[#e59a93]/[0.07] px-4 py-3.5 text-[0.82rem] leading-relaxed text-[#e59a93]">
-            <span className="mt-0.5 shrink-0">⚠</span>
-            This server is writing to a temporary folder, so these numbers will be lost when it restarts. Set
-            <span className="mx-1 font-mono text-[0.78rem]">DATA_DIR</span>
-            to a directory that persists.
-          </p>
-        )}
-      </Panel>
-
-      <p className="pb-4 text-center text-[0.72rem] text-fg/45">
-        Totals exclude obvious bots. All times UTC.
-      </p>
+      {/* ---- a glance at visitors ---- */}
+      <Link
+        href="/admin/visitors"
+        className="glass border-gradient group grid grid-cols-2 gap-5 rounded-frame p-6 transition-shadow duration-500 hover:shadow-glow sm:grid-cols-4"
+      >
+        {[
+          { label: "Reading now", value: String(week.liveVisitors) },
+          { label: "Visitors today", value: compact(day.totals.visitors) },
+          { label: "Visitors this week", value: compact(week.totals.visitors) },
+          { label: "Pages read this week", value: compact(week.totals.views) },
+        ].map(({ label, value }) => (
+          <span key={label} className="flex flex-col gap-1.5">
+            <span className="font-sans text-[1.7rem] font-semibold leading-none text-fg">{value}</span>
+            <span className="text-[0.74rem] text-fg/50">{label}</span>
+          </span>
+        ))}
+        <span className="col-span-2 flex items-center gap-1.5 text-[0.7rem] uppercase tracking-[0.16em] text-gold-light/70 transition-colors group-hover:text-gold-light sm:col-span-4">
+          See all visitor numbers <ArrowRight aria-hidden className="size-3.5" strokeWidth={1.8} />
+        </span>
+      </Link>
     </div>
   );
 }

@@ -65,7 +65,8 @@ export function SaveBar({
       {/* Keeps the last field clear of the bar rather than hidden behind it. */}
       <div aria-hidden className="h-24" />
 
-      <div className="fixed inset-x-0 bottom-0 z-40 px-5 pb-4 sm:px-8 lg:pl-[calc(264px+2rem)]">
+      {/* On a phone it floats above the tab bar at the foot of the screen. */}
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-40 px-3 pb-3 sm:px-8 lg:bottom-0 lg:pb-4 lg:pl-[calc(264px+2rem)]">
         <div className="glass-strong border-gradient mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3 rounded-frame px-5 py-3.5">
           <p aria-live="polite" className="min-w-0 flex-1 text-[0.8rem]">
             {message}

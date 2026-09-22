@@ -21,7 +21,7 @@ export default async function AdminMenusPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeading
-        eyebrow="Content"
+        eyebrow="Your website"
         title="Menus"
         description="The three menus shown on the site. Change the wording, the courses and the order they appear in."
       />

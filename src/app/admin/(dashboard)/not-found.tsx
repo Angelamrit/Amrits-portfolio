@@ -18,7 +18,7 @@ export default function DashboardNotFound() {
         href="/admin"
         className="text-xs uppercase tracking-[0.2em] text-gold transition-opacity duration-300 hover:opacity-70"
       >
-        Back to the overview
+        Back to home
       </Link>
     </div>
   );

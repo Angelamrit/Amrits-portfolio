@@ -5,7 +5,7 @@ import { flatten, getVenue, venueIsEdited } from "@/lib/content/venue";
 import { PageHeading } from "@/components/admin/PageHeading";
 import { VenueEditor } from "@/components/admin/VenueEditor";
 
-export const metadata: Metadata = { title: "Restaurant" };
+export const metadata: Metadata = { title: "Restaurant details" };
 
 export default async function AdminRestaurantPage() {
   const [venue, edited] = await Promise.all([getVenue(), venueIsEdited()]);
@@ -13,8 +13,8 @@ export default async function AdminRestaurantPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeading
-        eyebrow="Content"
-        title="Restaurant"
+        eyebrow="Your website"
+        title="Restaurant details"
         description="Address, hours and the links guests use to book. These appear across the whole site."
       >
         <Link

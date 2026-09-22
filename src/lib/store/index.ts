@@ -25,6 +25,18 @@ export type { Store, StoredBlob, BlobInfo } from "./types";
  * does not build a second one with its own write queues — two queues over the
  * same files is exactly the interleaving the queues exist to prevent.
  */
-const globalForStore = globalThis as typeof globalThis & { __chefStore?: Store };
+const globalForStore = globalThis as typeof globalThis & { __chefStore?: { version: number; store: Store } };
 
-export const store: Store = (globalForStore.__chefStore ??= createFsStore());
+/**
+ * Bumped whenever the `Store` interface gains a method. The cached instance
+ * above outlives hot reloads, so without this a dev server running across such
+ * a change keeps serving the old object — and the new method is simply not
+ * there. Production starts a fresh process on every deploy and never sees it.
+ */
+const STORE_API_VERSION = 2;
+
+if (globalForStore.__chefStore?.version !== STORE_API_VERSION) {
+  globalForStore.__chefStore = { version: STORE_API_VERSION, store: createFsStore() };
+}
+
+export const store: Store = globalForStore.__chefStore.store;

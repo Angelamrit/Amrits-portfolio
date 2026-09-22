@@ -7,8 +7,15 @@ import type { VenueDetails } from "@/lib/content/venue";
 const escape = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
 
-export function inquiryEmailHtml(data: InquiryInput) {
+/** Where the booking can be opened in the dashboard, when it was stored. */
+function dashboardLink(booking?: { ref: string; id: string }) {
+  return booking ? `${site.url.replace(/\/$/, "")}/admin/bookings/${booking.id}` : undefined;
+}
+
+export function inquiryEmailHtml(data: InquiryInput, booking?: { ref: string; id: string }) {
+  const link = dashboardLink(booking);
   const rows: [string, string | undefined][] = [
+    ["Reference", booking?.ref],
     ["Name", data.name],
     ["Email", data.email],
     ["Phone", data.phone],
@@ -37,12 +44,19 @@ export function inquiryEmailHtml(data: InquiryInput) {
     <div style="padding:20px 32px 32px">
       <div style="font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#b8975a;margin-bottom:8px">About the event</div>
       <p style="margin:0;font-size:16px;line-height:1.6;white-space:pre-wrap">${escape(data.message)}</p>
-    </div>
+    </div>${
+      link
+        ? `
+    <div style="padding:0 32px 32px"><a href="${escape(link)}" style="display:inline-block;padding:12px 22px;background:#2c1b12;color:#f0d9a0;text-decoration:none;font-family:Arial,sans-serif;font-size:12px;letter-spacing:.18em;text-transform:uppercase">Open in the dashboard</a></div>`
+        : ""
+    }
   </div></body></html>`;
 }
 
-export function inquiryEmailText(data: InquiryInput) {
+export function inquiryEmailText(data: InquiryInput, booking?: { ref: string; id: string }) {
+  const link = dashboardLink(booking);
   return [
+    ...(booking ? [`Reference: ${booking.ref}`] : []),
     `New private experience enquiry`,
     ``,
     `Name: ${data.name}`,
@@ -56,6 +70,7 @@ export function inquiryEmailText(data: InquiryInput) {
     data.budget ? `Budget: ${budgetLabels[data.budget]}` : null,
     ``,
     data.message,
+    ...(link ? [``, `Open in the dashboard: ${link}`] : []),
   ]
     .filter((l) => l !== null)
     .join("\n");

@@ -1,9 +1,11 @@
 import "server-only";
 import { z } from "zod";
-import { inquirySchema, type InquiryField } from "@/lib/validation/inquiry";
+import { inquirySchema, type InquiryField, type InquiryInput } from "@/lib/validation/inquiry";
 import { inquiryEmailConfigured, sendAutoReplyEmail, sendInquiryEmail } from "@/lib/email/resend";
 import { rateLimit, type Rule } from "@/lib/rate-limit";
 import { cleanFieldValue } from "@/lib/sanitize";
+import { markEmailed, recordWebsiteBooking } from "@/lib/bookings/bookings";
+import { store } from "@/lib/store";
 
 /**
  * Everything the enquiry form does, with the request itself passed in.
@@ -20,12 +22,35 @@ export type InquiryState =
   | { status: "error"; fieldErrors: Partial<Record<InquiryField, string>>; formError?: string; values: Record<string, string> }
   | { status: "success"; name: string; email?: string };
 
+/** What the booking store hands back: enough to reference the booking in the chef's email. */
+export type SavedBooking = { id: string; ref: string; durable: boolean };
+
 export type InquiryContext = {
   /** Best-effort client address; the key every per-client limit hangs off. */
   readonly ip: string;
   /** Injectable clock, so the fill-time trap can be exercised. */
   readonly now?: () => number;
+  /**
+   * Where a valid enquiry is kept. Injectable so the tests can assert on what
+   * was stored without writing into the real data directory; the default is
+   * the dashboard's booking store. Returns `null` when it could not be saved.
+   */
+  readonly saveBooking?: (inquiry: InquiryInput) => Promise<SavedBooking | null>;
+  /** Records on the stored booking that the chef's email went out. */
+  readonly markEmailed?: (id: string) => Promise<unknown>;
 };
+
+async function saveToDashboard(inquiry: InquiryInput): Promise<SavedBooking | null> {
+  try {
+    const booking = await recordWebsiteBooking(inquiry);
+    return { id: booking.id, ref: booking.ref, durable: store.durable };
+  } catch (error) {
+    // Logged with the enquiry itself, so a storage failure never loses the
+    // guest's details even when the email below fails too.
+    console.error("[inquiry:store-error]", error, { name: inquiry.name, email: inquiry.email });
+    return null;
+  }
+}
 
 /** A form filled in faster than this was filled in by a script, not a guest. */
 const MIN_FILL_MS = 3000;
@@ -128,16 +153,28 @@ export async function handleInquiry(input: Record<string, string>, ctx: InquiryC
     return { status: "error", fieldErrors: {}, formError: TOO_MANY, values };
   }
 
-  // The enquiry to the chef goes first: if it does not land there is nothing to
-  // thank the guest for, and telling them it arrived would be a lie.
+  // Stored first, emailed second. The dashboard is the record and the email is
+  // the notification, so an enquiry whose email bounces, lands in spam or is
+  // archived by accident is still sitting in the chef's bookings list.
+  const saved = await (ctx.saveBooking ?? saveToDashboard)(inquiry);
+
+  const { delivered } = await sendInquiryEmail(inquiry, saved ? { ref: saved.ref, id: saved.id } : undefined);
+  if (delivered && saved) {
+    await (ctx.markEmailed ?? markEmailed)(saved.id).catch((error: unknown) => {
+      console.error("[inquiry:mark-emailed-error]", error);
+    });
+  }
+
+  // "Received" means the chef can actually see it: the email landed, or it is
+  // in a store that survives a restart. A store on a temporary filesystem does
+  // not count — it would be thanking the guest for something that will vanish.
   //
-  // The unconfigured case is a local dry run, where reporting success is what
-  // lets the form be exercised without a Resend key. In production it is not a
-  // dry run, it is a lost enquiry, so the guest is told the truth and asked to
-  // call instead. `reportRuntimeEnv` makes the misconfiguration loud in the
-  // logs at boot; this is what keeps the guest from being misled meanwhile.
-  const { delivered } = await sendInquiryEmail(inquiry);
-  if (!delivered && (inquiryEmailConfigured() || process.env.NODE_ENV === "production")) {
+  // With neither, the unconfigured case is a local dry run, where reporting
+  // success is what lets the form be exercised without a Resend key. In
+  // production it is a lost enquiry, so the guest is told the truth and asked
+  // to call instead.
+  const received = delivered || Boolean(saved?.durable);
+  if (!received && (inquiryEmailConfigured() || process.env.NODE_ENV === "production")) {
     return { status: "error", fieldErrors: {}, formError: UNDELIVERABLE, values };
   }
 

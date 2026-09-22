@@ -5,7 +5,7 @@ import { galleryCategories, getGalleryForAdmin } from "@/lib/content/gallery";
 import { GalleryManager } from "@/components/admin/GalleryManager";
 import { PageHeading } from "@/components/admin/PageHeading";
 
-export const metadata: Metadata = { title: "Gallery" };
+export const metadata: Metadata = { title: "Photos" };
 
 export default async function AdminGalleryPage() {
   const { items } = await getGalleryForAdmin();
@@ -15,8 +15,8 @@ export default async function AdminGalleryPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeading
-        eyebrow="Content"
-        title="Gallery"
+        eyebrow="Your website"
+        title="Photos"
         description={`${live} photographs on the site${yours > 0 ? `, ${yours} of them uploaded here` : ""}. Add your own, write the captions, and choose what is shown.`}
       >
         <Link

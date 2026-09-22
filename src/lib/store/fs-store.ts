@@ -146,6 +146,27 @@ export function createFsStore(): Store {
       await serialise(path, () => writeAtomic(path, `${JSON.stringify(value, null, 2)}\n`));
     },
 
+    async updateDoc<T>(name: string, change: (current: T | null) => T): Promise<T> {
+      const path = join(contentDir, `${safeName(name)}.json`);
+      return serialise(path, async () => {
+        const raw = await readIfPresent(path);
+        let current: T | null = null;
+        if (raw !== null) {
+          try {
+            current = JSON.parse(raw) as T;
+          } catch {
+            // Refuse rather than start from empty: treating a corrupt file as
+            // "nothing here yet" and writing over it would destroy whatever
+            // could still be recovered from it by hand.
+            throw new Error(`[store] ${name}.json is not valid JSON; refusing to overwrite it.`);
+          }
+        }
+        const next = change(current);
+        await writeAtomic(path, `${JSON.stringify(next, null, 2)}\n`);
+        return next;
+      });
+    },
+
     async deleteDoc(name: string): Promise<void> {
       await rm(join(contentDir, `${safeName(name)}.json`), { force: true });
     },

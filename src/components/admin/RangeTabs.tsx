@@ -9,7 +9,7 @@ import { RANGES } from "@/lib/analytics/aggregate";
  * and nobody should have to assemble it out of two date pickers. It lives in
  * the URL, so a range can be bookmarked and the back button behaves.
  */
-export function RangeTabs({ active, basePath = "/admin" }: { active: string; basePath?: string }) {
+export function RangeTabs({ active, basePath = "/admin/visitors" }: { active: string; basePath?: string }) {
   return (
     <div
       // Five presets are wider than a phone. Scrolling the strip keeps every

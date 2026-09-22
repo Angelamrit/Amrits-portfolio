@@ -41,13 +41,12 @@ export async function readPatchDoc<T>(name: string): Promise<PatchDoc<T>> {
 
 /** Writes one item's patch. An `undefined` patch removes it, which restores the original. */
 export async function writePatch<T>(name: string, id: string, patch: T | undefined): Promise<void> {
-  const doc = await readPatchDoc<T>(name);
-  const patches = { ...doc.patches };
-
-  if (patch === undefined) delete patches[id];
-  else patches[id] = patch;
-
-  await store.writeDoc<PatchDoc<T>>(name, { version: 1, updatedAt: Date.now(), patches });
+  await store.updateDoc<PatchDoc<T>>(name, (current) => {
+    const patches = { ...(current?.version === 1 && current.patches ? current.patches : {}) };
+    if (patch === undefined) delete patches[id];
+    else patches[id] = patch;
+    return { version: 1, updatedAt: Date.now(), patches };
+  });
 }
 
 /**

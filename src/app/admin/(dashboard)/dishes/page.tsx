@@ -21,7 +21,7 @@ export default async function AdminDishesPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeading
-        eyebrow="Content"
+        eyebrow="Your website"
         title="Dishes"
         description="The dishes behind the menus and the signature showcase. Change a name, a description, the dietary tags or the photograph."
       />

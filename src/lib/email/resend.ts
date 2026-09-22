@@ -33,7 +33,10 @@ function resend(apiKey: string): Resend {
  * Sends the enquiry via Resend when configured; otherwise logs a dry run.
  * Never throws: a lost email should be visible in logs, not shown to a guest.
  */
-export async function sendInquiryEmail(data: InquiryInput): Promise<{ delivered: boolean }> {
+export async function sendInquiryEmail(
+  data: InquiryInput,
+  booking?: { ref: string; id: string },
+): Promise<{ delivered: boolean }> {
   const apiKey = env.RESEND_API_KEY;
   const to = env.INQUIRY_TO_EMAIL;
   const from = env.INQUIRY_FROM_EMAIL ?? DEFAULT_FROM;
@@ -48,9 +51,9 @@ export async function sendInquiryEmail(data: InquiryInput): Promise<{ delivered:
       from,
       to,
       replyTo: data.email,
-      subject: `Private experience enquiry — ${data.name} (${experienceLabels[data.experience]}, ${data.guests} guests)`,
-      html: inquiryEmailHtml(data),
-      text: inquiryEmailText(data),
+      subject: `${booking ? `[${booking.ref}] ` : ""}Private experience enquiry — ${data.name} (${experienceLabels[data.experience]}, ${data.guests} guests)`,
+      html: inquiryEmailHtml(data, booking),
+      text: inquiryEmailText(data, booking),
     });
     if (error) {
       console.error("[inquiry:resend-error]", error, inquiryEmailText(data));
