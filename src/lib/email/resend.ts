@@ -4,6 +4,7 @@ import { emailConfigured, env } from "@/lib/env";
 import type { InquiryInput } from "@/lib/validation/inquiry";
 import { experienceLabels } from "@/lib/validation/inquiry";
 import { autoReplyHtml, autoReplyText, inquiryEmailHtml, inquiryEmailText } from "./templates";
+import { getVenue } from "@/lib/content/venue";
 
 /**
  * Whether real delivery is wired up. When it is not, the senders below log the
@@ -76,14 +77,18 @@ export async function sendAutoReplyEmail(data: InquiryInput): Promise<{ delivere
     return { delivered: false };
   }
 
+  // The address in the sign-off is whatever the dashboard currently says, so
+  // a guest is never sent to a restaurant that has moved.
+  const venue = await getVenue();
+
   try {
     const { error } = await resend(apiKey).emails.send({
       from,
       to: data.email,
       ...(replyTo ? { replyTo } : {}),
       subject: `Thank you, ${data.name} — a message from Chef Amrit`,
-      html: autoReplyHtml(data),
-      text: autoReplyText(data),
+      html: autoReplyHtml(data, venue),
+      text: autoReplyText(data, venue),
     });
     if (error) {
       console.error("[inquiry:auto-reply:resend-error]", error);

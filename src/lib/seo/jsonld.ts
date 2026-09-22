@@ -1,7 +1,8 @@
 import { chef } from "@/data/chef";
 import { site } from "@/data/site";
+import type { VenueDetails } from "@/lib/content/venue";
 
-export function personJsonLd() {
+export function personJsonLd(venue: VenueDetails) {
   return {
     "@context": "https://schema.org",
     "@type": "Person",
@@ -13,35 +14,35 @@ export function personJsonLd() {
     award: ["Michelin Bib Gourmand (Angel Indian Restaurant)"],
     worksFor: {
       "@type": "Restaurant",
-      name: site.restaurant.name,
+      name: venue.name,
       address: {
         "@type": "PostalAddress",
-        streetAddress: site.restaurant.address.street,
-        addressLocality: site.restaurant.address.city,
-        addressRegion: site.restaurant.address.region,
-        postalCode: site.restaurant.address.postal,
-        addressCountry: site.restaurant.address.country,
+        streetAddress: venue.address.street,
+        addressLocality: venue.address.city,
+        addressRegion: venue.address.region,
+        postalCode: venue.address.postal,
+        addressCountry: venue.address.country,
       },
     },
   };
 }
 
-export function restaurantJsonLd() {
+export function restaurantJsonLd(venue: VenueDetails) {
   return {
     "@context": "https://schema.org",
     "@type": "Restaurant",
-    name: site.restaurant.name,
+    name: venue.name,
     url: new URL("/angel", site.url).toString(),
     servesCuisine: ["Indian", "North Indian", "Vegetarian"],
     address: {
       "@type": "PostalAddress",
-      streetAddress: site.restaurant.address.street,
-      addressLocality: site.restaurant.address.city,
-      addressRegion: site.restaurant.address.region,
-      postalCode: site.restaurant.address.postal,
-      addressCountry: site.restaurant.address.country,
+      streetAddress: venue.address.street,
+      addressLocality: venue.address.city,
+      addressRegion: venue.address.region,
+      postalCode: venue.address.postal,
+      addressCountry: venue.address.country,
     },
-    ...(site.restaurant.resyUrl ? { acceptsReservations: site.restaurant.resyUrl } : {}),
+    ...(venue.resyUrl ? { acceptsReservations: venue.resyUrl } : {}),
     founder: { "@type": "Person", name: chef.name },
     award: "Michelin Bib Gourmand",
   };

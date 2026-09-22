@@ -35,6 +35,7 @@ The site is arranged as one story, in the order a visitor should meet it: who th
 | `/testimonials` | Built but hidden from the nav until real guest quotes exist |
 | `/contact` | Seven-step booking wizard with live summary and estimated menu → server action → Resend email to the chef + video auto-reply to the guest |
 | `/thank-you` | Chef's video message, linked from the auto-reply email (not indexed) |
+| `/admin` | The dashboard: visitor numbers, menus, dishes, restaurant details and gallery. Password-protected, never indexed. See [The dashboard](#the-dashboard). |
 
 ## Editing content
 
@@ -66,6 +67,63 @@ All images are stock placeholders stored in `public/images/placeholders/` and fl
    ```
 3. Nothing else changes. Delete the unused placeholder file if you like.
 
+## The dashboard
+
+`/admin` is a private area where the chef can see who is visiting the site and change its content himself, without a deploy.
+
+### Turning it on
+
+Set one environment variable and reload. Until it is set, `/admin` has nothing behind it and says so.
+
+```bash
+npm run admin:password          # asks for a password, prints the hash
+```
+
+Put the printed line in `.env.local` (development) or the host's environment (production):
+
+```
+ADMIN_PASSWORD_HASH=scrypt:32768:8:1:…
+```
+
+A plain `ADMIN_PASSWORD` is accepted instead if you would rather not run the script; the hash is safer, because anything that can read the environment then learns nothing it can sign in with. Sessions are a signed, http-only cookie lasting 12 hours. Changing the password signs every open session out.
+
+### What it does
+
+| Screen | What it is for |
+|---|---|
+| Overview | Visitors, page views, visits, traffic over time, most-read pages, referrers, devices, hours of the day and the latest arrivals, over 24 hours to 12 months |
+| Menus | Names, intros, notes, and the courses themselves — add, remove, reorder, point a course at a dish or write it out |
+| Dishes | Names, taglines, descriptions, dietary tags, signature flag, order, and which photograph is used |
+| Restaurant | Address, hours, telephone, reservations and menu links, social links, the badges beside the restaurant |
+| Gallery | Upload photographs, caption them, set the description screen readers read, reorder, hide, delete |
+
+Every screen has a **Reset to original** that discards the stored edits and returns to the version in `src/data/`.
+
+### How edits reach the site
+
+`src/data/` is still the source of truth. The dashboard stores a *patch* — only the fields somebody actually changed — and the content layer in `src/lib/content/` lays those over the code's values at render time. Two consequences worth knowing:
+
+- A later code change still reaches the site for every field the chef has not personally overridden.
+- Resetting is deleting a key, not reconstructing a value.
+
+Saving calls `revalidatePath("/", "layout")`, so the statically rendered pages regenerate on their next request. Public pages stay static; nothing became dynamic.
+
+### Visitor numbers
+
+Counting is first-party and built into this site: one small `POST /api/track` per page opened, from `PageViewBeacon`. There is no third-party analytics script anywhere, which is also why there is no consent banner — nothing that identifies a visitor is collected.
+
+- No cookie is set and no IP address is stored. A visitor is a SHA-256 hash of the address, the user agent and a secret salt that is re-mixed with the date, so the same person on two days is two unrelated values.
+- Obvious bots are dropped by user agent, and the endpoint is same-origin only and rate limited.
+- Events are appended one line per visit to `analytics/<date>.jsonl`, and days older than 400 are pruned automatically.
+
+### Where the data lives
+
+Everything the dashboard writes — visit logs, content patches, uploaded photographs — goes through the `Store` interface in `src/lib/store/types.ts`. The default adapter writes plain files under `.data/` (or `DATA_DIR`), which needs no account, no dependency and no configuration.
+
+**It does need a filesystem that survives a restart.** That is true of a VPS, Docker with a volume, or Render/Railway with a disk. It is *not* true of Vercel, Netlify or any other serverless platform, where the filesystem is read-only apart from `/tmp` and `/tmp` is discarded between requests — the dashboard would appear to work and then lose everything. Moving there means adding one file next to `fs-store.ts` that implements the same interface against a database, and changing the single line in `src/lib/store/index.ts` that picks the adapter. Nothing else in the application reads or writes storage directly.
+
+The dashboard says which store is in use, and warns on its own if the directory looks temporary.
+
 ## Environment variables
 
 | Variable | Purpose |
@@ -75,6 +133,12 @@ All images are stock placeholders stored in `public/images/placeholders/` and fl
 | `RESEND_API_KEY` | Resend API key for enquiry emails |
 | `INQUIRY_TO_EMAIL` | Where enquiries are sent (comma-separated allowed) |
 | `INQUIRY_FROM_EMAIL` | Verified sender, e.g. `Chef Amrit Pal Singh <inquiries@yourdomain.com>` |
+| `ADMIN_PASSWORD_HASH` | Sign-in for `/admin`. Generate with `npm run admin:password`. Without it (or `ADMIN_PASSWORD`) the dashboard cannot be opened at all. |
+| `ADMIN_PASSWORD` | Accepted instead of the hash. Simpler; less safe. |
+| `ADMIN_SESSION_SECRET` | Optional. Signs the session cookie. Derived from the password when unset, which means changing the password signs everyone out. |
+| `DATA_DIR` | Optional. Where the dashboard writes. Defaults to `.data`. Must survive a restart — see [The dashboard](#the-dashboard). |
+
+A literal `$` in any `.env` value is read as a variable reference and has to be escaped as `\$`. The generated password hash deliberately contains none.
 
 Values are validated in `src/lib/env.ts`. A malformed value (a misspelled address, a site URL that is not absolute) throws immediately, wherever it is found. A *missing* value only warns, because taking the whole site down over the mailer would be worse than the problem it reports.
 
@@ -102,6 +166,8 @@ Photography is nearly all of this site's weight, so this is the caching change t
 - **No remote images.** `images.remotePatterns` is empty and must stay that way unless a real remote source appears. A hostname listed there turns `/_next/image` into an open image proxy for that host, on this domain.
 - **The enquiry form** is the only input the site accepts, and is treated accordingly: sanitising, then server-side validation with Zod, then two tiers of rate limit, with a honeypot field and a minimum fill time. `src/lib/inquiry/submit.ts` explains each decision at the point it is made.
 - **Secrets** live only in the environment, never in `src/data`. `.env*` is gitignored; `.env.example` documents what is needed.
+- **The dashboard** is closed by default: with no credential configured there is nothing behind `/admin`. The password is stored as a scrypt hash, compared in constant time, and sign-in is rate limited per address and globally so a distributed run at it is capped too. Every failure — wrong password, no password configured, too many attempts — returns the same sentence, so nothing is learned by probing. `proxy.ts` turns anonymous requests away before a dashboard route renders, and every Server Action behind it checks the session again next to the data it is about to change, because a Server Action is a public endpoint whether or not a page links to it.
+- **Uploads** are accepted only as JPEG, PNG or WebP, and the type is read from the file's own header rather than taken from the browser's word for it. The stored filename is generated on the server; nothing from the upload's own name is used. They are served from a route with `nosniff` and their real type.
 
 One limitation to know about: the rate limiter counts in the server's own memory (`src/lib/rate-limit.ts`). On a single long-lived Node process that is exactly right. On a serverless platform, or across several instances, each worker keeps its own counts and the effective limit is multiplied by the number of live workers. If the site is deployed that way, swap the body of `rateLimit` for a shared store — Upstash Redis or Vercel KV — which is all the signature was designed to allow.
 
@@ -114,7 +180,7 @@ npm run test:watch
 
 No test framework and no new dependencies: Node runs the TypeScript sources directly, and `test/alias-hook.mjs` teaches its loader the `@/*` alias so the tests import the application modules unchanged rather than a copy of them. Requires Node 24 or newer.
 
-The suite covers the parts where being wrong is expensive rather than merely visible — the sanitiser's defence against forged lines in the enquiry email, both tiers of rate limit (including that one address cannot be used to mail-bomb a third party), the bot traps, and that a production server never reports an undelivered enquiry as sent. `.github/workflows/ci.yml` runs lint, typecheck, tests and a build on every push and pull request.
+The suite covers the parts where being wrong is expensive rather than merely visible — the sanitiser's defence against forged lines in the enquiry email, both tiers of rate limit (including that one address cannot be used to mail-bomb a third party), the bot traps, that a production server never reports an undelivered enquiry as sent, and, for the dashboard, that an edited session cookie is refused, that an expired one is refused even though it is genuinely signed, that changing the password invalidates open sessions, that a malformed or absurdly expensive password hash never verifies, and that an upload's type comes from its bytes rather than its name. `.github/workflows/ci.yml` runs lint, typecheck, tests and a build on every push and pull request.
 
 ## Feature assets to supply
 

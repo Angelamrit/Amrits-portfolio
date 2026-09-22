@@ -2,6 +2,7 @@ import type { InquiryInput } from "@/lib/validation/inquiry";
 import { budgetLabels, experienceLabels } from "@/lib/validation/inquiry";
 import { process } from "@/data/process";
 import { site } from "@/data/site";
+import type { VenueDetails } from "@/lib/content/venue";
 
 const escape = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
@@ -64,7 +65,7 @@ export function inquiryEmailText(data: InquiryInput) {
 /* Auto-reply to the guest, with Chef Amrit's personal video message   */
 /* ------------------------------------------------------------------ */
 
-export function autoReplyHtml(data: InquiryInput) {
+export function autoReplyHtml(data: InquiryInput, venue: VenueDetails) {
   const base = site.url.replace(/\/$/, "");
   const videoPage = `${base}/thank-you`;
   const poster = `${base}${site.thankYou.poster.src}`;
@@ -101,11 +102,11 @@ export function autoReplyHtml(data: InquiryInput) {
       <table style="width:100%;border-collapse:collapse;margin-top:8px">${steps}</table>
     </div>
 
-    <p style="margin:32px 0 0;font-size:12px;line-height:1.7;color:#c9b391">${escape(site.restaurant.name)} · ${escape(site.restaurant.address.street)}, ${escape(site.restaurant.address.city)}, ${escape(site.restaurant.address.region)} ${escape(site.restaurant.address.postal)}<br>Michelin Guide · Bib Gourmand</p>
+    <p style="margin:32px 0 0;font-size:12px;line-height:1.7;color:#c9b391">${escape(venue.name)} · ${escape(venue.address.street)}, ${escape(venue.address.city)}, ${escape(venue.address.region)} ${escape(venue.address.postal)}<br>Michelin Guide · Bib Gourmand</p>
   </div></body></html>`;
 }
 
-export function autoReplyText(data: InquiryInput) {
+export function autoReplyText(data: InquiryInput, venue: VenueDetails) {
   const base = site.url.replace(/\/$/, "");
   return [
     `Thank you, ${data.name}.`,
@@ -119,6 +120,6 @@ export function autoReplyText(data: InquiryInput) {
     `What happens next:`,
     ...process.map((s) => `${s.step}. ${s.title}: ${s.body}`),
     ``,
-    `${site.restaurant.name}, ${site.restaurant.address.street}, ${site.restaurant.address.city}, ${site.restaurant.address.region} ${site.restaurant.address.postal}`,
+    `${venue.name}, ${venue.address.street}, ${venue.address.city}, ${venue.address.region} ${venue.address.postal}`,
   ].join("\n");
 }

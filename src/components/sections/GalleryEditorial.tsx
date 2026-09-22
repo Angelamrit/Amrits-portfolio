@@ -49,7 +49,7 @@ function Strip({ items, reverse = false }: { items: GalleryItem[]; reverse?: boo
 }
 
 /** Chapter 06: a two-row cinematic film strip of the kitchen, the plates and the tables. */
-export function GalleryEditorial() {
+export async function GalleryEditorial() {
   const rowA = gallery.slice(0, 9);
   const rowB = gallery.slice(9, 18);
   return (

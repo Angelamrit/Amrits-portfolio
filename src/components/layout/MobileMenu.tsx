@@ -9,12 +9,14 @@ import { site } from "@/data/site";
 import { Button } from "@/components/ui/Button";
 import { Orbs } from "@/components/ui/Orbs";
 import { Wordmark } from "./Wordmark";
+import { useVenue } from "@/components/layout/VenueContext";
 
 type Props = { open: boolean; onClose: () => void; items: NavItem[] };
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 export function MobileMenu({ open, onClose, items }: Props) {
+  const venue = useVenue();
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -105,10 +107,10 @@ export function MobileMenu({ open, onClose, items }: Props) {
             transition={{ delay: 0.5, duration: 0.6 }}
           >
             <address className="not-italic text-sm text-fg/60">
-              {site.restaurant.name}
+              {venue.name}
               <br />
-              {site.restaurant.address.street}, {site.restaurant.address.city}, {site.restaurant.address.region}{" "}
-              {site.restaurant.address.postal}
+              {venue.address.street}, {venue.address.city}, {venue.address.region}{" "}
+              {venue.address.postal}
             </address>
             <Button href={site.cta.href}>{site.cta.label}</Button>
           </m.div>

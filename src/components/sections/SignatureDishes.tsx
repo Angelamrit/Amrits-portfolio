@@ -1,5 +1,5 @@
-import { signatureDishes } from "@/data/dishes";
-import { site } from "@/data/site";
+import { getSignatureDishes } from "@/lib/content/dishes";
+import { getVenue } from "@/lib/content/venue";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -9,7 +9,8 @@ import { Section } from "@/components/ui/Section";
 import { DishShowcase } from "./DishShowcase";
 
 /** Chapter 03: the five plates that built Angel's name, as an interactive showcase. */
-export function SignatureDishes() {
+export async function SignatureDishes() {
+  const [signatureDishes, venue] = await Promise.all([getSignatureDishes(), getVenue()]);
   return (
     <Section id="signature-dishes" tone="base" orbs="gold" pattern divider className="scroll-mt-20">
       <Container>
@@ -29,9 +30,9 @@ export function SignatureDishes() {
               </p>
             </Reveal>
           </div>
-          {site.restaurant.menuUrl && (
+          {venue.menuUrl && (
             <Reveal delay={0.25}>
-              <Button href={site.restaurant.menuUrl} external>
+              <Button href={venue.menuUrl} external>
                 Full menu at Angel
               </Button>
             </Reveal>
