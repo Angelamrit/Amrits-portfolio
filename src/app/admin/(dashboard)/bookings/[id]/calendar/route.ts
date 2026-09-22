@@ -14,7 +14,7 @@ import { experienceLabels } from "@/lib/validation/inquiry";
  */
 
 function escapeText(value: string): string {
-  return value.replace(/\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\,").replace(/\r?\n/g, "\n");
+  return value.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
 }
 
 /** Lines are folded at 75 octets, as the format requires — counted in UTF-8 bytes, never splitting a character. */
