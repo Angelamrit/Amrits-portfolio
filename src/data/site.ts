@@ -1,10 +1,32 @@
 import type { SiteConfig } from "@/types/content";
 import { images } from "./images";
 
+const DEFAULT_URL = "https://chefamritpalsingh.com";
+
+/**
+ * The site's public address, used for canonical links, the sitemap and emails.
+ *
+ * Every page builds `new URL(...)` from this at build time, so a bad value
+ * fails the whole build. A hosting dashboard makes that easy: a variable
+ * added with an empty value is "set" to `""`, which `??` does not catch. So a
+ * blank value means unset, a bare host like `example.vercel.app` gains
+ * `https://`, and anything still unparseable falls back to the default.
+ */
+function resolveSiteUrl(raw: string | undefined): string {
+  const value = raw?.trim();
+  if (!value) return DEFAULT_URL;
+  const withScheme = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+  try {
+    return new URL(withScheme).origin;
+  } catch {
+    return DEFAULT_URL;
+  }
+}
+
 export const site: SiteConfig = {
   name: "Chef Amrit Pal Singh",
   shortName: "Amrit Pal Singh",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://chefamritpalsingh.com",
+  url: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
   description:
     "Chef Amrit Pal Singh, owner and head chef of Michelin Bib Gourmand–awarded Angel Indian Restaurant in Jackson Heights, Queens. Private dining, tasting menus and bespoke culinary experiences rooted in India.",
   locale: "en_US",
