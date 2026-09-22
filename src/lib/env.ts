@@ -54,7 +54,11 @@ const schema = z.object({
   INQUIRY_TO_EMAIL: z.preprocess(blankToUndefined, addressList.optional()),
   INQUIRY_FROM_EMAIL: z.preprocess(blankToUndefined, mailbox.optional()),
   NEXT_PUBLIC_SITE_URL: z.preprocess(
-    blankToUndefined,
+    // A bare host is accepted as https, matching `resolveSiteUrl` in src/data/site.ts.
+    (value) => {
+      const blank = blankToUndefined(value);
+      return typeof blank === "string" && !/^https?:\/\//i.test(blank.trim()) ? `https://${blank.trim()}` : blank;
+    },
     z.url({ error: "must be an absolute URL, e.g. https://chefamritpalsingh.com" }).optional(),
   ),
 });
