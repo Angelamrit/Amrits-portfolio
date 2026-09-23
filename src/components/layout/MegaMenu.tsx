@@ -72,8 +72,13 @@ export function MegaMenu({ panel, onNavigate }: { panel: MegaPanelData; onNaviga
               panel.items.length > 4 ? "sm:grid-cols-2 xl:grid-cols-3" : "sm:grid-cols-2 xl:grid-cols-3",
             )}
           >
+            {/*
+              Keyed by href *and* name: several cards can legitimately share a
+              destination — both Angel dining rooms link to /angel — so the href
+              alone is a destination, not an identity, and duplicates it.
+            */}
             {panel.items.map((item, i) => (
-              <li key={item.href}>
+              <li key={`${item.href}::${item.name}`}>
                 <Link
                   href={item.href}
                   onClick={onNavigate}
