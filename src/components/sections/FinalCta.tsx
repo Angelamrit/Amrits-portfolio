@@ -1,4 +1,5 @@
 import { images } from "@/data/images";
+import { getVenue } from "@/lib/content/venue";
 import { site } from "@/data/site";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -14,7 +15,7 @@ type Props = {
   body?: string;
 };
 
-export function FinalCta({
+export async function FinalCta({
   eyebrow = "Plan your private dining experience",
   title = (
     <>
@@ -23,6 +24,8 @@ export function FinalCta({
   ),
   body = "Private dinners, celebrations, corporate events and residencies, cooked by Chef Amrit and served with the care that earned Angel its Bib Gourmand.",
 }: Props) {
+  const venue = await getVenue();
+
   return (
     <section id="book" className="relative overflow-hidden surface-brown-deep tone-dark py-section">
       <ImageFrame image={images.tableCandles} ratio="fill" reveal="fade" vignette sizes="100vw" quality={65} imgClassName="opacity-35" />
@@ -40,8 +43,8 @@ export function FinalCta({
               <p className="mt-8 max-w-xl text-lead text-fg/70">{body}</p>
               <div className="mt-12 flex flex-wrap gap-4">
                 <Button href={site.cta.href}>Request a Private Experience</Button>
-                {site.restaurant.resyUrl && (
-                  <Button href={site.restaurant.resyUrl} variant="outline">
+                {venue.resyUrl && (
+                  <Button href={venue.resyUrl} variant="outline">
                     Reserve at Angel via Resy
                   </Button>
                 )}

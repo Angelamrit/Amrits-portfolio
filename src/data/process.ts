@@ -9,7 +9,7 @@ export const process: ProcessStep[] = [
   {
     step: 2,
     title: "Menu Design",
-    body: "Chef Amrit composes a menu around the season and your brief, from Punjabi classics to regional delicacies, predominantly vegetarian and always Halal.",
+    body: "Chef Amrit composes a menu around the season and your brief, from Indian classics to regional delicacies, predominantly vegetarian and always Halal.",
   },
   {
     step: 3,

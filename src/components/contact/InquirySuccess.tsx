@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Em } from "@/components/ui/Heading";
 import { ThankYouVideo } from "./ThankYouVideo";
+import { useVenue } from "@/components/layout/VenueContext";
 
 export function InquirySuccess({ name, email }: { name: string; email?: string }) {
+  const venue = useVenue();
   return (
     <m.div
       role="status"
@@ -45,8 +47,8 @@ export function InquirySuccess({ name, email }: { name: string; email?: string }
             <Button href="/" variant="glass">
               Back to home
             </Button>
-            {site.restaurant.resyUrl && (
-              <Button href={site.restaurant.resyUrl} variant="link">
+            {venue.resyUrl && (
+              <Button href={venue.resyUrl} variant="link">
                 Reserve at Angel via Resy
               </Button>
             )}

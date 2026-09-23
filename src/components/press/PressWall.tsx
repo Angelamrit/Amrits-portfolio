@@ -165,7 +165,7 @@ export function PressWall({ items }: { items: PressItem[] }) {
                           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-fg/65 md:text-[0.95rem]">{item.excerpt}</p>
                         ))}
                       {item.url && (
-                        <span className="mt-5 inline-flex items-center gap-2 border-b border-gold/50 pb-1 font-sans text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-gold-light transition-colors duration-300 group-hover:border-gold group-hover:text-fg">
+                        <span className="mt-6 inline-flex items-center gap-2 rounded-pill border border-gold/50 bg-gold/10 px-4 py-2 font-sans text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-gold-light shadow-[0_0_20px_-8px_rgba(226,189,108,0.6)] transition-all duration-300 group-hover:border-gold group-hover:bg-gold/20 group-hover:text-fg group-hover:shadow-glow">
                           Read at {item.outlet}
                           <ArrowUpRight aria-hidden className="size-3.5 transition-transform duration-500 ease-luxe group-hover:-translate-y-0.5 group-hover:translate-x-0.5" strokeWidth={2} />
                         </span>

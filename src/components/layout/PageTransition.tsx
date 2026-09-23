@@ -8,6 +8,14 @@ type Phase = "idle" | "covering" | "covered";
 
 const ease = [0.76, 0, 0.24, 1] as const;
 
+// Kept short on purpose: this curtain blocks the actual navigation until it
+// finishes covering the screen, so every millisecond here is added latency
+// on top of whatever Next.js itself takes. Longer values look nicer in
+// isolation but make every click feel sluggish.
+const COVER_S = 0.15;
+const STAGGER_S = 0.03;
+const POST_NAV_WAIT_MS = 30;
+
 const curtain = {
   hidden: { y: "100%" },
   show: { y: "0%" },
@@ -66,7 +74,7 @@ export function PageTransition() {
     if (lastPath.current === pathname) return;
     lastPath.current = pathname;
     if (phaseRef.current !== "idle") {
-      const t = window.setTimeout(() => go("idle"), 120);
+      const t = window.setTimeout(() => go("idle"), POST_NAV_WAIT_MS);
       return () => window.clearTimeout(t);
     }
   }, [pathname]);
@@ -94,7 +102,7 @@ export function PageTransition() {
             initial="hidden"
             animate="show"
             exit="exit"
-            transition={{ duration: 0.6, ease }}
+            transition={{ duration: COVER_S, ease }}
           />
           <m.div
             className="absolute inset-0 bg-gradient-to-br from-gold-light via-gold to-gold-deep"
@@ -102,7 +110,7 @@ export function PageTransition() {
             initial="hidden"
             animate="show"
             exit="exit"
-            transition={{ duration: 0.6, ease, delay: 0.08 }}
+            transition={{ duration: COVER_S, ease, delay: STAGGER_S }}
             onAnimationComplete={(def) => def === "show" && onCovered()}
           />
           <m.div
@@ -110,7 +118,7 @@ export function PageTransition() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.05 }}
-            transition={{ duration: 0.4, delay: 0.25 }}
+            transition={{ duration: COVER_S, delay: STAGGER_S * 2 }}
           >
             <span className="grid size-24 place-items-center rounded-full border border-brown-deep/30 font-display text-5xl font-light text-brown-deep">A</span>
           </m.div>

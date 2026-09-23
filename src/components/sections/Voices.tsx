@@ -36,12 +36,17 @@ export function Voices() {
           </div>
         </Reveal>
 
-        <RevealGroup className="mt-20 grid gap-4 md:grid-cols-3">
+        <RevealGroup className="mt-20 grid items-stretch gap-4 md:grid-cols-3">
           {credentials.map((c) => (
-            <RevealItem key={c.label + c.value}>
-              <SpotlightCard className="p-8 text-center" tilt={3}>
+            <RevealItem key={c.label + c.value} className="h-full">
+              {/* h-full + a fixed min-height so the short value ("8.6") does not
+                  make its card shorter than the two that wrap onto a second line. */}
+              <SpotlightCard
+                className="flex h-full min-h-[15rem] flex-col items-center justify-center p-8 text-center [background:linear-gradient(160deg,rgba(246,239,226,0.09),rgba(246,239,226,0.035))]"
+                tilt={3}
+              >
                 <p className="eyebrow">{c.label}</p>
-                <p className="mt-4 font-display text-display-md font-light text-gold-gradient">{c.value}</p>
+                <p className="mt-4 text-balance font-display text-display-md font-light text-gold-gradient">{c.value}</p>
                 <p className="mt-2 text-sm text-fg/55">{c.note}</p>
               </SpotlightCard>
             </RevealItem>

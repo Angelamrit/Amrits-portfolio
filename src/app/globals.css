@@ -411,25 +411,41 @@
 }
 
 /* Ambient orbs */
+/*
+  Ambient orbs: soft pools of light behind the content.
+
+  These used to be a radial gradient with `filter: blur(80px)` on top, and
+  that filter was the single most expensive thing on the site. A blur that
+  large over an element up to 900px across, on a layer that is also animating,
+  has to be recomputed every frame the page scrolls or the orb moves. Measured
+  in the dashboard it held pages to roughly 8 frames a second (120ms a frame);
+  removing only the filter brought every page to a steady 60 (17ms), and the
+  public home page from ~230ms a frame to ~80ms.
+
+  The blur was almost invisible anyway: the gradient already fades to nothing.
+  What it contributed was a gentler fall-off, and that is reproduced here with
+  the stops themselves — a bell-shaped curve instead of a straight ramp — which
+  costs nothing to draw. The drift animation stays: moving a layer that has no
+  filter is a cheap compositor transform.
+*/
 @utility orb {
   position: absolute;
   border-radius: 999px;
-  filter: blur(80px);
   pointer-events: none;
   will-change: transform;
   animation: var(--animate-float);
 }
 
 @utility orb-gold {
-  background: radial-gradient(circle, rgba(255, 220, 150, 0.5), rgba(255, 220, 150, 0) 70%);
+  background: radial-gradient(circle, rgba(255, 220, 150, 0.5) 0%, rgba(255, 220, 150, 0.42) 18%, rgba(255, 220, 150, 0.27) 38%, rgba(255, 220, 150, 0.12) 55%, rgba(255, 220, 150, 0.035) 68%, rgba(255, 220, 150, 0.0) 78%);
 }
 
 @utility orb-ember {
-  background: radial-gradient(circle, rgba(120, 60, 25, 0.5), rgba(120, 60, 25, 0) 70%);
+  background: radial-gradient(circle, rgba(120, 60, 25, 0.5) 0%, rgba(120, 60, 25, 0.42) 18%, rgba(120, 60, 25, 0.27) 38%, rgba(120, 60, 25, 0.12) 55%, rgba(120, 60, 25, 0.035) 68%, rgba(120, 60, 25, 0.0) 78%);
 }
 
 @utility orb-ivory {
-  background: radial-gradient(circle, rgba(255, 240, 210, 0.2), rgba(255, 240, 210, 0) 70%);
+  background: radial-gradient(circle, rgba(255, 240, 210, 0.2) 0%, rgba(255, 240, 210, 0.168) 18%, rgba(255, 240, 210, 0.108) 38%, rgba(255, 240, 210, 0.048) 55%, rgba(255, 240, 210, 0.014) 68%, rgba(255, 240, 210, 0.0) 78%);
 }
 
 /* Fine grid pattern */
@@ -1101,4 +1117,102 @@
   0% { opacity: 0; transform: scale(0.45); }
   30% { opacity: 0.65; }
   100% { opacity: 0; transform: scale(1.15); }
+}
+
+/* ===========================================================================
+   DASHBOARD
+   The private side of the site. Same Angel palette — chocolate, oak, gold —
+   but inverted: the public pages are lit oak with dark accents, the dashboard
+   is a dark room with lit instruments, which is what keeps a working screen
+   readable for an hour at a time.
+   =========================================================================== */
+
+@theme {
+  /*
+    Chart series colours, in fixed order. Assigned by slot and never cycled:
+    slot 1 is always the headline measure, slot 2 the second series, and the
+    device split takes 1–3 in that order, so a filter that removes a series
+    never repaints the ones that remain.
+
+    These are deeper and less bright than the brand gold used for headings and
+    buttons, and deliberately so. They were checked against the dashboard's
+    chocolate surface for lightness, chroma, colour-blind separation under
+    simulated protanopia and deuteranopia, and WCAG contrast — the brand's
+    #e2bd6c is too light to sit in that band, and a gold/jade pair is the one
+    that stays distinguishable when hue is taken away. Headings and values keep
+    the bright gold; only the marks use these.
+  */
+  --color-chart-1: #b8862f;
+  --color-chart-2: #2f9d84;
+  --color-chart-3: #7f6fd0;
+  --color-chart-4: #cf5f66;
+
+  /* One step off the surface: present enough to read a value against, quiet enough to ignore. */
+  --color-chart-grid: rgba(246, 239, 226, 0.09);
+  --color-chart-surface: #2c1b12;
+}
+
+/* The room the dashboard sits in. Darker than any public section, so the
+   panels floating on it read as lit instruments rather than page content. */
+@utility admin-room {
+  background:
+    radial-gradient(120% 80% at 12% -10%, rgba(226, 189, 108, 0.16), transparent 55%),
+    radial-gradient(90% 70% at 100% 0%, rgba(120, 60, 25, 0.35), transparent 60%),
+    linear-gradient(180deg, #1a100a 0%, #170e09 45%, #120b07 100%);
+}
+
+/* The active item in the sidebar: a gold rail down its leading edge. */
+@utility nav-rail {
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    height: 0;
+    width: 2px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #f5e4b8, #e2bd6c 50%, #a57a3b);
+    box-shadow: 0 0 14px rgba(226, 189, 108, 0.8);
+    transform: translateY(-50%);
+    transition: height 0.45s var(--ease-luxe);
+  }
+  &[data-active="true"]::before {
+    height: 62%;
+  }
+}
+
+/* A live indicator that actually looks alive: a dot with a ring breathing out of it. */
+@utility live-dot {
+  position: relative;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-gold-light);
+  box-shadow: 0 0 10px rgba(240, 217, 160, 0.9);
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border-radius: 999px;
+    border: 1px solid rgba(240, 217, 160, 0.55);
+    animation: live-ping 2.4s var(--ease-luxe) infinite;
+  }
+}
+
+@keyframes live-ping {
+  0% { opacity: 0.9; transform: scale(0.5); }
+  70% { opacity: 0; transform: scale(1.25); }
+  100% { opacity: 0; transform: scale(1.25); }
+}
+
+/* Columns of figures line up; a headline figure should not be forced to. */
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot::after {
+    animation: none;
+  }
 }

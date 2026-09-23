@@ -1,18 +1,20 @@
 import { primaryNav, visibleNav } from "@/data/nav";
 import { experiences } from "@/data/experiences";
-import { menus } from "@/data/menus";
+import { getMenus } from "@/lib/content/menus";
 import { restaurant } from "@/data/restaurant";
-import { galleryCategories, galleryByCategory } from "@/data/gallery";
+import { galleryCategories } from "@/data/gallery";
+import { getGallery } from "@/lib/content/gallery";
 import type { GalleryCategory } from "@/types/content";
 import { HeaderClient } from "./HeaderClient";
 import type { MegaPanelData } from "./MegaMenu";
 
 /** Dropdown content for the nav items that have children. */
-function buildPanels(): MegaPanelData[] {
+async function buildPanels(): Promise<MegaPanelData[]> {
+  const [menus, gallery] = await Promise.all([getMenus(), getGallery()]);
   const galleryItems = galleryCategories
     .filter((c) => c.value !== "all")
     .map((c) => {
-      const first = galleryByCategory(c.value as GalleryCategory)[0];
+      const first = gallery.find((item) => item.category === (c.value as GalleryCategory));
       return first
         ? {
             href: `/gallery?category=${c.value}`,
@@ -93,6 +95,6 @@ function buildPanels(): MegaPanelData[] {
   ];
 }
 
-export function Header() {
-  return <HeaderClient items={primaryNav} mobileItems={visibleNav} panels={buildPanels()} />;
+export async function Header() {
+  return <HeaderClient items={primaryNav} mobileItems={visibleNav} panels={await buildPanels()} />;
 }

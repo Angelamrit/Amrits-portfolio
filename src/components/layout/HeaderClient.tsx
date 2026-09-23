@@ -12,6 +12,7 @@ import { NavLink } from "./NavLink";
 import { MobileMenu } from "./MobileMenu";
 import { Wordmark } from "./Wordmark";
 import { MegaMenu, type MegaPanelData } from "./MegaMenu";
+import { useVenue } from "@/components/layout/VenueContext";
 
 type Indicator = { left: number; width: number; ready: boolean };
 
@@ -27,6 +28,7 @@ export function HeaderClient({
   mobileItems: NavItem[];
   panels?: MegaPanelData[];
 }) {
+  const venue = useVenue();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -181,14 +183,14 @@ export function HeaderClient({
             <p className="hidden items-center gap-2 eyebrow text-[0.52rem] text-fg/45 md:flex">
               <MapPin aria-hidden className="size-3 shrink-0" strokeWidth={1.5} />
               <span className="whitespace-nowrap">
-                {site.restaurant.address.street}, {site.restaurant.address.city}
+                {venue.address.street}, {venue.address.city}
               </span>
             </p>
             <p className="flex items-center gap-4">
-              <span className="hidden eyebrow text-[0.52rem] text-fg/45 lg:inline">{site.restaurant.hours}</span>
-              {site.restaurant.resyUrl && (
+              <span className="hidden eyebrow text-[0.52rem] text-fg/45 lg:inline">{venue.hours}</span>
+              {venue.resyUrl && (
                 <a
-                  href={site.restaurant.resyUrl}
+                  href={venue.resyUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="eyebrow whitespace-nowrap text-[0.52rem] text-gold-light/90 transition-colors hover:text-fg"

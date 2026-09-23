@@ -24,7 +24,7 @@ export function MeetTheChef() {
           </Reveal>
           <Reveal delay={0.2}>
             <p className="mt-8 max-w-2xl text-lead text-fg/70">
-              Owner and head chef of Angel Indian Restaurant in Jackson Heights, Queens. Born in Punjab, trained in Australia and in two of
+              Owner and head chef of Angel Indian Restaurant in Jackson Heights, Queens. Born in India, trained in Australia and in two of
               New York&rsquo;s most acclaimed Indian kitchens, and recognised by the Michelin Guide.
             </p>
           </Reveal>

@@ -3,6 +3,15 @@
 import { m, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 
+/**
+ * A viewport `amount` is a fraction of the CHILD's height, so anything taller
+ * than the window can never reach it and stays at opacity 0 forever — the press
+ * coverage wall is 3,300px, of which only ~15% fits a laptop viewport, so it
+ * never cleared a 0.2 threshold. Trigger on first contact and hold the reveal
+ * back with a viewport-relative margin instead, which is height-independent.
+ */
+const viewport = { amount: "some" } as const;
+
 type Props = {
   children: ReactNode;
   className?: string;
@@ -10,10 +19,9 @@ type Props = {
   y?: number;
   duration?: number;
   once?: boolean;
-  amount?: number;
 };
 
-export function Reveal({ children, className, delay = 0, y = 28, duration = 1.1, once = true, amount = 0.2 }: Props) {
+export function Reveal({ children, className, delay = 0, y = 28, duration = 1.1, once = true }: Props) {
   const reduce = useReducedMotion();
   if (reduce) return <div className={className}>{children}</div>;
   return (
@@ -21,7 +29,7 @@ export function Reveal({ children, className, delay = 0, y = 28, duration = 1.1,
       className={className}
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once, amount }}
+      viewport={{ once, ...viewport }}
       transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
@@ -48,7 +56,7 @@ export function RevealGroup({
       className={className}
       initial="hidden"
       whileInView="show"
-      viewport={{ once: true, amount: 0.15 }}
+      viewport={{ once: true, ...viewport }}
       variants={{ hidden: {}, show: { transition: { staggerChildren: stagger, delayChildren: delay } } }}
     >
       {children}

@@ -12,7 +12,8 @@
     "test": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./test/alias-hook.mjs --test \"test/**/*.test.ts\"",
     "test:watch": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./test/alias-hook.mjs --test --watch \"test/**/*.test.ts\"",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "admin:password": "node scripts/admin-password.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

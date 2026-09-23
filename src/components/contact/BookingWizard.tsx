@@ -4,17 +4,17 @@ import { startTransition, useActionState, useEffect, useMemo, useRef, useState }
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, m } from "motion/react";
 import { Check, ChevronLeft, ClipboardList, MapPin, Minus, Plus, Sparkles } from "lucide-react";
-import { submitInquiry, type InquiryState } from "@/app/contact/actions";
+import { submitInquiry, type InquiryState } from "@/app/(site)/contact/actions";
 import { budgetLabels, budgetOptions, experienceLabels, experienceOptions, type InquiryField } from "@/lib/validation/inquiry";
 import { experiences } from "@/data/experiences";
 import { process as bookingProcess } from "@/data/process";
-import { site } from "@/data/site";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
 import { CardHeader } from "@/components/ui/CardHeader";
 import { Input, Textarea } from "@/components/ui/Field";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
 import { InquirySuccess } from "./InquirySuccess";
+import { useVenue } from "@/components/layout/VenueContext";
 
 /* ------------------------------------------------------------------ */
 /* Types and static config                                             */
@@ -136,6 +136,7 @@ function Row({ label, value }: { label: string; value?: string }) {
 const initialState: InquiryState = { status: "idle" };
 
 export function BookingWizard() {
+  const venue = useVenue();
   const params = useSearchParams();
   const preset = params.get("experience");
   const presetExperience = experienceOptions.includes(preset as Experience) ? (preset as Experience) : "";
@@ -502,15 +503,15 @@ export function BookingWizard() {
           <SpotlightCard as="section" aria-labelledby="wizard-visit" className="group/card p-6 md:p-7">
             <CardHeader id="wizard-visit" title="Prefer to dine in?" icon={<MapPin className="size-4" strokeWidth={1.5} />} />
             <p className="mt-4 text-sm text-fg/70">
-              {site.restaurant.name}, {site.restaurant.address.street}, {site.restaurant.address.city}
+              {venue.name}, {venue.address.street}, {venue.address.city}
             </p>
-            <p className="mt-2 text-xs text-muted">{site.restaurant.hours} · Replies within two working days</p>
+            <p className="mt-2 text-xs text-muted">{venue.hours} · Replies within two working days</p>
             <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
               <Button href="/angel" variant="link">
                 About Angel
               </Button>
-              {site.restaurant.resyUrl && (
-                <Button href={site.restaurant.resyUrl} variant="link">
+              {venue.resyUrl && (
+                <Button href={venue.resyUrl} variant="link">
                   Reserve via Resy
                 </Button>
               )}

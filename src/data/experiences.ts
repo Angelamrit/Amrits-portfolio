@@ -8,7 +8,7 @@ export const experiences: Experience[] = [
     short: "A multi-course menu cooked and served by Chef Amrit at your home or chosen venue.",
     description: [
       "Chef Amrit brings the kitchen of Angel to your table. A personalised, multi-course menu, designed around your guests and cooked in front of them, from the first chaat to the last cup of chai.",
-      "The menu is predominantly vegetarian and always Halal, moving from Punjabi street food to slow-cooked regional delicacies. Every dish is prepared the way it is at the restaurant: paneer made in-house, spices ground the same day.",
+      "The menu is predominantly vegetarian and always Halal, moving from Indian street food to slow-cooked regional delicacies. Every dish is prepared the way it is at the restaurant: paneer made in-house, spices ground the same day.",
     ],
     idealFor: ["Intimate celebrations", "Family gatherings", "Milestone dinners"],
     includes: ["Consultation and bespoke menu", "Chef and service team", "All ingredients and equipment", "Full clean-up"],
@@ -81,7 +81,7 @@ export const experiences: Experience[] = [
     name: "Weekly Personal Chef",
     short: "Meal preparation designed around your lifestyle, preferences and dietary needs.",
     description: [
-      "Honest, home-style Punjabi cooking, prepared weekly in your kitchen. Chef Amrit builds a rotating plan around your preferences, health goals and dietary requirements, then cooks, labels and stores it.",
+      "Honest, home-style Indian cooking, prepared weekly in your kitchen. Chef Amrit builds a rotating plan around your preferences, health goals and dietary requirements, then cooks, labels and stores it.",
       "It is the food his mother cooked every day, simple but good, made for a busy household.",
     ],
     idealFor: ["Busy families", "Dietary programmes", "Extended stays in New York"],

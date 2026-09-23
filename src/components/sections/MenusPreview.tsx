@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { menus } from "@/data/menus";
-import { dishById } from "@/data/dishes";
+import { getMenus } from "@/lib/content/menus";
+import { getDishes } from "@/lib/content/dishes";
+import { getVenue } from "@/lib/content/venue";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -13,7 +14,10 @@ import { Section } from "@/components/ui/Section";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
 
 /** Chapter 05: every menu, presented like a printed menu card with its courses listed. */
-export function MenusPreview() {
+export async function MenusPreview() {
+  const [menus, dishes, venue] = await Promise.all([getMenus(), getDishes(), getVenue()]);
+  const dishById = (id: string) => dishes.find((dish) => dish.id === id);
+
   return (
     <Section id="menus" tone="raised" orbs="ember" divider className="scroll-mt-20">
       <Container>
@@ -34,11 +38,13 @@ export function MenusPreview() {
               </p>
             </Reveal>
           </div>
-          <Reveal delay={0.2}>
-            <Button href="/menus" variant="glass">
-              Explore all menus
-            </Button>
-          </Reveal>
+          {venue.menuUrl && (
+            <Reveal delay={0.2}>
+              <Button href={venue.menuUrl} external>
+                Full menu at Angel
+              </Button>
+            </Reveal>
+          )}
         </div>
 
         <RevealGroup className="mt-16 grid gap-6 lg:grid-cols-3">

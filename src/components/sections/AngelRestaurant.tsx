@@ -1,5 +1,5 @@
 import { restaurant } from "@/data/restaurant";
-import { site } from "@/data/site";
+import { getVenue } from "@/lib/content/venue";
 import { Badge } from "@/components/ui/Badge";
 import { CompareSlider } from "@/components/ui/CompareSlider";
 import { Button } from "@/components/ui/Button";
@@ -18,7 +18,9 @@ import { StatRow } from "@/components/ui/Stat";
  * Chapter 02: the chef's own restaurant, told over a full-bleed parallax
  * photograph of the dining room.
  */
-export function AngelRestaurant() {
+export async function AngelRestaurant() {
+  const venue = await getVenue();
+
   return (
     <section id="angel" className="tone-dark relative scroll-mt-20 overflow-hidden surface-brown-deep py-section grain">
       <Parallax amount={80}>
@@ -74,8 +76,8 @@ export function AngelRestaurant() {
                 </ul>
                 <div className="mt-10 flex flex-wrap gap-4">
                   <Button href="/angel">Discover Angel</Button>
-                  {site.restaurant.resyUrl && (
-                    <Button href={site.restaurant.resyUrl} variant="outline">
+                  {venue.resyUrl && (
+                    <Button href={venue.resyUrl} variant="outline">
                       Reserve via Resy
                     </Button>
                   )}

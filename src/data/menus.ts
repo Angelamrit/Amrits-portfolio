@@ -14,15 +14,15 @@ export const menus: Menu[] = [
     courseCount: 7,
     courseLabel: "7 Courses",
     intro:
-      "Served at Angel's new upscale location, the tasting menu is Chef Amrit's own journey: from the street food of Punjab to slow-cooked regional delicacies, told across seven courses.",
+      "Served at Angel's new upscale location, the tasting menu is Chef Amrit's own journey: from the street food of India to slow-cooked regional delicacies, told across seven courses.",
     courses: [
-      { title: "Welcome", dishId: "dahi-batata-puri", status: "confirmed" },
-      { title: "Fritter", dishId: "kale-pakora", status: "confirmed" },
-      { title: "Vegetable", dishId: "lassuni-gobi", status: "confirmed" },
-      { title: "Paneer", dishId: "housemade-paneer", status: "confirmed" },
+      { title: "Welcome", dishId: "chole-bhatura", status: "confirmed" },
+      { title: "Paneer", dishId: "amritsari-paneer-kulcha", status: "confirmed" },
+      { title: "Potato", dishId: "amritsari-aloo-kulcha", status: "confirmed" },
+      { title: "Vegetable", dishId: "mix-veg-kulcha", status: "confirmed" },
       { title: "Rice", dishId: "vegetable-dum-biryani", status: "confirmed" },
-      { title: "Regional Course", status: "draft", description: "A seasonal regional delicacy, chosen by Chef." },
-      { title: "Sweet", status: "draft", description: "Dessert course to be confirmed with Chef." },
+      { title: "Chicken", dishId: "chicken-dum-biryani", status: "confirmed" },
+      { title: "Goat", dishId: "goat-dum-biryani", status: "confirmed" },
     ],
     notes: [
       "Predominantly vegetarian. 100% Halal.",
@@ -40,13 +40,13 @@ export const menus: Menu[] = [
     courseCount: 5,
     courseLabel: "Family Style",
     intro:
-      "The dishes that built Angel's reputation in Jackson Heights, served to share. Bold, honest and rooted in Punjab.",
+      "The dishes that built Angel's reputation in Jackson Heights, served to share. Bold, honest and rooted in India.",
     courses: [
-      { title: "Chaat", dishId: "dahi-batata-puri", status: "confirmed" },
-      { title: "Pakora", dishId: "kale-pakora", status: "confirmed" },
-      { title: "Gobi", dishId: "lassuni-gobi", status: "confirmed" },
-      { title: "Paneer", dishId: "housemade-paneer", status: "confirmed" },
+      { title: "Chole", dishId: "chole-bhatura", status: "confirmed" },
+      { title: "Kulcha", dishId: "amritsari-paneer-kulcha", status: "confirmed" },
       { title: "Biryani", dishId: "vegetable-dum-biryani", status: "confirmed" },
+      { title: "Chicken", dishId: "chicken-dum-biryani", status: "confirmed" },
+      { title: "Goat", dishId: "goat-dum-biryani", status: "confirmed" },
     ],
     notes: ["Predominantly vegetarian. 100% Halal.", "Breads and rice are served alongside."],
     venue: "At Angel · Jackson Heights",
@@ -62,9 +62,9 @@ export const menus: Menu[] = [
     intro:
       "A framework for private dining, dinner parties and celebrations. Chef Amrit designs each menu around your guests, the season and your setting.",
     courses: [
-      { title: "Street Food Welcome", status: "confirmed", name: "Chaat & Pakora", description: "Passed bites drawn from Angel's street-food canon, such as Dahi Batata Puri and Kale Pakora." },
-      { title: "From the Tandoor", status: "confirmed", name: "Housemade Paneer & Vegetables", description: "Charred in the tandoor and served with fresh breads." },
-      { title: "The Table", status: "confirmed", name: "Regional Delicacies & Dum Biryani", description: "Slow-cooked centrepieces served family style, including Lassuni Gobi and Vegetable Dum Biryani." },
+      { title: "Street Food Welcome", status: "confirmed", name: "Chole Bhatura", description: "Chickpeas and fried flat bread, passed as guests arrive." },
+      { title: "From the Tandoor", status: "confirmed", name: "Amritsari Kulcha", description: "Paneer, potato and mixed vegetable kulcha, served with chickpeas, pickle and yogurt." },
+      { title: "The Table", status: "confirmed", name: "Dum Biryani", description: "Vegetable, chicken and goat dum biryani, sealed and slow-cooked, served family style with raita." },
       { title: "Sweet & Chai", status: "draft", description: "Dessert course designed with Chef for the occasion." },
     ],
     notes: [
