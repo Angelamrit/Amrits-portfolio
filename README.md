@@ -75,8 +75,11 @@ All images are stock placeholders stored in `public/images/placeholders/` and fl
 | `RESEND_API_KEY` | Resend API key for enquiry emails |
 | `INQUIRY_TO_EMAIL` | Where enquiries are sent (comma-separated allowed) |
 | `INQUIRY_FROM_EMAIL` | Verified sender, e.g. `Chef Amrit Pal Singh <inquiries@yourdomain.com>` |
+| `GEMINI_API_KEY` | Google Gemini key for the site assistant. Server-side only — never prefix with `NEXT_PUBLIC_`. |
 
 Without `RESEND_API_KEY` and `INQUIRY_TO_EMAIL`, enquiries are logged to the server console as `[inquiry:dry-run]` and the visitor still sees the success state.
+
+Without `GEMINI_API_KEY`, the assistant still opens and answers, but replies with the restaurant's phone and email instead of calling Gemini.
 
 ## Feature assets to supply
 

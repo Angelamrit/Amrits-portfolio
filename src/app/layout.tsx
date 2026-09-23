@@ -10,6 +10,7 @@ import { Footer } from "@/components/layout/Footer";
 import { SkipLink } from "@/components/layout/SkipLink";
 import { StickyBookCta } from "@/components/layout/StickyBookCta";
 import { PageTransition } from "@/components/layout/PageTransition";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 // Self-hosted variable fonts (Fontsource builds of the Google Fonts originals).
 const cormorant = localFont({
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
           <Footer />
           <StickyBookCta />
+          <ChatWidget />
           <PageTransition />
         </Providers>
       </body>
