@@ -12,7 +12,6 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Em } from "@/components/ui/Heading";
 import { ImageFrame } from "@/components/ui/ImageFrame";
 import { NeighborhoodMap } from "@/components/ui/NeighborhoodMap";
-import { Medallion } from "@/components/ui/Medallion";
 import { Orbs } from "@/components/ui/Orbs";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
@@ -75,7 +74,7 @@ export function Footer() {
   ].filter((s): s is { label: string; href: string; Icon: typeof InstagramIcon } => Boolean(s));
 
   return (
-    <footer aria-labelledby="footer-heading" className="tone-dark grain relative overflow-hidden bg-gradient-to-b from-brown to-brown-deep">
+    <footer aria-labelledby="footer-heading" className="section-lazy tone-dark grain relative overflow-hidden bg-gradient-to-b from-brown to-brown-deep">
       <span aria-hidden className="hairline-center absolute inset-x-0 top-0 z-[3]" />
 
       {/* The dining room at night, barely there, fading out before the cards begin. */}
@@ -89,8 +88,8 @@ export function Footer() {
 
       <Container className="relative z-[2] pt-20 md:pt-28">
         {/* ---- The invitation ---- */}
-        <div className="grid gap-12 lg:grid-cols-12 lg:items-end">
-          <div className="lg:col-span-8">
+        <div>
+          <div>
             <Reveal>
               <Eyebrow>
                 {restaurant.name} · {restaurant.address.city}
@@ -103,20 +102,11 @@ export function Footer() {
             </Reveal>
             <Reveal delay={0.2}>
               <div className="mt-10 flex flex-wrap gap-4">
-                <Button href={site.cta.href}>{site.cta.label}</Button>
-                {restaurant.resyUrl && (
-                  <Button href={restaurant.resyUrl} variant="outline">
-                    Reserve at Angel
-                  </Button>
-                )}
+                <Button href={restaurant.resyUrl ?? site.cta.href}>{site.cta.label}</Button>
+                <Button href="/contact" variant="glass">
+                  Get in touch
+                </Button>
               </div>
-            </Reveal>
-          </div>
-          <div className="hidden lg:col-span-4 lg:flex lg:justify-end">
-            <Reveal delay={0.3}>
-              <Medallion text="Michelin Bib Gourmand · Est. 2019 · Simple but good · " size={200} className="text-gold-light">
-                <span className="font-display text-6xl font-light italic leading-none text-gold-gradient">A</span>
-              </Medallion>
             </Reveal>
           </div>
         </div>

@@ -6,8 +6,10 @@ import { getSignatureDishes } from "@/lib/content/dishes";
 import { getMenus } from "@/lib/content/menus";
 import { getVenue } from "@/lib/content/venue";
 import { restaurant } from "@/data/restaurant";
+import { seo } from "@/data/seo";
 import { buildMetadata } from "@/lib/seo/metadata";
-import { FinalCta } from "@/components/sections/FinalCta";
+import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Badge, DietaryBadges } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { CompareSlider } from "@/components/ui/CompareSlider";
@@ -22,19 +24,14 @@ import { Section } from "@/components/ui/Section";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
 import { StatRow } from "@/components/ui/Stat";
 
-export const metadata: Metadata = buildMetadata({
-  title: "Angel Indian Restaurant",
-  description:
-    "Angel Indian Restaurant, Jackson Heights: Chef Amrit Pal Singh's Michelin Bib Gourmand restaurant. The story, the two dining rooms, the house specialties and how to reserve.",
-  path: "/angel",
-});
+export const metadata: Metadata = buildMetadata({ seo: seo.angel, path: "/angel" });
 
 export default async function AngelPage() {
   const [menus, signatureDishes, venue] = await Promise.all([getMenus(), getSignatureDishes(), getVenue()]);
-  const atAngel = menus.filter((m) => m.kind !== "event");
 
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "Angel Indian Restaurant", path: "/angel" }])} />
       <PageHero
         eyebrow="The Restaurant"
         title={
@@ -146,7 +143,7 @@ export default async function AngelPage() {
       {/* 03 What is served */}
       <Section tone="base" orbs="gold" pattern divider>
         <Container>
-          <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between md:[&>*:last-child]:shrink-0">
             <div className="max-w-2xl">
               <Reveal>
                 <Eyebrow>03 · On the Table</Eyebrow>
@@ -174,7 +171,7 @@ export default async function AngelPage() {
               <Reveal>
                 <Eyebrow rule={false}>Menus served at Angel</Eyebrow>
                 <ul className="mt-6 space-y-3">
-                  {atAngel.map((m) => (
+                  {menus.map((m) => (
                     <li key={m.slug}>
                       <Link
                         href={`/menus?menu=${m.slug}`}
@@ -271,7 +268,7 @@ export default async function AngelPage() {
                   Dinner at <Em shimmer>Angel.</Em>
                 </Heading>
                 <p className="mt-8 max-w-md text-lead text-fg/70">
-                  Reserve a table, or bring the kitchen of Angel to your own occasion with a private experience cooked by Chef Amrit.
+                  Chef Amrit is in the kitchen every night. Reserve a table and come taste it for yourself.
                 </p>
               </Reveal>
             </div>
@@ -309,8 +306,8 @@ export default async function AngelPage() {
                   </dl>
                   <div className="relative mt-10 flex flex-wrap gap-4">
                     {venue.resyUrl && <Button href={venue.resyUrl}>Reserve via Resy</Button>}
-                    <Button href="/experiences" variant="outline">
-                      Private experiences
+                    <Button href="/contact" variant="glass">
+                      Get in touch
                     </Button>
                   </div>
                 </div>
@@ -320,15 +317,6 @@ export default async function AngelPage() {
         </Container>
       </Section>
 
-      <FinalCta
-        eyebrow="Beyond the restaurant"
-        title={
-          <>
-            Prefer the chef <Em shimmer>at your own table?</Em>
-          </>
-        }
-        body="Private dinners, celebrations, corporate events and residencies, cooked by Chef Amrit with the same care that earned Angel its Bib Gourmand."
-      />
     </>
   );
 }

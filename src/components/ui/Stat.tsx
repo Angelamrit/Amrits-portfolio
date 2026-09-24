@@ -30,11 +30,13 @@ export function StatRow({ stats, className, glass = false }: { stats: StatItem[]
       )}
     >
       {stats.map((s) => (
-        <div key={s.label} className="flex flex-col gap-2">
+        <div key={s.label} className="flex min-w-0 flex-col gap-2">
           <dd className="order-1 font-display text-display-sm font-light leading-none">
             <StatValue value={s.value} className="text-gold-gradient" />
           </dd>
-          <dt className="order-2 eyebrow text-muted">{s.label}</dt>
+          {/* Three columns on a phone leave ~90px each; the eyebrow's wide tracking
+              would push words like "Publications" into the next column. */}
+          <dt className="order-2 eyebrow text-muted [overflow-wrap:anywhere] max-sm:text-[0.56rem] max-sm:tracking-[0.12em]">{s.label}</dt>
         </div>
       ))}
     </dl>

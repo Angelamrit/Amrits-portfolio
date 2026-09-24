@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { testimonials, voices } from "@/data/testimonials";
 import { filterPlaceholders } from "@/lib/placeholders";
+import { seo } from "@/data/seo";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { FinalCta } from "@/components/sections/FinalCta";
 import { Container } from "@/components/ui/Container";
@@ -12,11 +13,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { Section } from "@/components/ui/Section";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
 
-export const metadata: Metadata = buildMetadata({
-  title: "Testimonials",
-  description: "Genuine words about Chef Amrit Pal Singh from peers and guests.",
-  path: "/testimonials",
-});
+export const metadata: Metadata = buildMetadata({ seo: seo.testimonials, path: "/testimonials", noindex: true });
 
 export default function TestimonialsPage() {
   const client = filterPlaceholders(testimonials);

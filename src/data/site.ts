@@ -28,7 +28,7 @@ export const site: SiteConfig = {
   shortName: "Amrit Pal Singh",
   url: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
   description:
-    "Chef Amrit Pal Singh, owner and head chef of Michelin Bib Gourmand–awarded Angel Indian Restaurant in Jackson Heights, Queens. Private dining, tasting menus and bespoke culinary experiences rooted in India.",
+    "Chef Amrit Pal Singh, owner and head chef of Michelin Bib Gourmand–awarded Angel Indian Restaurant in Jackson Heights, Queens. Tasting menus, house specialties and regional Indian cooking, served every night at Angel.",
   locale: "en_US",
   restaurant: {
     name: "Angel Indian Restaurant",
@@ -49,13 +49,13 @@ export const site: SiteConfig = {
   social: {
     // TODO: add verified handles.
   },
-  cta: { label: "Book a Private Experience", href: "/contact" },
+  cta: { label: "Reserve a Table", href: "/contact" },
   thankYou: {
     // TODO: record a 20–30 second clip of Chef Amrit and drop it at public/video/chef-thank-you.mp4
     videoUrl: "/video/chef-thank-you.mp4",
     poster: images.chefPlating,
     headline: "A message from Chef Amrit",
     message:
-      "Thank you for thinking of me for your occasion. I read every enquiry myself, and I will be in touch within two working days to talk about your guests, your setting and the menu I would love to cook for you.",
+      "Thank you for writing to me. I read every message myself, and I will be in touch within two working days. I hope to welcome you to Angel soon.",
   },
 };

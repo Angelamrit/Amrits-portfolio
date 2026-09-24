@@ -4,7 +4,7 @@ import { Compass } from "lucide-react";
 /**
  * A wrong turn inside the dashboard. Kept separate from the site's 404 so a
  * signed-in admin is offered the way back to the dashboard rather than to the
- * booking page.
+ * public site.
  */
 export default function DashboardNotFound() {
   return (

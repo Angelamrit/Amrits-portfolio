@@ -7,7 +7,6 @@ import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Heading, Em } from "@/components/ui/Heading";
 import { ImageFrame } from "@/components/ui/ImageFrame";
-import { Medallion } from "@/components/ui/Medallion";
 import { Orbs } from "@/components/ui/Orbs";
 import { Parallax } from "@/components/ui/Parallax";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
@@ -32,7 +31,7 @@ export async function AngelRestaurant() {
       <span aria-hidden className="hairline-center absolute inset-x-0 top-0 z-[2]" />
 
       <Container className="relative z-[2]">
-        <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between md:[&>*:last-child]:shrink-0">
           <div className="max-w-3xl">
             <Reveal>
               <Eyebrow>02 · The Restaurant</Eyebrow>
@@ -49,14 +48,6 @@ export async function AngelRestaurant() {
               </p>
             </Reveal>
           </div>
-          <Reveal delay={0.25} className="hidden md:block">
-            <Medallion text="Michelin Guide · Bib Gourmand · New York · " size={190} className="text-gold-light">
-              <span className="block text-center font-display leading-none">
-                <span className="block text-[0.5rem] uppercase tracking-[0.3em] text-fg/60">Michelin</span>
-                <span className="mt-1 block text-lg text-gold-gradient">Bib Gourmand</span>
-              </span>
-            </Medallion>
-          </Reveal>
         </div>
 
         <div className="mt-16 grid gap-6 lg:grid-cols-12">

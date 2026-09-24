@@ -5,31 +5,15 @@ import { resetRateLimits } from "@/lib/rate-limit";
 
 /**
  * These run against the real pipeline with no Resend credentials, which is the
- * dry-run path: the enquiry is logged rather than sent. That is deliberate —
+ * dry-run path: the message is logged rather than sent. That is deliberate —
  * everything worth asserting here (the bot traps, the two tiers of rate limit,
  * what the guest is told) happens before delivery.
  */
 
 const NOW = 1_750_000_000_000;
 
-/**
- * Every call gets an in-memory booking store, so nothing here writes into the
- * real data directory. `stored` is what the pipeline tried to keep; `result`
- * is what the store answers — `null` for "could not save", and `durable`
- * for whether it would survive a restart.
- */
-function ctx(ip: string, result: { durable: boolean } | null = null) {
-  const stored: unknown[] = [];
-  return {
-    ip,
-    now: () => NOW,
-    stored,
-    saveBooking: async (inquiry: unknown) => {
-      stored.push(inquiry);
-      return result ? { id: "bk-test", ref: "APS-TEST1", durable: result.durable } : null;
-    },
-    markEmailed: async () => {},
-  };
+function ctx(ip: string) {
+  return { ip, now: () => NOW };
 }
 
 /**
@@ -44,11 +28,8 @@ function validInput(overrides: Record<string, string> = {}): Record<string, stri
     name: "Test Guest",
     email: "guest@example.com",
     phone: "+1 555 0100",
-    location: "Jackson Heights",
-    guests: "8",
-    experience: "tasting-menu",
-    budget: "2k-5k",
-    message: "We would like to book the chef's tasting menu for eight guests next month.",
+    topic: "angel",
+    message: "We loved the tasting menu last week and wanted to say thank you to the kitchen.",
     company: "",
     startedAt: String(NOW - 10_000),
     ...overrides,
@@ -136,7 +117,7 @@ test("one address cannot be used to mail-bomb a third party", async () => {
   const blocked = await handleInquiry(validInput({ email: victim }), ctx("10.0.0.4"));
   assert.equal(blocked.status, "error");
   if (blocked.status !== "error") return;
-  assert.match(blocked.formError ?? "", /lot of enquiries/i);
+  assert.match(blocked.formError ?? "", /lot of messages/i);
 });
 
 test("one connection cannot flood the chef's inbox", async () => {
@@ -156,7 +137,7 @@ test("invalid submissions are rate limited too, so validation cannot be made exp
 
   for (let i = 0; i < 40; i += 1) {
     const state = await handleInquiry(junk, ctx("8.8.8.8"));
-    if (state.status === "error" && /lot of enquiries/i.test(state.formError ?? "")) blocked += 1;
+    if (state.status === "error" && /lot of messages/i.test(state.formError ?? "")) blocked += 1;
   }
 
   assert.ok(blocked > 0, "a flood of invalid submissions should eventually be turned away");
@@ -179,43 +160,10 @@ test("in production an enquiry that was not delivered is never reported as sent"
   }
 });
 
-test("an enquiry that could not be emailed but is safely stored is not lost", async () => {
-  // The dashboard is the record now. A mailer outage in production must not
-  // turn a booking the chef can see into an error the guest is shown.
-  const original = process.env.NODE_ENV;
-  try {
-    mutableEnv.NODE_ENV = "production";
-    const context = ctx("9.9.9.10", { durable: true });
-    const state = await handleInquiry(validInput(), context);
+test("a message about a topic the form does not offer is rejected", async () => {
+  const state = await handleInquiry(validInput({ topic: "wedding-catering" }), ctx("9.9.9.12"));
 
-    assert.equal(state.status, "success");
-    assert.equal(context.stored.length, 1);
-  } finally {
-    mutableEnv.NODE_ENV = original;
-  }
-});
-
-test("storage that will not survive a restart does not count as received", async () => {
-  const original = process.env.NODE_ENV;
-  try {
-    mutableEnv.NODE_ENV = "production";
-    const state = await handleInquiry(validInput(), ctx("9.9.9.11", { durable: false }));
-    assert.equal(state.status, "error");
-  } finally {
-    mutableEnv.NODE_ENV = original;
-  }
-});
-
-test("bot traps and invalid enquiries never reach the bookings list", async () => {
-  const honeypot = ctx("9.9.9.12", { durable: true });
-  await handleInquiry(validInput({ company: "Acme Ltd" }), honeypot);
-  assert.equal(honeypot.stored.length, 0, "a honeypot hit must not be stored");
-
-  const tooFast = ctx("9.9.9.13", { durable: true });
-  await handleInquiry(validInput({ startedAt: String(NOW - 500) }), tooFast);
-  assert.equal(tooFast.stored.length, 0, "a form filled by a script must not be stored");
-
-  const invalid = ctx("9.9.9.14", { durable: true });
-  await handleInquiry(validInput({ email: "not-an-address" }), invalid);
-  assert.equal(invalid.stored.length, 0, "an enquiry that failed validation must not be stored");
+  assert.equal(state.status, "error");
+  if (state.status !== "error") return;
+  assert.ok(state.fieldErrors.topic, "the topic should be flagged");
 });

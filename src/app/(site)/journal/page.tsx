@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { articles } from "@/data/journal";
 import { filterPlaceholders } from "@/lib/placeholders";
+import { seo } from "@/data/seo";
 import { buildMetadata } from "@/lib/seo/metadata";
+import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { ArticleCard } from "@/components/journal/ArticleCard";
 import { FinalCta } from "@/components/sections/FinalCta";
 import { Badge } from "@/components/ui/Badge";
@@ -13,11 +16,12 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Section } from "@/components/ui/Section";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
 
-export const metadata: Metadata = buildMetadata({
-  title: "Journal",
-  description: "Recipes, stories and notes from the kitchen of Chef Amrit Pal Singh.",
-  path: "/journal",
-});
+const hasPublished = filterPlaceholders(articles).some((a) => a.status === "published");
+
+// Until the first article is approved this page is a list of titles marked
+// "upcoming", which search engines treat as thin content. It stays reachable
+// but out of the index, and out of the sitemap, until something is published.
+export const metadata: Metadata = buildMetadata({ seo: seo.journal, path: "/journal", noindex: !hasPublished });
 
 export default function JournalPage() {
   const live = filterPlaceholders(articles).filter((a) => a.status === "published" || process.env.NEXT_PUBLIC_SHOW_PLACEHOLDERS === "true");
@@ -26,6 +30,7 @@ export default function JournalPage() {
 
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "Journal", path: "/journal" }])} />
       <PageHero
         eyebrow="Journal"
         title={

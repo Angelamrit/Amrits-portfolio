@@ -1,13 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, m } from "motion/react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ArrowUpRight, Award, Newspaper, PlayCircle, Quote as QuoteIcon, Star } from "lucide-react";
 import type { PressItem } from "@/types/content";
 import { cn } from "@/lib/cn";
 import { Badge } from "@/components/ui/Badge";
-
-const ease = [0.16, 1, 0.3, 1] as const;
 
 export const kindLabel: Record<PressItem["kind"], string> = {
   award: "Award",
@@ -102,29 +99,21 @@ export function PressWall({ items }: { items: PressItem[] }) {
 
       {/* wall */}
       <ul className="mt-10 grid gap-4">
-        {/* No `layout` prop: the app loads motion's `domAnimation` feature set, which excludes layout animations. */}
-        <AnimatePresence initial={false}>
-          {visible.map((item, i) => {
+        {visible.map((item, i) => {
             const Icon = kindIcon[item.kind];
             const flagship = item.tier === "flagship";
             return (
-              <m.li
-                key={item.id}
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.45, ease, delay: Math.min(i * 0.04, 0.24) }}
+              <li
+                key={`${filter}-${item.id}`}
+                className="enter"
+                style={{ "--enter-y": "18px", "--enter-delay": `${Math.min(i * 0.04, 0.24)}s` } as CSSProperties}
               >
                 <article
+                  data-spotlight=""
                   className={cn(
                     "spotlight border-gradient group relative overflow-hidden rounded-[1.5rem] transition-all duration-700 ease-luxe hover:shadow-glow",
                     flagship ? "glass-strong p-7 md:p-10" : "glass p-6 md:p-8",
                   )}
-                  onMouseMove={(e) => {
-                    const r = e.currentTarget.getBoundingClientRect();
-                    e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
-                    e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
-                  }}
                 >
                   {flagship && <span aria-hidden className="orb orb-gold -right-[15%] -top-[60%] size-[45%] opacity-40" />}
                   {item.url && (
@@ -173,10 +162,9 @@ export function PressWall({ items }: { items: PressItem[] }) {
                     </div>
                   </div>
                 </article>
-              </m.li>
+              </li>
             );
           })}
-        </AnimatePresence>
       </ul>
     </div>
   );

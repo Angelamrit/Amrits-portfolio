@@ -20,22 +20,21 @@ Other scripts: `npm run build`, `npm run start`, `npm run lint`, `npm run typech
 
 ## Site map
 
-The site is arranged as one story, in the order a visitor should meet it: who the chef is, where he cooks, what he cooks, what he offers privately, proof, process, action. Navigation follows the same order.
+The site is arranged as one story, in the order a visitor should meet it: who the chef is, where he cooks, what he cooks, proof, action. Chef Amrit cooks only at Angel, so there is no private dining or event booking; every call to action leads to a table at the restaurant. Navigation follows the same order.
 
 | Route | Purpose |
 |---|---|
-| `/` | Hero → credentials strip → 01 Meet the Chef → 02 Angel (the restaurant) → 03 Signature Dishes → 04 Private Experiences → 05 Menus → 06 Gallery → 07 Recognition → 08 How it works → Final CTA |
+| `/` | Hero → credentials strip → 01 Meet the Chef → 02 Angel (the restaurant) → 03 Signature Dishes → 04 Menus → 05 Gallery → 06 Recognition → Final CTA (reserve a table) |
 | `/about` | The Chef: story → philosophy → milestones → training and career → recognition |
 | `/angel` | The Restaurant: story → the two dining rooms → what is served → recognition → visit / reserve |
-| `/experiences` and `/experiences/[slug]` | Six private services, then a cross-link to dining at Angel, then the booking process |
-| `/menus` | Tasting menu and house specialties (served at Angel) plus the private event menu (tab switcher, `?menu=`) |
+| `/menus` | Tasting menu and house specialties, both served at Angel (tab switcher, `?menu=`) |
 | `/gallery` | Filterable editorial grid with lightbox |
 | `/press` | Genuine press and awards only |
 | `/journal` and `/journal/[slug]` | Articles (drafts hidden until published; footer and mobile nav only until then) |
 | `/testimonials` | Built but hidden from the nav until real guest quotes exist |
-| `/contact` | Seven-step booking wizard with live summary and estimated menu → server action → Resend email to the chef + video auto-reply to the guest |
+| `/contact` | Reserve at Angel (Resy), address and phone, plus a short message form (topic, name, email, message) → server action → Resend email to the chef + video auto-reply to the guest |
 | `/thank-you` | Chef's video message, linked from the auto-reply email (not indexed) |
-| `/admin` | The dashboard: bookings, visitor numbers, menus, dishes, restaurant details and photos. Password-protected, never indexed. See [The dashboard](#the-dashboard). |
+| `/admin` | The dashboard: visitor numbers, menus, dishes, restaurant details and photos. Password-protected, never indexed. See [The dashboard](#the-dashboard). |
 
 ## Editing content
 
@@ -48,11 +47,9 @@ All copy and images live in `src/data/`. Components only render what they are gi
 | `restaurant.ts` | Angel: story, features, the two dining rooms, facts |
 | `dishes.ts` | Signature dishes with dietary tags |
 | `menus.ts` | Menus and courses. Courses with `status: "draft"` show "To be confirmed with Chef". |
-| `experiences.ts` | The six services (copy, inclusions, FAQ) |
 | `gallery.ts` | Gallery items and categories |
 | `journal.ts` | Articles as typed blocks. Set `status: "published"` and `isPlaceholder: false` to release. |
 | `press.ts` / `testimonials.ts` | Genuine recognition only. Never add unverified awards or invented quotes. |
-| `process.ts` | The five booking steps |
 | `nav.ts` | Navigation order. `secondary` keeps a page out of the desktop header; `hidden` removes it everywhere. |
 | `images.ts` | Every photograph on the site |
 
@@ -91,25 +88,16 @@ A plain `ADMIN_PASSWORD` is accepted instead if you would rather not run the scr
 
 | Screen | What it is for |
 |---|---|
-| Home | What needs the chef today: enquiries waiting for a reply, confirmed events coming up, one-tap shortcuts, and a glance at visitor numbers |
-| Bookings | Every enquiry from the booking form, plus any added by hand. Move each one through New → Contacted → Confirmed → Completed (or Declined), reply by email or phone in one tap, keep private notes, correct details, search, filter, and download the list as a spreadsheet |
+| Home | One-tap shortcuts to the jobs the chef comes here to do, and a glance at visitor numbers |
 | Visitors | Visitors, page views, visits, traffic over time, most-read pages, referrers, devices, hours of the day and the latest arrivals, over 24 hours to 12 months |
 | Menus | Names, intros, notes, and the courses themselves — add, remove, reorder, point a course at a dish or write it out |
 | Dishes | Names, taglines, descriptions, dietary tags, signature flag, order, and which photograph is used |
 | Restaurant details | Address, hours, telephone, reservations and menu links, social links, the badges beside the restaurant |
 | Photos | Upload photographs, caption them, set the description screen readers read, reorder, hide, delete |
 
-The sidebar shows how many enquiries are waiting for a reply. On a phone, Home, Bookings and Visitors sit in a tab bar at the bottom of the screen.
+On a phone, Home, Visitors and Menus sit in a tab bar at the bottom of the screen.
 
 Every content screen has a **Reset to original** that discards the stored edits and returns to the version in `src/data/`.
-
-### Bookings
-
-Every enquiry the website's booking form accepts is **stored first and emailed second**. The dashboard is the record; the email to the chef is the notification, and now carries the booking's reference (e.g. `APS-7K3QX`) and a link straight to it. An enquiry whose email bounces or lands in spam is still in the list, marked so it is obvious the dashboard is the only copy.
-
-That also changes what the guest is told. An enquiry now counts as received if the email went out **or** it was saved to storage that survives a restart — so a mailer outage in production no longer turns a booking the chef can see into an error for the guest. If neither worked, the guest is still told the truth and asked to telephone.
-
-Bookings carry a guest's name, email and phone, so every action checks the session itself, and the downloaded spreadsheet is guarded against formula injection (a guest-typed `=…` is written as text rather than run when the file is opened). A booking that is not going ahead should be marked **Declined**, which keeps the record; **Delete** is for spam and for a guest who asks to be erased.
 
 ### How edits reach the site
 
@@ -165,7 +153,7 @@ Every route here is static, so Next already serves the pages themselves with `Ca
 
 | What | Before | Now |
 |---|---|---|
-| `/public` files (`/images`, `/sequences`, `/video`) | `max-age=0` — revalidated on every visit | `public, max-age=604800, stale-while-revalidate=2592000` |
+| `/public` files (`/images`, `/video`) | `max-age=0` — revalidated on every visit | `public, max-age=604800, stale-while-revalidate=2592000` |
 | Optimized images from `/_next/image` | 4 hours (the default `minimumCacheTTL`) | 7 days, matching the upstream file |
 
 Seven days rather than a year because these filenames carry no content hash: an `immutable` year would strand a browser on an old photo when a new one is dropped in. A week self-corrects without needing a CDN purge, and the `stale-while-revalidate` window keeps the swap invisible to whoever is on the site at the time. The same value drives the optimizer, whose cache has no invalidation hook at all — which is the reason not to reach for a longer one.
@@ -198,7 +186,6 @@ The suite covers the parts where being wrong is expensive rather than merely vis
 
 | Asset | Where | Notes |
 |---|---|---|
-| Plating frames | `public/sequences/plating/frame-001.jpg …` | Scroll-scrubbed sequence on the home page. Shipped frames are a generated placeholder; export 48–96 real frames at 1400×875 and update `count` in `src/data/sequences.ts`. |
 | Thank-you video | `public/video/chef-thank-you.mp4` | 20–30 s clip of Chef Amrit. Shown on the enquiry success screen and `/thank-you`, and linked from the auto-reply email. Until it exists the poster image is shown. |
 | Then / now photos | `src/data/restaurant.ts` → `thenNow` | The before/after slider (2019 kitchen vs new dining room). |
 

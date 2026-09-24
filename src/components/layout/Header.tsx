@@ -1,5 +1,4 @@
 import { primaryNav, visibleNav } from "@/data/nav";
-import { experiences } from "@/data/experiences";
 import { getMenus } from "@/lib/content/menus";
 import { restaurant } from "@/data/restaurant";
 import { galleryCategories } from "@/data/gallery";
@@ -47,29 +46,11 @@ async function buildPanels(): Promise<MegaPanelData[]> {
       })),
     },
     {
-      key: "/experiences",
-      eyebrow: "Private Experiences",
-      title: "Six ways to book",
-      accent: "Chef Amrit.",
-      blurb: "Beyond the restaurant, he brings the kitchen of Angel to your home, your celebration or your residency.",
-      cta: "View all experiences",
-      ctaHref: "/experiences",
-      note: "Every experience begins with a consultation and a menu designed around your guests.",
-      items: experiences.map((e) => ({
-        href: `/experiences/${e.slug}`,
-        name: e.name,
-        blurb: e.short,
-        meta: e.guestRange,
-        src: e.image.src,
-        alt: e.image.alt,
-      })),
-    },
-    {
       key: "/menus",
       eyebrow: "Menu",
       title: "Course by",
       accent: "course.",
-      blurb: "Two menus served at Angel, and one framework designed around your private event.",
+      blurb: "The chef's tasting menu and the house specialties, both served at Angel.",
       cta: "Explore all menus",
       ctaHref: "/menus",
       note: "Predominantly vegetarian · 100% Halal · vegan and gluten-free options",
@@ -87,7 +68,7 @@ async function buildPanels(): Promise<MegaPanelData[]> {
       eyebrow: "Gallery",
       title: "The plates, the tables,",
       accent: "the hands.",
-      blurb: "Signature dishes, private dining rooms, events and the quiet work of the kitchen before service.",
+      blurb: "Signature dishes, the dining rooms, celebrations and the quiet work of the kitchen before service.",
       cta: "Open the full gallery",
       ctaHref: "/gallery",
       items: galleryItems,

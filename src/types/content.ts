@@ -36,7 +36,7 @@ export type SiteConfig = {
   social: { instagram?: string; facebook?: string };
   contactEmail?: string;
   cta: { label: string; href: string };
-  /** Personal thank-you video sent after an enquiry and shown on the success screen. */
+  /** Personal thank-you video sent after a contact message and shown on the success screen. */
   thankYou: { videoUrl: string; poster: ImageAsset; headline: string; message: string };
 };
 
@@ -75,18 +75,6 @@ export type RestaurantProfile = {
     before: { image: ImageAsset; label: string; caption: string };
     after: { image: ImageAsset; label: string; caption: string };
   };
-};
-
-export type SequencePhase = { at: number; eyebrow: string; title: string; body: string };
-
-export type ImageSequence = {
-  /** Public path prefix, e.g. "/sequences/plating/frame-" */
-  prefix: string;
-  count: number;
-  width: number;
-  height: number;
-  phases: SequencePhase[];
-  placeholder?: boolean;
 };
 
 export type TimelineEntry = { year: string; title: string; body: string };
@@ -136,30 +124,17 @@ export type MenuCourse = {
 export type Menu = {
   slug: string;
   name: string;
-  kind: "tasting" | "specialties" | "event";
+  kind: "tasting" | "specialties";
   courseCount: number;
   courseLabel: string;
   intro: string;
   courses: MenuCourse[];
   notes: string[];
-  /** Where this menu is served, e.g. "At Angel" or "Private events". */
+  /** Where this menu is served, e.g. "At Angel · Jackson Heights". */
   venue: string;
   pdfUrl?: string;
   featured: boolean;
   image: ImageAsset;
-};
-
-export type Experience = {
-  slug: string;
-  name: string;
-  short: string;
-  description: string[];
-  idealFor: string[];
-  includes: string[];
-  guestRange?: string;
-  image: ImageAsset;
-  faq?: { q: string; a: string }[];
-  order: number;
 };
 
 export type GalleryCategory =
@@ -220,4 +195,3 @@ export type Testimonial = {
   isPlaceholder: boolean;
 };
 
-export type ProcessStep = { step: number; title: string; body: string };

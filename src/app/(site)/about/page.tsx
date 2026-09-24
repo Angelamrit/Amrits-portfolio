@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { chef } from "@/data/chef";
 import { images } from "@/data/images";
+import { seo } from "@/data/seo";
 import { buildMetadata } from "@/lib/seo/metadata";
+import { breadcrumbJsonLd, profilePageJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { Timeline } from "@/components/about/Timeline";
 import { FinalCta } from "@/components/sections/FinalCta";
 import { Badge } from "@/components/ui/Badge";
@@ -18,12 +21,7 @@ import { Section } from "@/components/ui/Section";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
 import { StatRow } from "@/components/ui/Stat";
 
-export const metadata: Metadata = buildMetadata({
-  title: "The Chef · Amrit Pal Singh",
-  description:
-    "From a mother's kitchen in Pathankot, India, to a Michelin Bib Gourmand in Jackson Heights: the story, philosophy, training and recognition of Chef Amrit Pal Singh.",
-  path: "/about",
-});
+export const metadata: Metadata = buildMetadata({ seo: seo.about, path: "/about", type: "profile" });
 
 /**
  * The About page reads top to bottom as a biography:
@@ -39,6 +37,7 @@ export default function AboutPage() {
 
   return (
     <>
+      <JsonLd data={[breadcrumbJsonLd([{ name: "The Chef", path: "/about" }]), profilePageJsonLd("/about")]} />
       <PageHero
         eyebrow="The Chef"
         title={
@@ -54,7 +53,7 @@ export default function AboutPage() {
             His restaurant, Angel
           </Button>
           <Button href="/contact" variant="link">
-            Book a private experience
+            Reserve a table
           </Button>
         </div>
       </PageHero>
@@ -158,10 +157,11 @@ export default function AboutPage() {
               <RevealGroup className="mt-10 space-y-3">
                 {chef.training.map((t, i) => (
                   <RevealItem key={t.title}>
-                    <SpotlightCard className="grid gap-2 p-6 sm:grid-cols-[3rem_10rem_1fr] sm:gap-6" tilt={2}>
+                    {/* Three columns when the list has the full width; in the half-width column (lg) the body moves under the title so it is not crushed. */}
+                    <SpotlightCard className="grid gap-2 p-6 sm:grid-cols-[3rem_10rem_1fr] sm:gap-6 lg:grid-cols-[3rem_1fr] lg:gap-x-5 lg:gap-y-2 xl:grid-cols-[3rem_10rem_1fr] xl:gap-6" tilt={2}>
                       <span className="font-display text-2xl text-gold-gradient">{String(i + 1).padStart(2, "0")}</span>
                       <h3 className="font-display text-xl font-normal">{t.title}</h3>
-                      <p className="text-sm leading-relaxed text-fg/65">{t.body}</p>
+                      <p className="text-sm leading-relaxed text-fg/65 lg:col-start-2 xl:col-start-auto">{t.body}</p>
                     </SpotlightCard>
                   </RevealItem>
                 ))}
@@ -179,14 +179,14 @@ export default function AboutPage() {
                 <p className="eyebrow mt-10 text-[0.6rem] text-muted">His own</p>
                 <ul className="mt-4 divide-y divide-line rounded-frame glass px-6">
                   {own.map((r) => (
-                    <li key={r.name} className="flex flex-col gap-1 py-4 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+                    <li key={r.name} className="flex flex-col gap-1 py-4 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 lg:flex-col lg:gap-1 xl:flex-row xl:gap-6">
                       <div>
                         <Link href="/angel" className="font-display text-xl transition-colors hover:text-gold-light">
                           {r.name}
                         </Link>
                         {r.note && <p className="mt-1 text-sm text-fg/55">{r.note}</p>}
                       </div>
-                      <p className="eyebrow shrink-0 text-muted">
+                      <p className="eyebrow text-muted sm:max-w-[55%] sm:text-right lg:max-w-none lg:text-left xl:max-w-[55%] xl:text-right">
                         {r.role} · {r.location}
                       </p>
                     </li>
@@ -197,9 +197,9 @@ export default function AboutPage() {
                 <p className="eyebrow mt-8 text-[0.6rem] text-muted">Trained at</p>
                 <ul className="mt-4 divide-y divide-line rounded-frame glass px-6">
                   {trainedAt.map((r) => (
-                    <li key={r.name} className="flex flex-col gap-1 py-4 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+                    <li key={r.name} className="flex flex-col gap-1 py-4 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 lg:flex-col lg:gap-1 xl:flex-row xl:gap-6">
                       <p className="font-display text-xl">{r.name}</p>
-                      <p className="eyebrow shrink-0 text-muted">
+                      <p className="eyebrow text-muted sm:max-w-[55%] sm:text-right lg:max-w-none lg:text-left xl:max-w-[55%] xl:text-right">
                         {r.role} · {r.location}
                       </p>
                     </li>

@@ -27,7 +27,7 @@ export const menus: Menu[] = [
     notes: [
       "Predominantly vegetarian. 100% Halal.",
       "Dinner only, at Angel's new location. Reservations via Resy.",
-      "Please share dietary requirements when booking.",
+      "Please let your server know about any dietary requirements.",
     ],
     venue: "At Angel · New dining room",
     featured: true,
@@ -52,28 +52,6 @@ export const menus: Menu[] = [
     venue: "At Angel · Jackson Heights",
     featured: true,
     image: images.karahi,
-  },
-  {
-    slug: "private-event",
-    name: "Private Event Menu",
-    kind: "event",
-    courseCount: 4,
-    courseLabel: "Bespoke, 4 Movements",
-    intro:
-      "A framework for private dining, dinner parties and celebrations. Chef Amrit designs each menu around your guests, the season and your setting.",
-    courses: [
-      { title: "Street Food Welcome", status: "confirmed", name: "Chole Bhatura", description: "Chickpeas and fried flat bread, passed as guests arrive." },
-      { title: "From the Tandoor", status: "confirmed", name: "Amritsari Kulcha", description: "Paneer, potato and mixed vegetable kulcha, served with chickpeas, pickle and yogurt." },
-      { title: "The Table", status: "confirmed", name: "Dum Biryani", description: "Vegetable, chicken and goat dum biryani, sealed and slow-cooked, served family style with raita." },
-      { title: "Sweet & Chai", status: "draft", description: "Dessert course designed with Chef for the occasion." },
-    ],
-    notes: [
-      "Fully customisable. Predominantly vegetarian, 100% Halal, with vegan and gluten-free options.",
-      "Suitable for 8 to 200 guests.",
-    ],
-    venue: "Private dining & events",
-    featured: false,
-    image: images.tableCandles,
   },
 ];
 

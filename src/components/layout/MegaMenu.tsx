@@ -1,9 +1,9 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { m } from "motion/react";
 import { cn } from "@/lib/cn";
 
 export type MegaItem = {
@@ -29,20 +29,15 @@ export type MegaPanelData = {
   note?: string;
 };
 
-const ease = [0.16, 1, 0.3, 1] as const;
-
 /**
  * Full-width dropdown with imagery, shown under the header for nav items that
  * have children. Presentational only: open/close is owned by the header.
  */
 export function MegaMenu({ panel, onNavigate }: { panel: MegaPanelData; onNavigate: () => void }) {
   return (
-    <m.div
-      initial={{ opacity: 0, y: -14 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.4, ease }}
-      className="tone-dark absolute inset-x-0 top-full px-5 pt-3 sm:px-8 lg:px-12"
+    <div
+      className="enter tone-dark absolute inset-x-0 top-full px-5 pt-3 sm:px-8 lg:px-12"
+      style={{ "--enter-y": "-14px" } as CSSProperties}
     >
       <div className="glass-strong border-gradient relative mx-auto max-w-wide overflow-hidden rounded-[1.75rem] p-5 shadow-frame md:p-7">
         <span aria-hidden className="orb orb-gold -right-[12%] -top-[60%] size-[45%] opacity-40" />
@@ -111,6 +106,6 @@ export function MegaMenu({ panel, onNavigate }: { panel: MegaPanelData; onNaviga
           </ul>
         </div>
       </div>
-    </m.div>
+    </div>
   );
 }

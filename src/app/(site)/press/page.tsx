@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Award, Beer, GlassWater, Mail, Martini, Wine } from "lucide-react";
 import { barLaunch, press, pressOutlets, pressStats } from "@/data/press";
 import { images } from "@/data/images";
+import { seo } from "@/data/seo";
 import { buildMetadata } from "@/lib/seo/metadata";
+import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { PressWall } from "@/components/press/PressWall";
 import { FinalCta } from "@/components/sections/FinalCta";
 import { Badge } from "@/components/ui/Badge";
@@ -11,7 +14,6 @@ import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Heading, Em } from "@/components/ui/Heading";
 import { ImageFrame } from "@/components/ui/ImageFrame";
-import { Medallion } from "@/components/ui/Medallion";
 import { Orbs } from "@/components/ui/Orbs";
 import { Parallax } from "@/components/ui/Parallax";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
@@ -20,12 +22,7 @@ import { SpotlightCard } from "@/components/ui/SpotlightCard";
 import { StatRow } from "@/components/ui/Stat";
 import { getVenue } from "@/lib/content/venue";
 
-export const metadata: Metadata = buildMetadata({
-  title: "Press & Recognition",
-  description:
-    "The MICHELIN Guide, The Infatuation, Time Out New York, Resy, Hell Gate and Culinary Backstreets on Chef Amrit Pal Singh and Angel Indian Restaurant. Every item verified at the source.",
-  path: "/press",
-});
+export const metadata: Metadata = buildMetadata({ seo: seo.press, path: "/press" });
 
 const michelin = press.find((p) => p.id === "michelin-bib-gourmand");
 const khanna = press.find((p) => p.id === "michelin-vikas-khanna");
@@ -38,6 +35,7 @@ export default async function PressPage() {
 
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "Press", path: "/press" }])} />
       {/* ---------- cinematic hero ---------- */}
       <section className="tone-dark relative overflow-hidden bg-brown-deep pt-40 pb-16 grain md:pt-48 md:pb-20">
         <Parallax amount={70}>
@@ -69,14 +67,6 @@ export default async function PressPage() {
                 <StatRow stats={pressStats} glass className="mt-10 max-w-xl" />
               </Reveal>
             </div>
-            <Reveal delay={0.35} className="hidden lg:col-span-4 lg:flex lg:justify-end">
-              <Medallion text="MICHELIN Guide · Bib Gourmand · New York · " size={200} className="text-gold-light">
-                <span className="block text-center font-display leading-none">
-                  <span className="block text-[0.5rem] uppercase tracking-[0.3em] text-fg/60">Bib Gourmand</span>
-                  <span className="mt-1 block text-3xl text-gold-gradient">2021</span>
-                </span>
-              </Medallion>
-            </Reveal>
           </div>
         </Container>
       </section>

@@ -6,9 +6,12 @@ import { ArrowUpRight } from "lucide-react";
 import { getMenus } from "@/lib/content/menus";
 import { getDishes } from "@/lib/content/dishes";
 import { getVenue } from "@/lib/content/venue";
+import { seo } from "@/data/seo";
 import { buildMetadata } from "@/lib/seo/metadata";
+import { breadcrumbJsonLd, menusJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { DietaryLegend } from "@/components/menus/DietaryLegend";
-import { MenuSwitcher, type ResolvedMenu } from "@/components/menus/MenuSwitcher";
+import { MenuSwitcher, MenuSwitcherView, type ResolvedMenu } from "@/components/menus/MenuSwitcher";
 import { FinalCta } from "@/components/sections/FinalCta";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -16,19 +19,13 @@ import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Heading, Em } from "@/components/ui/Heading";
 import { ImageFrame } from "@/components/ui/ImageFrame";
-import { Medallion } from "@/components/ui/Medallion";
 import { Orbs } from "@/components/ui/Orbs";
 import { Parallax } from "@/components/ui/Parallax";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Section } from "@/components/ui/Section";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
 
-export const metadata: Metadata = buildMetadata({
-  title: "Menus",
-  description:
-    "The Chef's Tasting Menu, House Specialties and Private Event Menu by Chef Amrit Pal Singh: predominantly vegetarian, 100% Halal, rooted in India.",
-  path: "/menus",
-});
+export const metadata: Metadata = buildMetadata({ seo: seo.menus, path: "/menus" });
 
 async function resolveMenus(): Promise<ResolvedMenu[]> {
   const [menus, dishes] = await Promise.all([getMenus(), getDishes()]);
@@ -65,6 +62,7 @@ export default async function MenusPage() {
 
   return (
     <>
+      <JsonLd data={[breadcrumbJsonLd([{ name: "Menus", path: "/menus" }]), menusJsonLd(resolved)]} />
       {/* ---------- cinematic hero ---------- */}
       <section className="tone-dark relative overflow-hidden bg-brown-deep pt-40 pb-16 grain md:pt-48 md:pb-20">
         <Parallax amount={70}>
@@ -82,14 +80,13 @@ export default async function MenusPage() {
               </Reveal>
               <Reveal delay={0.1}>
                 <Heading as="h1" size="xl" className="mt-8">
-                  Three menus, <Em shimmer>course by course.</Em>
+                  Two menus, <Em shimmer>course by course.</Em>
                 </Heading>
               </Reveal>
               <Reveal delay={0.2}>
                 <p className="mt-8 max-w-2xl text-lead text-fg/75">
-                  Two are served at Angel: the seven-course Chef&rsquo;s Tasting Menu in the new dining room, and the House Specialties that
-                  built its name. The third is the framework Chef Amrit designs around for your private event. Every course is listed with
-                  its dietary notes, so you know exactly what arrives at the table.
+                  Both are served at Angel: the seven-course Chef&rsquo;s Tasting Menu in the new dining room, and the House Specialties that
+                  built its name. Every course is listed with its dietary notes, so you know exactly what arrives at the table.
                 </p>
               </Reveal>
               <Reveal delay={0.3}>
@@ -108,29 +105,18 @@ export default async function MenusPage() {
                       View the full menu at Angel
                     </Button>
                   )}
-                  <Button href="/contact" variant="glass">
-                    Request a bespoke menu
-                  </Button>
                   {venue.resyUrl && (
-                    <Button href={venue.resyUrl} variant="outline">
+                    <Button href={venue.resyUrl} variant="glass">
                       Reserve at Angel via Resy
                     </Button>
                   )}
                 </div>
               </Reveal>
             </div>
-            <Reveal delay={0.35} className="hidden lg:col-span-4 lg:flex lg:justify-end">
-              <Medallion text="Predominantly Vegetarian · 100% Halal · India · " size={200} className="text-gold-light">
-                <span className="block text-center font-display leading-none">
-                  <span className="block text-[0.5rem] uppercase tracking-[0.3em] text-fg/60">Angel</span>
-                  <span className="mt-1 block text-2xl text-gold-gradient">Menus</span>
-                </span>
-              </Medallion>
-            </Reveal>
           </div>
 
           {/* menu tiles */}
-          <RevealGroup className="mt-14 grid gap-4 md:grid-cols-3">
+          <RevealGroup className="mt-14 grid gap-4 sm:grid-cols-2 lg:max-w-4xl">
             {resolved.map((mn, i) => (
               <RevealItem key={mn.slug}>
                 <SpotlightCard as="article" className="group relative flex h-full items-center gap-4 p-3 pr-5" tilt={3}>
@@ -166,7 +152,7 @@ export default async function MenusPage() {
               <p className="mt-6 text-lead text-fg/65">Choose a menu, then hover or tap any course to see the dish.</p>
             </Reveal>
           </div>
-          <Suspense fallback={<div className="h-96" aria-busy="true" />}>
+          <Suspense fallback={<MenuSwitcherView menus={resolved} fromUrl={null} />}>
             <MenuSwitcher menus={resolved} />
           </Suspense>
           {venue.menuUrl && (
@@ -190,7 +176,7 @@ export default async function MenusPage() {
                   Every course, <Em>clearly marked.</Em>
                 </Heading>
                 <p className="mt-6 max-w-sm text-sm leading-relaxed text-fg/60">
-                  Tell us about allergies and dietary requirements when booking. The kitchen handles nuts, dairy and gluten, and most dishes
+                  Let your server know about allergies and dietary requirements. The kitchen handles nuts, dairy and gluten, and most dishes
                   can be made vegan.
                 </p>
               </Reveal>
@@ -203,10 +189,10 @@ export default async function MenusPage() {
       </Section>
 
       <FinalCta
-        eyebrow="A menu written for you"
+        eyebrow="The tasting menu at Angel"
         title={
           <>
-            Design your own <Em shimmer>tasting menu.</Em>
+            Seven courses, <Em shimmer>one evening.</Em>
           </>
         }
       />

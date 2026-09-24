@@ -7,8 +7,8 @@ import type { VenueDetails } from "@/lib/content/venue";
 /**
  * The restaurant's details, made available to the client parts of the site.
  *
- * The header bar, the mobile menu and the booking wizard all print the address
- * and the booking link, and all three are client components — they cannot
+ * The header bar, the mobile menu and the menu card all print the address
+ * and the reservation link, and all three are client components — they cannot
  * await a lookup. Threading the details down as props would mean four
  * components and their parents all carrying a prop they only pass along.
  *

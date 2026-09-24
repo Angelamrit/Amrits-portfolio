@@ -1,12 +1,11 @@
 import { chef } from "@/data/chef";
 import { site } from "@/data/site";
+import { getVenue } from "@/lib/content/venue";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Embers } from "@/components/ui/Embers";
-import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ImageFrame } from "@/components/ui/ImageFrame";
-import { Medallion } from "@/components/ui/Medallion";
-import { Reveal } from "@/components/ui/Reveal";
+import type { CSSProperties } from "react";
 
 const credentials = [
   { label: "Michelin Guide", value: "Bib Gourmand" },
@@ -14,75 +13,72 @@ const credentials = [
   { label: "Jackson Heights, Queens", value: "Since October 2019" },
 ];
 
-export function Hero() {
+export async function Hero() {
+  const venue = await getVenue();
   return (
     <section id="hero" className="relative flex min-h-[100svh] items-end overflow-hidden surface-brown-deep tone-dark grain" aria-label="Introduction">
-      {/* The hero photograph stays exactly as it is; only a very slow cinematic drift is added. */}
-      <ImageFrame
-        image={chef.heroImage}
-        ratio="fill"
-        reveal="fade"
-        vignette
-        priority
-        sizes="100vw"
-        quality={72}
-        imgClassName="opacity-80 animate-kenburns motion-reduce:animate-none"
-      />
-      <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-r from-charcoal/75 via-charcoal/25 to-transparent" />
+      {/* The hero is the first thing anyone sees, so nothing in it waits for JavaScript:
+          the photograph is visible from the first frame (it is the page's largest paint),
+          and the text rises in with a CSS animation that starts the moment the page paints.
+          The hero photograph stays exactly as it is; only a very slow cinematic drift is added.
+          It is landscape, so on an upright screen (phones, iPads held portrait) filling the
+          whole section would crop most of it away. There it runs edge to edge at its own
+          proportions, just under the header, so the whole photograph is visible, and fades
+          into the brown under the name — the same full-bleed look as the desktop hero.
+          Landscape screens keep the desktop layout. */}
+      <div className="absolute inset-0 portrait:top-[4.75rem] portrait:bottom-auto portrait:aspect-[1453/1082] portrait:w-full">
+        <ImageFrame
+          image={chef.heroImage}
+          ratio="fill"
+          reveal="none"
+          vignette
+          priority
+          sizes="100vw"
+          quality={72}
+          imgClassName="opacity-80 animate-kenburns motion-reduce:animate-none portrait:animate-none portrait:opacity-90"
+        />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 z-[1] hidden h-1/4 bg-gradient-to-t from-brown-deep to-transparent portrait:block" />
+      </div>
+      <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-r from-charcoal/75 via-charcoal/25 to-transparent portrait:hidden" />
       <div aria-hidden className="absolute inset-x-0 bottom-0 z-[1] h-1/2 bg-gradient-to-t from-brown-deep/90 to-transparent" />
       <Embers />
 
-      <Container className="relative z-[2] w-full pb-10 pt-40 md:pb-14">
+      <Container className="relative z-[2] w-full pb-10 pt-32 md:pb-14 lg:pt-40 portrait:pt-[calc(4.75rem+74.5vw-1.5rem)]">
         <div className="grid gap-10 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-8">
-            <Reveal delay={0.2}>
-              <Eyebrow className="text-gold-light">Owner &amp; Head Chef · Angel Indian Restaurant · Michelin Bib Gourmand</Eyebrow>
-            </Reveal>
-            <Reveal delay={0.35}>
-              <h1 className="mt-8 font-display text-display-xl font-light leading-[0.92] tracking-[-0.02em] text-fg">
+            <div className="hero-in" style={{ "--hero-delay": "0.05s" } as CSSProperties}>
+              <h1 className="font-display text-display-lg font-light leading-[0.95] tracking-[-0.015em] text-fg">
                 Amrit
                 <br />
-                Pal Singh
+                <em className="font-normal italic text-gold-gradient">Pal Singh</em>
               </h1>
-            </Reveal>
-            <Reveal delay={0.5}>
-              <p className="mt-8 max-w-xl font-display text-display-sm font-light italic text-shimmer">{chef.positioning}</p>
-            </Reveal>
-            <Reveal delay={0.6}>
-              <p className="mt-5 max-w-lg text-sm leading-relaxed text-fg/65 md:text-base">
-                Private dining, events and residencies by the chef behind one of New York&rsquo;s most celebrated Indian kitchens. {chef.location}.
-              </p>
-            </Reveal>
-            <Reveal delay={0.7}>
-              <div className="mt-10 flex flex-wrap gap-4">
-                <Button href={site.cta.href} tone="dark">
-                  Book a Private Experience
+              <span aria-hidden className="mt-7 block h-px w-24 bg-gradient-to-r from-gold-light via-gold to-transparent" />
+            </div>
+            <div className="hero-in" style={{ "--hero-delay": "0.15s" } as CSSProperties}>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Button href={venue.resyUrl ?? site.cta.href} tone="dark" size="sm">
+                  {site.cta.label}
                 </Button>
-                <Button href="/experiences" tone="dark" variant="outline">
-                  Explore My Work
+                <Button href="/menus" tone="dark" variant="glass" size="sm">
+                  Explore the Menu
                 </Button>
               </div>
-            </Reveal>
+            </div>
           </div>
 
           <div className="hidden lg:col-span-4 lg:flex lg:flex-col lg:items-end lg:gap-10">
-            <Reveal delay={0.8}>
-              <Medallion text="Michelin Bib Gourmand · Angel · Est. 2019 · " size={176} className="text-gold-light">
-                <span className="font-display text-5xl font-light leading-none text-gold-gradient">A</span>
-              </Medallion>
-            </Reveal>
-            <Reveal delay={0.9}>
+            <div className="hero-in" style={{ "--hero-delay": "0.3s" } as CSSProperties}>
               <div className="flex flex-col items-center gap-4">
                 <span className="eyebrow text-[0.55rem] text-fg/50 [writing-mode:vertical-rl]">Scroll</span>
                 <span aria-hidden className="block h-16 w-px overflow-hidden bg-fg/15">
                   <span className="block h-full w-full origin-top bg-gold animate-scroll-cue" />
                 </span>
               </div>
-            </Reveal>
+            </div>
           </div>
         </div>
 
-        <Reveal delay={0.95}>
+        <div className="hero-in" style={{ "--hero-delay": "0.3s" } as CSSProperties}>
           <ul className="mt-12 grid gap-3 border-t border-fg/10 pt-6 sm:grid-cols-3">
             {credentials.map((c) => (
               <li key={c.label} className="glass rounded-2xl px-5 py-4 transition-all duration-500 hover:border-gold/60 hover:shadow-glow">
@@ -91,7 +87,7 @@ export function Hero() {
               </li>
             ))}
           </ul>
-        </Reveal>
+        </div>
       </Container>
     </section>
   );

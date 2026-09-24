@@ -14,7 +14,7 @@ import { TextField } from "./FormControls";
  *
  * Worth saying what is at stake on this screen, because it is not obvious from
  * the fields: the address here is the one search engines read out of the
- * site's structured data, the booking link is every "Reserve" button on the
+ * site's structured data, the reservations link is every "Reserve" button on the
  * site, and the opening hours sit in the header of every page. An edit here
  * reaches further than anywhere else in the dashboard, which is why each
  * field says where it shows up.
@@ -78,21 +78,21 @@ export function VenueEditor({ initial, isEdited }: { initial: VenueDraft; isEdit
             value={draft.phone}
             maxLength={40}
             onChange={(v) => update("phone", v)}
-            hint="Shown when the enquiry form cannot send."
+            hint="Shown on the Contact page, and when the contact form cannot send."
           />
           <TextField
-            label="Enquiry email shown to guests"
+            label="Contact email shown to guests"
             value={draft.contactEmail}
             maxLength={160}
             onChange={(v) => update("contactEmail", v)}
-            hint="Where enquiries are actually delivered is set on the server, not here."
+            hint="Where contact-form messages are actually delivered is set on the server, not here."
           />
           <TextField
             label="Reservations link"
             value={draft.resyUrl}
             maxLength={300}
             onChange={(v) => update("resyUrl", v)}
-            hint='Every "Reserve at Angel" button on the site.'
+            hint='Every "Reserve a Table" button on the site.'
             className="md:col-span-2"
           />
           <TextField

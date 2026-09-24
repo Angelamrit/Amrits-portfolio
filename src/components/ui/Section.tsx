@@ -42,8 +42,10 @@ export function Section({
   return (
     <section
       data-tone={tone}
-      // overflow-clip (not hidden) keeps sticky children working while containing the orbs
-      className={cn("relative overflow-clip", tones[tone], paddings[padding], grain && "grain", className)}
+      // overflow-clip (not hidden) keeps sticky children working while containing the orbs.
+      // `section-lazy` (globals.css) lets the browser skip styling, layout and
+      // painting for sections that are off screen until they are about to scroll in.
+      className={cn("section-lazy relative overflow-clip", tones[tone], paddings[padding], grain && "grain", className)}
       {...rest}
     >
       {divider && <span aria-hidden className="hairline-center absolute inset-x-0 top-0 z-[2]" />}

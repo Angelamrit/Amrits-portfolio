@@ -98,6 +98,17 @@ const nextConfig: NextConfig = {
     // short-lived rather than set to a year.
     minimumCacheTTL: ASSET_CACHE_TTL,
   },
+  // Chef Amrit cooks only at Angel, so the private-experience pages and the
+  // dashboard's bookings screens were removed. Old links — search results,
+  // shared URLs, bookmarks — land somewhere useful instead of a 404.
+  async redirects() {
+    return [
+      { source: "/experiences", destination: "/angel", permanent: true },
+      { source: "/experiences/:path*", destination: "/angel", permanent: true },
+      { source: "/admin/bookings", destination: "/admin", permanent: true },
+      { source: "/admin/bookings/:path*", destination: "/admin", permanent: true },
+    ];
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
@@ -105,7 +116,6 @@ const nextConfig: NextConfig = {
       // are left alone: Next already sets their Cache-Control from the
       // rendering strategy, and every route here is static.
       { source: "/images/:path*", headers: assetCacheHeaders },
-      { source: "/sequences/:path*", headers: assetCacheHeaders },
       { source: "/video/:path*", headers: assetCacheHeaders },
     ];
   },

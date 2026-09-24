@@ -8,7 +8,7 @@ import { applyPatch, readPatchDoc, writePatch } from "./overrides";
  * The restaurant's own details: where it is, when it serves, how to reach it.
  *
  * These are the facts most likely to change without a developer being
- * involved — a new phone number, a booking link, the hours — and the ones
+ * involved — a new phone number, a reservations link, the hours — and the ones
  * where being out of date does real damage, because a guest acts on them.
  * They are also the facts that feed the structured data search engines read,
  * so an edit here changes the address Google shows as well as the footer.

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { process } from "@/data/process";
 import { site } from "@/data/site";
 import { ThankYouVideo } from "@/components/contact/ThankYouVideo";
 import { Button } from "@/components/ui/Button";
@@ -7,16 +6,15 @@ import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Heading, Em } from "@/components/ui/Heading";
 import { Orbs } from "@/components/ui/Orbs";
-import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
-import { SpotlightCard } from "@/components/ui/SpotlightCard";
+import { Reveal } from "@/components/ui/Reveal";
 
 export const metadata: Metadata = {
-  title: "Thank you",
-  description: "A personal message from Chef Amrit Pal Singh after your enquiry.",
+  title: { absolute: `Thank You | ${site.name}` },
+  description: "A personal message from Chef Amrit Pal Singh.",
   robots: { index: false, follow: false },
 };
 
-/** Linked from the enquiry auto-reply email: the chef's video message and what happens next. */
+/** Linked from the contact-form auto-reply email: the chef's video message. */
 export default function ThankYouPage() {
   return (
     <section className="relative overflow-hidden surface-gold pt-36 pb-section md:pt-44">
@@ -27,7 +25,7 @@ export default function ThankYouPage() {
             <Reveal>
               <Eyebrow>{site.thankYou.headline}</Eyebrow>
               <Heading as="h1" size="lg" className="mt-8">
-                Thank you for <Em shimmer>your enquiry.</Em>
+                Thank you for <Em shimmer>your message.</Em>
               </Heading>
               <p className="mt-8 max-w-md text-lead text-fg/70">{site.thankYou.message}</p>
               <p className="mt-6 font-display text-2xl italic text-gold-gradient">— Chef Amrit Pal Singh</p>
@@ -40,32 +38,14 @@ export default function ThankYouPage() {
           </div>
         </div>
 
-        <div className="mt-20">
-          <Reveal>
-            <Eyebrow>What happens next</Eyebrow>
-          </Reveal>
-          <RevealGroup className="mt-8 grid gap-4 md:grid-cols-5">
-            {process.map((s) => (
-              <RevealItem key={s.step}>
-                <SpotlightCard className="h-full p-6" tilt={2}>
-                  <span className="font-display text-display-sm text-gold-gradient">{String(s.step).padStart(2, "0")}</span>
-                  <h2 className="mt-3 font-display text-xl font-normal">{s.title}</h2>
-                  <p className="mt-2 text-sm leading-relaxed text-fg/65">{s.body}</p>
-                </SpotlightCard>
-              </RevealItem>
-            ))}
-          </RevealGroup>
-          <Reveal delay={0.2}>
-            <div className="mt-10 flex flex-wrap gap-4">
-              <Button href="/experiences" variant="glass">
-                Explore the experiences
-              </Button>
-              <Button href="/angel" variant="link">
-                About Angel
-              </Button>
-            </div>
-          </Reveal>
-        </div>
+        <Reveal delay={0.2}>
+          <div className="mt-16 flex flex-wrap gap-4">
+            <Button href="/menus">Explore the Menu</Button>
+            <Button href="/angel" variant="glass">
+              Visit Angel
+            </Button>
+          </div>
+        </Reveal>
       </Container>
     </section>
   );
