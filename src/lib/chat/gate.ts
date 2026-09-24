@@ -29,18 +29,27 @@ export type GateDecision =
 /** Longest input we accept. Anything beyond this is abuse, not a question. */
 export const MAX_INPUT_LENGTH = 1000;
 
-const SCOPE_HINT =
-  "I can only help with questions about Chef Amrit Pal Singh and Angel Indian Restaurant — the menu, the food, visiting, recognition and contact details.";
+/**
+ * The single reply used whenever a request is refused — by this gate or by the
+ * assistant itself.
+ *
+ * Deliberately one fixed sentence with nothing before or after it. Earlier
+ * wordings varied by reason and explained *why* ("I don't have verified
+ * information about that…"), which both leaked how the assistant works and gave
+ * a probing visitor a signal to work against. A single, uninformative reply
+ * gives every refusal the same surface.
+ */
+export const SCOPE_REPLY = "Ask me about Chef Amrit or Angel Indian Restaurant.";
 
 const GATE_RESPONSES: Record<GateReason, string> = {
-  empty: "Please type a question about Chef Amrit or Angel Indian Restaurant.",
-  too_long: "That message is a little long for me. Could you shorten it to a single question?",
-  emoji_only: "Ask me about Chef Amrit or Angel Indian Restaurant.",
-  gibberish: "I didn't catch that. Ask me about Chef Amrit or Angel Indian Restaurant.",
-  greeting: "Ask me about Chef Amrit or Angel Indian Restaurant.",
-  profanity: "Ask me about Chef Amrit or Angel Indian Restaurant.",
-  vague_wh: "Could you give me a little more detail? " + SCOPE_HINT,
-  off_topic: SCOPE_HINT,
+  empty: SCOPE_REPLY,
+  too_long: SCOPE_REPLY,
+  emoji_only: SCOPE_REPLY,
+  gibberish: SCOPE_REPLY,
+  greeting: SCOPE_REPLY,
+  profanity: SCOPE_REPLY,
+  vague_wh: SCOPE_REPLY,
+  off_topic: SCOPE_REPLY,
 };
 
 /** Small talk that carries no question. A message made only of these is not answered. */

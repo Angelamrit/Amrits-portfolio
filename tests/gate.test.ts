@@ -201,6 +201,35 @@ test("KB-derived lexicon widens scope to menu items", () => {
   allowed("Do you have Lakhanpur De Bhalle?", { lexicon: ["lakhanpur", "bhalle"] });
 });
 
+test("every refusal is the same fixed sentence, whatever the reason", () => {
+  // A closed world: the reply must not reveal *why* it was refused, so a prober
+  // cannot tell an off-topic question from one the knowledge base simply lacks.
+  const probes = [
+    "", "   ", "😀", "asdjkh 7788 !!!", "hi", "thanks", "what?", "why",
+    "Who won the football match?", "Write me a python script", "fuck",
+    "hekki", "a".repeat(MAX_INPUT_LENGTH + 1),
+  ];
+
+  const seen = new Set<string>();
+  for (const probe of probes) {
+    const result = classifyInput(probe);
+    assert.equal(result.allow, false, `expected "${probe.slice(0, 20)}" to be refused`);
+    if (result.allow === false) seen.add(result.response);
+  }
+
+  assert.deepEqual([...seen], ["Ask me about Chef Amrit or Angel Indian Restaurant."]);
+});
+
+test("the refusal sentence carries nothing before or after it", () => {
+  const result = classifyInput("Who won the football match?");
+  assert.equal(result.allow, false);
+  if (result.allow === false) {
+    assert.equal(result.response, "Ask me about Chef Amrit or Angel Indian Restaurant.");
+    // No contact details, no apology, no explanation of what is held.
+    assert.ok(!/347-848-0098|@angelindian|sorry|verified|knowledge base/i.test(result.response));
+  }
+});
+
 test("gate responses never leak internals", () => {
   const probes = ["", "😀", "asdjkh", "hi", "what?", "who won the football match?"];
   for (const probe of probes) {
