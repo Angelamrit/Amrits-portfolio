@@ -108,10 +108,21 @@ test("verifying a token does not spend it", async () => {
 });
 
 test("the proof has to be for this token", async () => {
+  // At this test's tiny difficulty one solution in sixteen happens to satisfy
+  // another token as well, so this cannot assert on a single random pair. If
+  // proofs were not bound to their token, every token would accept a's
+  // solution; finding one that does not, in a bounded number of tries, is
+  // what shows the binding. Without a bug it takes about one try.
   const a = await solvedChallenge();
-  const b = await solvedChallenge();
+  let b: Awaited<ReturnType<typeof solvedChallenge>> | undefined;
+  for (let tries = 0; tries < 50 && !b; tries += 1) {
+    const candidate = await solvedChallenge();
+    if (!(await verifyProof(candidate.token, a.solution, BITS))) b = candidate;
+  }
+  assert.ok(b, "every token accepted a solution computed for another: proofs are not bound to their token");
 
-  assert.deepEqual(await verifyChallenge(a.token, b.solution, NOW), { ok: false, reason: "unsolved" });
+  assert.deepEqual(await verifyChallenge(b.token, a.solution, NOW), { ok: false, reason: "unsolved" });
+  assert.equal((await verifyChallenge(a.token, a.solution, NOW)).ok, true, "and it still verifies for its own token");
 });
 
 test("a wrong, missing or malformed proof is refused", async () => {

@@ -2,7 +2,7 @@ import test, { beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { FORM_FIELDS, handleInquiry, issueInquiryChallenge, type InquiryContext } from "@/lib/inquiry/submit";
 import { issueChallenge, resetChallenges } from "@/lib/inquiry/challenge";
-import { solveProof } from "@/lib/inquiry/proof";
+import { solveProof, verifyProof } from "@/lib/inquiry/proof";
 import { resetRateLimits } from "@/lib/rate-limit";
 
 /**
@@ -39,6 +39,14 @@ const mutableEnv = process.env as Record<string, string | undefined>;
 async function solved(at = NOW): Promise<{ challenge: string; proof: string }> {
   const { token, bits } = await issueChallenge({ now: at - 10 * SECOND, bits: TEST_BITS });
   return { challenge: token, proof: await solveProof(token, bits) };
+}
+
+/** The smallest counter that is not a proof for this token: a deterministic wrong answer. */
+async function wrongProofFor(token: string): Promise<string> {
+  for (let counter = 0; ; counter += 1) {
+    const candidate = String(counter);
+    if (!(await verifyProof(token, candidate, TEST_BITS))) return candidate;
+  }
 }
 
 async function validInput(overrides: Record<string, string> = {}, at = NOW): Promise<Record<string, string>> {
@@ -141,8 +149,14 @@ test("a challenge older than two hours is refused, and a fresh one requested", a
 });
 
 test("a challenge without its proof of work is answered as though it worked", async () => {
-  // A script that fetched a token but did not do the work behind it.
-  const state = await handleInquiry(await validInput({ proof: "12345" }), ctx("4.4.4.7"));
+  // A script that fetched a token but did not do the work behind it. The
+  // wrong answer is found rather than hard-coded: at this test's tiny
+  // difficulty a fixed number would be a valid proof one time in sixteen.
+  const { challenge } = await solved();
+  const state = await handleInquiry(
+    await validInput({ challenge, proof: await wrongProofFor(challenge) }),
+    ctx("4.4.4.7"),
+  );
 
   assert.equal(state.status, "success");
   if (state.status !== "success") return;
