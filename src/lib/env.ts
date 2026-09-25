@@ -53,6 +53,24 @@ const schema = z.object({
   RESEND_API_KEY: z.preprocess(blankToUndefined, z.string().min(1).optional()),
   INQUIRY_TO_EMAIL: z.preprocess(blankToUndefined, addressList.optional()),
   INQUIRY_FROM_EMAIL: z.preprocess(blankToUndefined, mailbox.optional()),
+  // Signs the anti-bot challenges behind the contact form. Optional: see
+  // `challengeSecret` in src/lib/inquiry/challenge.ts for what it falls back to.
+  INQUIRY_CHALLENGE_SECRET: z.preprocess(
+    blankToUndefined,
+    z.string().min(16, { error: "must be at least 16 characters; generate one with: openssl rand -base64 32" }).optional(),
+  ),
+  // The one request header the proxy in front of the site is known to set with
+  // the client's address; see `clientIp` in src/lib/rate-limit.ts.
+  TRUSTED_IP_HEADER: z.preprocess(
+    (value) => {
+      const blank = blankToUndefined(value);
+      return typeof blank === "string" ? blank.trim().toLowerCase() : blank;
+    },
+    z
+      .string()
+      .regex(/^[a-z0-9-]+$/, { error: "must be a header name, e.g. cf-connecting-ip" })
+      .optional(),
+  ),
   NEXT_PUBLIC_SITE_URL: z.preprocess(
     // A bare host is accepted as https, matching `resolveSiteUrl` in src/data/site.ts.
     (value) => {

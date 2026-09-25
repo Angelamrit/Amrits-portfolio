@@ -1,6 +1,6 @@
 import test, { beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { rateLimit, resetRateLimits, type Rule } from "@/lib/rate-limit";
+import { clientIp, rateLimit, resetRateLimits, trackedKeyCount, type Rule } from "@/lib/rate-limit";
 
 const rule = (limit: number, windowMs = 60_000): Rule => ({ limit, windowMs });
 
@@ -53,6 +53,21 @@ test("when several rules block, the longest wait is the one reported", () => {
   const blocked = rateLimit([shortWindow, longWindow]);
   assert.equal(blocked.allowed, false);
   assert.ok(!blocked.allowed && blocked.retryAfterSeconds > 1, "should report the 60s window, not the 1s one");
+});
+
+test("the number of tracked keys is capped at every insert, not only at the sweep", () => {
+  // A flood of spoofed addresses inside one sweep interval must not be able
+  // to grow memory without bound, and it is the newest keys that are kept.
+  for (let i = 0; i < 20_500; i += 1) rateLimit([{ key: `flood:${i}`, rule: rule(1) }]);
+
+  assert.ok(trackedKeyCount() <= 20_000, `tracked ${trackedKeyCount()} keys`);
+  assert.equal(rateLimit([{ key: "flood:20499", rule: rule(1) }]).allowed, false, "the newest is still counted");
+  assert.ok(rateLimit([{ key: "flood:0", rule: rule(1) }]).allowed, "the oldest was the one let go");
+});
+
+test("a forged address header cannot make a key of any length", () => {
+  const headers = new Headers({ "x-forwarded-for": `${"1".repeat(5_000)}, 10.0.0.1` });
+  assert.ok(clientIp(headers).length <= 64);
 });
 
 test("the window expires and the budget comes back", async () => {

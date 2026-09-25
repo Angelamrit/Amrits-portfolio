@@ -30,6 +30,22 @@ function resend(apiKey: string): Resend {
 }
 
 /**
+ * How long one call to the mail API may take. A normal send is a few hundred
+ * milliseconds. Past this the send is reported as not delivered and the guest
+ * is told so, rather than left looking at "Sending" while a stalled connection
+ * runs down the platform's own request limit and turns into a blank error.
+ */
+const SEND_TIMEOUT_MS = 8_000;
+
+function withTimeout<T>(work: Promise<T>, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${SEND_TIMEOUT_MS}ms`)), SEND_TIMEOUT_MS);
+  });
+  return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
+}
+
+/**
  * Sends the enquiry via Resend when configured; otherwise logs a dry run.
  * Never throws: a lost email should be visible in logs, not shown to a guest.
  */
@@ -44,14 +60,17 @@ export async function sendInquiryEmail(data: InquiryInput): Promise<{ delivered:
   }
 
   try {
-    const { error } = await resend(apiKey).emails.send({
-      from,
-      to,
-      replyTo: data.email,
-      subject: `Website message — ${data.name} (${topicLabels[data.topic]})`,
-      html: inquiryEmailHtml(data),
-      text: inquiryEmailText(data),
-    });
+    const { error } = await withTimeout(
+      resend(apiKey).emails.send({
+        from,
+        to,
+        replyTo: data.email,
+        subject: `Website message — ${data.name} (${topicLabels[data.topic]})`,
+        html: inquiryEmailHtml(data),
+        text: inquiryEmailText(data),
+      }),
+      "inquiry email",
+    );
     if (error) {
       console.error("[inquiry:resend-error]", error, inquiryEmailText(data));
       return { delivered: false };
@@ -77,19 +96,22 @@ export async function sendAutoReplyEmail(data: InquiryInput): Promise<{ delivere
     return { delivered: false };
   }
 
-  // The address in the sign-off is whatever the dashboard currently says, so
-  // a guest is never sent to a restaurant that has moved.
-  const venue = await getVenue();
-
   try {
-    const { error } = await resend(apiKey).emails.send({
-      from,
-      to: data.email,
-      ...(replyTo ? { replyTo } : {}),
-      subject: `Thank you, ${data.name} — a message from Chef Amrit`,
-      html: autoReplyHtml(data, venue),
-      text: autoReplyText(data, venue),
-    });
+    // The address in the sign-off is whatever the dashboard currently says, so
+    // a guest is never sent to a restaurant that has moved.
+    const venue = await getVenue();
+
+    const { error } = await withTimeout(
+      resend(apiKey).emails.send({
+        from,
+        to: data.email,
+        ...(replyTo ? { replyTo } : {}),
+        subject: `Thank you, ${data.name} — a message from Chef Amrit`,
+        html: autoReplyHtml(data, venue),
+        text: autoReplyText(data, venue),
+      }),
+      "auto-reply",
+    );
     if (error) {
       console.error("[inquiry:auto-reply:resend-error]", error);
       return { delivered: false };

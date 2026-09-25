@@ -32,10 +32,13 @@ export const inquirySchema = z.object({
   phone: optionalText(40),
   topic: z.enum(topicOptions, { error: "Please choose what your message is about." }),
   message: z.string().trim().min(20, "Tell us a little more (at least 20 characters).").max(2000),
-  // Anti-spam
+  // Anti-spam: the honeypot, and the signed challenge with its proof of work.
+  // All three are read and stripped before validation; they are listed here
+  // so the field type below knows they are not fields a guest is shown.
   company: z.string().max(0).optional(),
-  startedAt: z.coerce.number().optional(),
+  challenge: z.string().max(512).optional(),
+  proof: z.string().max(20).optional(),
 });
 
 export type InquiryInput = z.infer<typeof inquirySchema>;
-export type InquiryField = keyof Omit<InquiryInput, "company" | "startedAt">;
+export type InquiryField = keyof Omit<InquiryInput, "company" | "challenge" | "proof">;
