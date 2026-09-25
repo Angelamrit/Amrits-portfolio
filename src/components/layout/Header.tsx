@@ -50,8 +50,8 @@ async function buildPanels(): Promise<MegaPanelData[]> {
       eyebrow: "Menu",
       title: "Course by",
       accent: "course.",
-      blurb: "The chef's tasting menu and the house specialties, both served at Angel.",
-      cta: "Explore all menus",
+      blurb: "The chef's seven-course tasting menu, served at Angel.",
+      cta: "Explore the menu",
       ctaHref: "/menus",
       note: "Predominantly vegetarian · 100% Halal · vegan and gluten-free options",
       items: menus.map((m) => ({

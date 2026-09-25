@@ -13,7 +13,6 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { DietaryLegend } from "@/components/menus/DietaryLegend";
 import { MenuSwitcher, MenuSwitcherView, type ResolvedMenu } from "@/components/menus/MenuSwitcher";
 import { FinalCta } from "@/components/sections/FinalCta";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -80,25 +79,10 @@ export default async function MenusPage() {
               </Reveal>
               <Reveal delay={0.1}>
                 <Heading as="h1" size="xl" className="mt-8">
-                  Two menus, <Em shimmer>course by course.</Em>
+                  The tasting menu, <Em shimmer>course by course.</Em>
                 </Heading>
               </Reveal>
               <Reveal delay={0.2}>
-                <p className="mt-8 max-w-2xl text-lead text-fg/75">
-                  Both are served at Angel: the seven-course Chef&rsquo;s Tasting Menu in the new dining room, and the House Specialties that
-                  built its name. Every course is listed with its dietary notes, so you know exactly what arrives at the table.
-                </p>
-              </Reveal>
-              <Reveal delay={0.3}>
-                <ul className="mt-8 flex flex-wrap gap-2">
-                  {["Predominantly vegetarian", "100% Halal", "Vegan & gluten-free options", "Housemade paneer"].map((f) => (
-                    <li key={f}>
-                      <Badge>{f}</Badge>
-                    </li>
-                  ))}
-                </ul>
-              </Reveal>
-              <Reveal delay={0.4}>
                 <div className="mt-10 flex flex-wrap gap-4">
                   {venue.menuUrl && (
                     <Button href={venue.menuUrl} external>
@@ -146,10 +130,10 @@ export default async function MenusPage() {
         <Container>
           <div className="mb-10 max-w-2xl">
             <Reveal>
-              <Eyebrow>Explore each menu</Eyebrow>
+              <Eyebrow>Explore the menu</Eyebrow>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="mt-6 text-lead text-fg/65">Choose a menu, then hover or tap any course to see the dish.</p>
+              <p className="mt-6 text-lead text-fg/65">Hover or tap any course to see the dish.</p>
             </Reveal>
           </div>
           <Suspense fallback={<MenuSwitcherView menus={resolved} fromUrl={null} />}>

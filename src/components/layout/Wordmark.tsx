@@ -1,14 +1,45 @@
+"use client";
+
 import Link from "next/link";
+import type { MouseEvent } from "react";
 import { cn } from "@/lib/cn";
+
+/**
+ * Already on the home page, the mark is a "back to the top" button: a link to
+ * the page you are on does not scroll anywhere by itself, so a guest far down
+ * the page would tap it and see nothing happen.
+ */
+function scrollHomeToTop(event: MouseEvent<HTMLAnchorElement>) {
+  if (window.location.pathname !== "/" || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
+  // Drop any #section left in the address bar, so a reload also lands at the top.
+  if (window.location.hash) history.replaceState(history.state, "", "/");
+}
 
 /**
  * Engraved monogram + name. The ring rotates and the disc fills with gold on
  * hover, so the mark feels struck rather than typed.
  */
-export function Wordmark({ className, compact = false }: { tone?: "light" | "dark"; className?: string; compact?: boolean }) {
+export function Wordmark({
+  className,
+  compact = false,
+  onNavigate,
+}: {
+  tone?: "light" | "dark";
+  className?: string;
+  compact?: boolean;
+  /** Called on every click, before anything else — the mobile menu uses it to close itself. */
+  onNavigate?: () => void;
+}) {
   return (
     <Link
       href="/"
+      onClick={(event) => {
+        onNavigate?.();
+        scrollHomeToTop(event);
+      }}
       aria-label="Amrit Pal Singh — home"
       className={cn("group relative inline-flex shrink-0 items-center gap-3.5 text-fg", className)}
     >

@@ -28,12 +28,12 @@ export async function MenusPreview() {
             </Reveal>
             <Reveal delay={0.1}>
               <Heading as="h2" size="lg" className="mt-8">
-                Two menus, <Em shimmer>course by course.</Em>
+                The tasting menu, <Em shimmer>course by course.</Em>
               </Heading>
             </Reveal>
             <Reveal delay={0.2}>
               <p className="mt-8 max-w-xl text-lead text-fg/65">
-                Both served every night at Angel: the seven-course tasting menu and the house specialties.
+                Seven courses, served every night at Angel.
               </p>
             </Reveal>
           </div>
@@ -46,7 +46,7 @@ export async function MenusPreview() {
           )}
         </div>
 
-        <RevealGroup className="mt-16 grid gap-6 lg:grid-cols-2">
+        <RevealGroup className={menus.length > 1 ? "mt-16 grid gap-6 lg:grid-cols-2" : "mx-auto mt-16 grid max-w-3xl gap-6"}>
           {menus.map((menu, mi) => (
             <RevealItem key={menu.slug}>
               <SpotlightCard as="article" className="group relative flex h-full flex-col overflow-hidden p-3" tilt={3}>
