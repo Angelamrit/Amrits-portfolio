@@ -43,7 +43,12 @@ describe("admin sessions", () => {
   it("rejects a token whose signature has been edited", async () => {
     const token = (await issueSession())!;
     const [payload, signature] = token.split(".");
-    const flipped = `${signature.slice(0, -1)}${signature.slice(-1) === "A" ? "B" : "A"}`;
+    // The first character, not the last. A 32-byte signature is 43 base64url
+    // characters and the last one carries only two real bits, so an edit
+    // there decodes to the very same bytes one time in four and the token
+    // verifies anyway. Every other character carries six bits, and changing
+    // one always changes the signature.
+    const flipped = `${signature[0] === "A" ? "B" : "A"}${signature.slice(1)}`;
     assert.equal(await readSession(`${payload}.${flipped}`), null);
   });
 

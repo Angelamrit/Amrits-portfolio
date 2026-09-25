@@ -57,9 +57,15 @@ test("an edited token is refused, however it was edited", async () => {
   const { token, solution } = await solvedChallenge();
   const [payload, signature] = token.split(".");
 
-  // The claims changed under a genuine signature.
-  const editedClaims = `${payload.slice(0, -2)}${payload.slice(-2) === "AA" ? "BB" : "AA"}.${signature}`;
+  // The claims changed under a genuine signature. The edit is to the first
+  // character, which always carries real bits (the last one may not), so the
+  // edited token can never decode to the original by accident.
+  const editedClaims = `${payload[0] === "A" ? "B" : "A"}${payload.slice(1)}.${signature}`;
   assert.deepEqual(await verifyChallenge(editedClaims, solution, NOW), { ok: false, reason: "invalid" });
+
+  // The signature changed under genuine claims.
+  const editedSignature = `${payload}.${signature[0] === "A" ? "B" : "A"}${signature.slice(1)}`;
+  assert.deepEqual(await verifyChallenge(editedSignature, solution, NOW), { ok: false, reason: "invalid" });
 
   // A signature that is not base64 at all.
   assert.deepEqual(await verifyChallenge(`${payload}.not*base64`, solution, NOW), { ok: false, reason: "invalid" });

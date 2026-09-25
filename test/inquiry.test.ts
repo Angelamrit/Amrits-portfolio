@@ -130,7 +130,10 @@ test("a form with no challenge is refused, and told so", async () => {
 
 test("a challenge this server did not sign is refused", async () => {
   const genuine = await solved();
-  const forged = genuine.challenge.slice(0, -4) + "AAAA";
+  // One character of the signature changed: the first, which always carries
+  // real bits, so the forgery can never decode to the genuine signature.
+  const [payload, signature] = genuine.challenge.split(".");
+  const forged = `${payload}.${signature[0] === "A" ? "B" : "A"}${signature.slice(1)}`;
 
   const state = await handleInquiry(await validInput({ challenge: forged }), ctx("4.4.4.5"));
   assert.equal(state.status, "error");
