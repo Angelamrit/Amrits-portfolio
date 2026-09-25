@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, Code2, Compass, Globe } from "lucide-react";
+import { FacebookIcon, InstagramIcon } from "@/components/ui/SocialIcons";
 import { site } from "@/data/site";
 import { visibleNav } from "@/data/nav";
 import { chef } from "@/data/chef";
@@ -43,27 +44,6 @@ const externalLinkCards = [
     ],
   },
 ] as const;
-
-/* Lucide dropped its brand glyphs in v1, so the two social marks live here as plain strokes. */
-const socialSvg = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" } as const;
-
-function InstagramIcon({ className }: { className?: string }) {
-  return (
-    <svg {...socialSvg} className={className} aria-hidden>
-      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-    </svg>
-  );
-}
-
-function FacebookIcon({ className }: { className?: string }) {
-  return (
-    <svg {...socialSvg} className={className} aria-hidden>
-      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-    </svg>
-  );
-}
 
 export function Footer() {
   const { restaurant, social } = site;

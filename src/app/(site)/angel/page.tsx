@@ -192,7 +192,7 @@ export default async function AngelPage() {
             </div>
             <div className="lg:col-span-8">
               <Reveal>
-                <Eyebrow rule={false}>House specialties</Eyebrow>
+                <Eyebrow rule={false}>Signature dishes</Eyebrow>
               </Reveal>
               <RevealGroup className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {signatureDishes.map((dish, i) => (

@@ -24,7 +24,7 @@ export type ResolvedCourse = {
 export type ResolvedMenu = {
   slug: string;
   name: string;
-  kind: "tasting" | "specialties";
+  kind: "tasting";
   courseLabel: string;
   courseCount: number;
   intro: string;
@@ -148,55 +148,61 @@ export function MenuSwitcherView({ menus, fromUrl }: { menus: ResolvedMenu[]; fr
     return () => window.removeEventListener("resize", measure);
   }, [active]);
 
+  const tabbed = menus.length > 1;
+
   return (
     <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      {/* ---------- menu tabs ---------- */}
-      <div ref={tabsRef} role="tablist" aria-label="Menus" className="glass relative grid gap-1 rounded-[1.6rem] p-1.5 sm:grid-cols-2 sm:rounded-pill">
-        <span
-          aria-hidden
-          className={cn(
-            "pointer-events-none absolute inset-y-1.5 z-[1] hidden rounded-pill bg-gradient-to-r from-gold-light via-gold to-gold-deep shadow-[0_10px_30px_-10px_rgba(226,189,108,0.9)] transition-all duration-500 ease-luxe sm:block",
-            ind.ready ? "opacity-100" : "opacity-0",
-          )}
-          style={{ left: ind.left, width: ind.width }}
-        />
-        {menus.map((mn, i) => {
-          const selected = mn.slug === active;
-          return (
-            <button
-              key={mn.slug}
-              role="tab"
-              type="button"
-              id={`tab-${mn.slug}`}
-              data-tab={mn.slug}
-              aria-selected={selected}
-              aria-controls={`panel-${mn.slug}`}
-              onClick={() => select(mn.slug)}
-              className={cn(
-                "relative z-[2] flex items-center gap-4 rounded-pill px-5 py-3.5 text-left transition-colors duration-500 ease-luxe",
-                selected ? "text-charcoal" : "text-fg/70 hover:text-fg",
-                selected && "bg-gradient-to-r from-gold-light via-gold to-gold-deep sm:bg-none",
-              )}
-            >
-              <span className={cn("font-display text-2xl leading-none", selected ? "text-charcoal" : "text-gold-gradient")}>{nn(i)}</span>
-              <span className="min-w-0">
-                <span className="block truncate font-display text-lg leading-tight">{mn.name}</span>
-                <span className={cn("eyebrow mt-1 block truncate text-[0.5rem]", selected ? "text-charcoal/70" : "text-muted")}>
-                  {mn.courseLabel} · {mn.venue}
+      {/* ---------- menu tabs ----------
+          Only when there is a choice to make: with a single menu the bar would
+          be one wide gold slab repeating the name the card below already shows. */}
+      {tabbed && (
+        <div ref={tabsRef} role="tablist" aria-label="Menus" className="glass relative grid gap-1 rounded-[1.6rem] p-1.5 sm:grid-cols-2 sm:rounded-pill">
+          <span
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute inset-y-1.5 z-[1] hidden rounded-pill bg-gradient-to-r from-gold-light via-gold to-gold-deep shadow-[0_10px_30px_-10px_rgba(226,189,108,0.9)] transition-all duration-500 ease-luxe sm:block",
+              ind.ready ? "opacity-100" : "opacity-0",
+            )}
+            style={{ left: ind.left, width: ind.width }}
+          />
+          {menus.map((mn, i) => {
+            const selected = mn.slug === active;
+            return (
+              <button
+                key={mn.slug}
+                role="tab"
+                type="button"
+                id={`tab-${mn.slug}`}
+                data-tab={mn.slug}
+                aria-selected={selected}
+                aria-controls={`panel-${mn.slug}`}
+                onClick={() => select(mn.slug)}
+                className={cn(
+                  "relative z-[2] flex items-center gap-4 rounded-pill px-5 py-3.5 text-left transition-colors duration-500 ease-luxe",
+                  selected ? "text-charcoal" : "text-fg/70 hover:text-fg",
+                  selected && "bg-gradient-to-r from-gold-light via-gold to-gold-deep sm:bg-none",
+                )}
+              >
+                <span className={cn("font-display text-2xl leading-none", selected ? "text-charcoal" : "text-gold-gradient")}>{nn(i)}</span>
+                <span className="min-w-0">
+                  <span className="block truncate font-display text-lg leading-tight">{mn.name}</span>
+                  <span className={cn("eyebrow mt-1 block truncate text-[0.5rem]", selected ? "text-charcoal/70" : "text-muted")}>
+                    {mn.courseLabel} · {mn.venue}
+                  </span>
                 </span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* ---------- menu body ---------- */}
       <div
           key={menu.slug}
-          role="tabpanel"
+          role={tabbed ? "tabpanel" : undefined}
           id={`panel-${menu.slug}`}
-          aria-labelledby={`tab-${menu.slug}`}
-          className="enter mt-12 grid gap-10 lg:grid-cols-12 lg:gap-14"
+          aria-labelledby={tabbed ? `tab-${menu.slug}` : undefined}
+          className={cn("enter grid gap-10 lg:grid-cols-12 lg:gap-14", tabbed && "mt-12")}
         >
           {/* dish showcase */}
           <div className="lg:col-span-5">
@@ -236,7 +242,7 @@ export function MenuSwitcherView({ menus, fromUrl }: { menus: ResolvedMenu[]; fr
                 {[
                   { k: "Courses", v: String(menu.courseCount) },
                   { k: "Kitchen", v: "100% Halal" },
-                  { k: "Style", v: menu.kind === "tasting" ? "Tasting" : "Family style" },
+                  { k: "Style", v: "Tasting" },
                 ].map((f) => (
                   <div key={f.k} className="glass rounded-frame px-4 py-3.5">
                     <dt className="eyebrow text-[0.5rem] text-muted">{f.k}</dt>

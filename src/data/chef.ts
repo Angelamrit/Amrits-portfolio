@@ -14,7 +14,7 @@ export const chef: ChefProfile = {
     "He left India for Australia to study the food industry formally, then made his way to New York City. There he honed his craft in two of the city's most celebrated Indian kitchens, Rahi and Adda, learning how tradition and precision could share the same plate.",
     "In October 2019 he opened Angel Indian Restaurant in Jackson Heights, Queens, with almost nothing: a six-burner stove, one tandoor and a fridge. It was a two-person operation. Amrit cooked, took the orders and cleaned the floors himself. The neighbourhood answered immediately, and Angel paid its own rent in the very first month.",
     "Named after his daughter, Angel is predominantly vegetarian and 100% Halal, and its menu moves from comforting street food to complex regional delicacies. The restaurant earned a Michelin Bib Gourmand in 2021, and when the new dining room opened in July 2025 the Michelin-starred chef Vikas Khanna called it “the pride of India” and Amrit “possibly one of the finest Indian chefs in the U.S.”",
-    "Today Chef Amrit leads a team of more than twenty. His new upscale location is a formal, dinner-only dining room with a full bar and a curated chef's tasting menu alongside the house specialties that made Angel famous.",
+    "Today Chef Amrit leads a team of more than twenty. His new upscale location is a formal, dinner-only dining room with a full bar and a curated chef's tasting menu.",
   ],
   portrait: images.chefPortrait,
   heroImage: images.hero,

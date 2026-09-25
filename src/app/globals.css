@@ -1284,6 +1284,15 @@
   }
 }
 
+/* Home hero, upright screens: the photograph's lower edge dissolves into the
+   blurred copy behind it, so there is no line where the picture stops. */
+@media (orientation: portrait) {
+  .hero-photo {
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 100%);
+  }
+}
+
 /* Hero entrance: pure CSS, so it starts with the first paint instead of after hydration. */
 .hero-in {
   animation: hero-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -1298,6 +1307,248 @@
 @media (prefers-reduced-motion: reduce) {
   .hero-in {
     animation: none;
+  }
+}
+
+/*
+  ---- Mobile and tablet menu (components/layout/MobileMenu.tsx) ----
+  A lacquered chocolate drawer. Everything here is opaque gradients, shadows
+  and transforms — no backdrop blur — because it lives on phones and tablets,
+  where blur is what made scrolling heavy.
+*/
+.menu-scrim {
+  background:
+    radial-gradient(120% 80% at 100% 50%, rgba(226, 189, 108, 0.08), transparent 60%),
+    rgba(12, 7, 4, 0.72);
+  animation: menu-fade 0.4s ease both;
+}
+.menu-panel {
+  background-color: var(--color-brown-deep);
+  background-image:
+    repeating-linear-gradient(135deg, rgba(246, 239, 226, 0.022) 0 1px, transparent 1px 9px),
+    radial-gradient(90% 38% at 85% 0%, rgba(226, 189, 108, 0.2), transparent 70%),
+    radial-gradient(70% 40% at 0% 100%, rgba(146, 80, 30, 0.22), transparent 70%),
+    linear-gradient(180deg, #2c1b12 0%, #1f130d 45%, #170e09 100%);
+  box-shadow:
+    -40px 0 90px -30px rgba(0, 0, 0, 0.75),
+    inset 1px 0 0 rgba(226, 189, 108, 0.28);
+  animation: menu-slide 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* From tablet width up it is a panel rather than the whole screen: round the
+   inner edge and light it with a gold seam. */
+@media (width >= 40rem) {
+  .menu-panel {
+    border-radius: 2rem 0 0 2rem;
+  }
+  .menu-panel::before {
+    content: "";
+    position: absolute;
+    inset: 8% auto 8% 0;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, #e8d29c 30%, #a87c40 70%, transparent);
+    box-shadow: 0 0 14px rgba(226, 189, 108, 0.55);
+    pointer-events: none;
+  }
+}
+.menu-monogram {
+  background: linear-gradient(160deg, rgba(232, 210, 156, 0.07), rgba(168, 124, 64, 0.02));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* On a phone held sideways it would sit behind the first links. */
+@media (max-height: 34rem) {
+  .menu-monogram {
+    display: none;
+  }
+}
+.menu-rule {
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(226, 189, 108, 0.55), rgba(226, 189, 108, 0.12) 60%, transparent);
+}
+.menu-close {
+  color: var(--color-gold-light);
+  background: linear-gradient(160deg, rgba(61, 40, 24, 0.9), rgba(31, 19, 13, 0.9));
+  box-shadow:
+    inset 0 0 0 1px rgba(226, 189, 108, 0.4),
+    0 8px 20px -10px rgba(0, 0, 0, 0.8);
+  transition: box-shadow 0.4s var(--ease-luxe), color 0.4s var(--ease-luxe);
+}
+.menu-close:hover,
+.menu-close:focus-visible {
+  color: #fff4d8;
+  box-shadow:
+    inset 0 0 0 1px rgba(240, 217, 160, 0.9),
+    0 0 22px -4px rgba(226, 189, 108, 0.6);
+}
+
+/* Rows slide in one after another, from the side the drawer came from. */
+.menu-item {
+  animation: menu-item 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(0.12s + var(--menu-i, 0) * 0.04s);
+}
+.menu-link {
+  color: var(--fg);
+  transition: background-color 0.5s var(--ease-luxe);
+}
+/* Fading gold hairline between rows. */
+.menu-link::after {
+  content: "";
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(226, 189, 108, 0.22), rgba(226, 189, 108, 0.06) 70%, transparent);
+}
+li:last-child > .menu-link::after {
+  display: none;
+}
+.menu-num {
+  opacity: 0.6;
+  transition: opacity 0.5s var(--ease-luxe);
+}
+.menu-label {
+  color: rgba(246, 239, 226, 0.9);
+  transition:
+    color 0.5s var(--ease-luxe),
+    transform 0.5s var(--ease-luxe);
+}
+.menu-arrow {
+  color: rgba(226, 189, 108, 0.8);
+  background: rgba(246, 239, 226, 0.03);
+  box-shadow: inset 0 0 0 1px rgba(226, 189, 108, 0.25);
+  transition:
+    color 0.5s var(--ease-luxe),
+    background 0.5s var(--ease-luxe),
+    box-shadow 0.5s var(--ease-luxe),
+    transform 0.5s var(--ease-luxe);
+}
+/* The gold marker on the left edge: drawn on the current page, grown on press. */
+.menu-marker {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 2px;
+  height: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f0d9a0, #a87c40);
+  box-shadow: 0 0 12px rgba(226, 189, 108, 0.9);
+  transform: translateY(-50%);
+  transition: height 0.5s var(--ease-luxe);
+}
+/* A band of light that crosses the row on press. */
+.menu-sheen {
+  position: absolute;
+  inset: 0 auto 0 -60%;
+  width: 60%;
+  background: linear-gradient(100deg, transparent, rgba(240, 217, 160, 0.12), transparent);
+  transform: skewX(-12deg);
+  transition: transform 0.8s var(--ease-luxe);
+  pointer-events: none;
+}
+
+.menu-link:hover,
+.menu-link:focus-visible,
+.menu-link:active {
+  background-color: rgba(226, 189, 108, 0.06);
+}
+.menu-link:hover .menu-sheen,
+.menu-link:active .menu-sheen {
+  transform: translateX(280%) skewX(-12deg);
+}
+.menu-link:hover .menu-num,
+.menu-link[aria-current="page"] .menu-num {
+  opacity: 1;
+}
+.menu-link:hover .menu-label,
+.menu-link:focus-visible .menu-label {
+  color: var(--color-gold-light);
+  transform: translateX(4px);
+}
+.menu-link:hover .menu-marker,
+.menu-link:active .menu-marker {
+  height: 45%;
+}
+.menu-link:hover .menu-arrow,
+.menu-link:focus-visible .menu-arrow,
+.menu-arrow:is(a):hover {
+  color: #2a1a10;
+  background: linear-gradient(135deg, #e8d29c 0%, #c9a05a 45%, #a87c40 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 246, 222, 0.6),
+    0 0 18px -4px rgba(226, 189, 108, 0.7);
+  transform: rotate(45deg);
+}
+.menu-arrow:is(a):hover {
+  transform: none;
+}
+
+/* Where you are: a lit row with a full-height gold marker and a gold name. */
+.menu-link[aria-current="page"] {
+  background:
+    radial-gradient(80% 140% at 0% 50%, rgba(226, 189, 108, 0.14), transparent 70%),
+    rgba(226, 189, 108, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(226, 189, 108, 0.2);
+}
+.menu-link[aria-current="page"] .menu-marker {
+  height: 60%;
+}
+.menu-link[aria-current="page"] .menu-label {
+  background: var(--accent-grad, linear-gradient(100deg, #f5e4b8 0%, #e2bd6c 45%, #b3884a 100%));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.menu-link[aria-current="page"] .menu-arrow {
+  box-shadow:
+    inset 0 0 0 1px rgba(226, 189, 108, 0.6),
+    0 0 14px -4px rgba(226, 189, 108, 0.6);
+}
+
+.menu-card {
+  background:
+    radial-gradient(90% 120% at 100% 0%, rgba(226, 189, 108, 0.12), transparent 60%),
+    linear-gradient(160deg, rgba(61, 40, 24, 0.95), rgba(36, 22, 15, 0.95));
+  box-shadow:
+    inset 0 0 0 1px rgba(226, 189, 108, 0.22),
+    inset 0 1px 0 rgba(255, 246, 222, 0.06),
+    0 24px 50px -28px rgba(0, 0, 0, 0.8);
+}
+
+/* Leaving: the drawer slides back out and the page brightens. */
+.menu-closing .menu-panel {
+  animation: menu-slide-out 0.28s cubic-bezier(0.7, 0, 0.84, 0) both;
+}
+.menu-closing .menu-scrim {
+  animation: menu-fade-out 0.28s ease both;
+}
+
+@keyframes menu-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes menu-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes menu-slide {
+  from {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+@keyframes menu-slide-out {
+  to {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+@keyframes menu-item {
+  from {
+    opacity: 0;
+    transform: translate3d(28px, 0, 0);
   }
 }
 

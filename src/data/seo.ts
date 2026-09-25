@@ -37,9 +37,9 @@ export const seo = {
     card: { eyebrow: "The Restaurant · Jackson Heights, Queens", title: "Angel Indian", accent: "Restaurant." },
   },
   menus: {
-    title: "Tasting Menu & House Specialties | Angel Indian Restaurant",
+    title: "Chef's Tasting Menu | Angel Indian Restaurant",
     description:
-      "Chef Amrit Pal Singh's seven-course tasting menu and house specialties at Angel, Jackson Heights: chole bhatura, Amritsari kulcha, dum biryani. 100% Halal.",
+      "Chef Amrit Pal Singh's seven-course tasting menu at Angel, Jackson Heights: chole bhatura, Amritsari kulcha, dum biryani. 100% Halal.",
     card: { eyebrow: "The Menus · 100% Halal", title: "Two menus,", accent: "course by course." },
   },
   gallery: {

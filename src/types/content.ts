@@ -124,7 +124,7 @@ export type MenuCourse = {
 export type Menu = {
   slug: string;
   name: string;
-  kind: "tasting" | "specialties";
+  kind: "tasting";
   courseCount: number;
   courseLabel: string;
   intro: string;

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { chef } from "@/data/chef";
 import { site } from "@/data/site";
 import { getVenue } from "@/lib/content/venue";
@@ -25,8 +26,29 @@ export async function Hero() {
           whole section would crop most of it away. There it runs edge to edge at its own
           proportions, just under the header, so the whole photograph is visible, and fades
           into the brown under the name — the same full-bleed look as the desktop hero.
-          Landscape screens keep the desktop layout. */}
-      <div className="absolute inset-0 portrait:top-[4.75rem] portrait:bottom-auto portrait:aspect-[1453/1082] portrait:w-full">
+          Landscape screens keep the desktop layout.
+
+          Upright, a blurred, darkened copy of the same photograph fills the whole
+          screen behind it, and the sharp photograph melts into that copy instead of
+          stopping at an edge. So the hero still reads as one full-screen photograph
+          with the name and buttons on it, as on desktop, without cropping any of
+          the real one. The copy asks for exactly the file the sharp photograph does
+          (same sizes, same quality), so the browser reuses that download and it
+          costs nothing; and it is a still image, so the blur is drawn once rather
+          than on every frame. */}
+      <div aria-hidden className="absolute inset-0 hidden overflow-hidden portrait:block">
+        <Image
+          src={chef.heroImage.src}
+          alt=""
+          fill
+          sizes="100vw"
+          quality={72}
+          loading="eager"
+          className="scale-125 object-cover opacity-70 blur-2xl brightness-[0.55] saturate-[1.3]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-brown-deep/40 via-transparent to-brown-deep/60" />
+      </div>
+      <div className="hero-photo absolute inset-0 portrait:top-[4.75rem] portrait:bottom-auto portrait:aspect-[1453/1082] portrait:w-full">
         <ImageFrame
           image={chef.heroImage}
           ratio="fill"
@@ -37,13 +59,12 @@ export async function Hero() {
           quality={72}
           imgClassName="opacity-80 animate-kenburns motion-reduce:animate-none portrait:animate-none portrait:opacity-90"
         />
-        <div aria-hidden className="absolute inset-x-0 bottom-0 z-[1] hidden h-1/4 bg-gradient-to-t from-brown-deep to-transparent portrait:block" />
       </div>
       <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-r from-charcoal/75 via-charcoal/25 to-transparent portrait:hidden" />
       <div aria-hidden className="absolute inset-x-0 bottom-0 z-[1] h-1/2 bg-gradient-to-t from-brown-deep/90 to-transparent" />
       <Embers />
 
-      <Container className="relative z-[2] w-full pb-10 pt-32 md:pb-14 lg:pt-40 portrait:pt-[calc(4.75rem+74.5vw-1.5rem)]">
+      <Container className="relative z-[2] w-full pb-10 pt-32 md:pb-14 lg:pt-40 portrait:pt-[calc(4.75rem+74.5vw*0.8)]">
         <div className="grid gap-10 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-8">
             <div className="hero-in" style={{ "--hero-delay": "0.05s" } as CSSProperties}>

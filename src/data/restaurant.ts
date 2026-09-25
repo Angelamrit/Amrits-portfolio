@@ -30,14 +30,14 @@ export const restaurant: RestaurantProfile = {
       kind: "original",
       description:
         "The original room on 37th Avenue, where the menu moves from Indian street food to slow-cooked regional delicacies. The dishes that earned the Bib Gourmand are still served here, family style.",
-      highlights: ["House specialties", "Street food to regional delicacies", "Predominantly vegetarian, 100% Halal"],
+      highlights: ["Street food to regional delicacies", "Predominantly vegetarian, 100% Halal"],
       image: images.diningRoomGreen,
     },
     {
       name: "Angel, the new dining room",
       kind: "upscale",
       description:
-        "A sleek, formal, dinner-only dining room with a full bar and a curated chef's tasting menu served alongside the house specialties. The expansion Chef Vikas Khanna called a “pride of India.”",
+        "A sleek, formal, dinner-only dining room with a full bar and a curated chef's tasting menu. The expansion Chef Vikas Khanna called a “pride of India.”",
       highlights: ["Chef's tasting menu", "Full bar and cocktails", "Reservations via Resy"],
       image: images.angelDiningRoom,
     },

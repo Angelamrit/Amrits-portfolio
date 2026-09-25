@@ -1,4 +1,5 @@
 import "server-only";
+import { env } from "@/lib/env";
 
 /**
  * Fixed-window request counters held in the server's own memory.
@@ -34,10 +35,18 @@ const windows = new Map<string, Window>();
  * A ceiling on the number of tracked keys. Without it, a flood of requests with
  * spoofed `X-Forwarded-For` values would be a memory-exhaustion vector: each
  * distinct value would add an entry that lives until its window expires.
+ *
+ * The ceiling holds at every insert, not only at the periodic sweep: a flood
+ * fast enough to add a million keys inside one sweep interval would otherwise
+ * get to keep them all for a minute. When the map is full the oldest entry
+ * goes. Maps iterate in insertion order, so that is one delete, not a sort.
  */
 const MAX_KEYS = 20_000;
 const SWEEP_INTERVAL_MS = 60_000;
 let nextSweep = 0;
+
+/** Keys are addresses, and no address is longer than this; a forged header is not allowed to be. */
+const MAX_KEY_LENGTH = 64;
 
 function sweep(now: number) {
   if (now < nextSweep) return;
@@ -46,11 +55,12 @@ function sweep(now: number) {
   for (const [key, window] of windows) {
     if (window.resetAt <= now) windows.delete(key);
   }
+}
 
-  if (windows.size > MAX_KEYS) {
-    const byExpiry = [...windows.entries()].sort((a, b) => a[1].resetAt - b[1].resetAt);
-    for (const [key] of byExpiry.slice(0, windows.size - MAX_KEYS)) windows.delete(key);
-  }
+function evictIfFull() {
+  if (windows.size < MAX_KEYS) return;
+  const oldest = windows.keys().next();
+  if (!oldest.done) windows.delete(oldest.value);
 }
 
 function peek(key: string, rule: Rule, now: number): Verdict {
@@ -62,17 +72,22 @@ function peek(key: string, rule: Rule, now: number): Verdict {
 
 function bump(key: string, rule: Rule, now: number) {
   const window = windows.get(key);
-  if (!window || window.resetAt <= now) windows.set(key, { count: 1, resetAt: now + rule.windowMs });
-  else window.count += 1;
+  if (!window || window.resetAt <= now) {
+    if (!window) evictIfFull();
+    windows.set(key, { count: 1, resetAt: now + rule.windowMs });
+  } else {
+    window.count += 1;
+  }
 }
 
 /**
  * All-or-nothing across every rule: they are all read before any counter moves,
  * so a request turned away by the last rule does not spend budget against the
  * first. When several rules block, the longest wait is the one reported.
+ *
+ * `now` is injectable so a window can be tested without waiting for it to pass.
  */
-export function rateLimit(checks: readonly Check[]): Verdict {
-  const now = Date.now();
+export function rateLimit(checks: readonly Check[], now = Date.now()): Verdict {
   sweep(now);
 
   let worst: Verdict = { allowed: true };
@@ -94,20 +109,39 @@ export function resetRateLimits() {
   nextSweep = 0;
 }
 
+/** Test seam: how many keys are being tracked. Not used by application code. */
+export function trackedKeyCount(): number {
+  return windows.size;
+}
+
 /**
  * Best-effort client address.
  *
  * These headers are only as trustworthy as the proxy in front of the app: a
  * client talking to the origin directly can put anything in `X-Forwarded-For`.
- * Behind Vercel, Cloudflare or any reverse proxy that overwrites them they are
- * reliable, and that is how this site is meant to be deployed. The `MAX_KEYS`
- * ceiling above is what keeps a spoofed flood from costing anything.
+ * Behind Vercel, which overwrites both headers below at its edge, they are
+ * reliable, and that is the deployment this defaults to.
+ *
+ * Other proxies append rather than overwrite, and then the first address in
+ * `X-Forwarded-For` is whatever the client chose to send. For those,
+ * `TRUSTED_IP_HEADER` names the one header the proxy is known to set itself
+ * (Cloudflare: `cf-connecting-ip`; nginx with real_ip: `x-real-ip`), and
+ * nothing else is consulted, so a client cannot rotate a forged header to
+ * escape its own bucket. Whatever the source, the value is cut to the length
+ * of an address, so a forged header cannot inflate a key either. The
+ * `MAX_KEYS` ceiling above is what keeps a spoofed flood from costing memory.
  */
 export function clientIp(headers: Headers): string {
-  const forwarded = headers.get("x-forwarded-for");
-  if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim();
-    if (first) return first;
-  }
-  return headers.get("x-real-ip")?.trim() || headers.get("cf-connecting-ip")?.trim() || "unknown";
+  const trusted = env.TRUSTED_IP_HEADER;
+  const address = trusted
+    ? firstAddress(headers.get(trusted))
+    : firstAddress(headers.get("x-forwarded-for")) ||
+      firstAddress(headers.get("x-real-ip")) ||
+      firstAddress(headers.get("cf-connecting-ip"));
+  return address ?? "unknown";
+}
+
+function firstAddress(value: string | null): string | undefined {
+  const first = value?.split(",")[0]?.trim().slice(0, MAX_KEY_LENGTH);
+  return first || undefined;
 }

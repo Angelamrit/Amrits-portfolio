@@ -33,26 +33,6 @@ export const menus: Menu[] = [
     featured: true,
     image: images.thaliOverhead,
   },
-  {
-    slug: "house-specialties",
-    name: "House Specialties",
-    kind: "specialties",
-    courseCount: 5,
-    courseLabel: "Family Style",
-    intro:
-      "The dishes that built Angel's reputation in Jackson Heights, served to share. Bold, honest and rooted in India.",
-    courses: [
-      { title: "Chole", dishId: "chole-bhatura", status: "confirmed" },
-      { title: "Kulcha", dishId: "amritsari-paneer-kulcha", status: "confirmed" },
-      { title: "Biryani", dishId: "vegetable-dum-biryani", status: "confirmed" },
-      { title: "Chicken", dishId: "chicken-dum-biryani", status: "confirmed" },
-      { title: "Goat", dishId: "goat-dum-biryani", status: "confirmed" },
-    ],
-    notes: ["Predominantly vegetarian. 100% Halal.", "Breads and rice are served alongside."],
-    venue: "At Angel · Jackson Heights",
-    featured: true,
-    image: images.karahi,
-  },
 ];
 
 export const featuredMenus = menus.filter((m) => m.featured);

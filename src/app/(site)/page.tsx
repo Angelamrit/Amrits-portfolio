@@ -21,7 +21,7 @@ export const metadata: Metadata = buildMetadata({ seo: seo.home, path: "/" });
  *   01 WHO     Meet the Chef
  *   02 WHERE   Angel, his Michelin Bib Gourmand restaurant
  *   03 WHAT    Signature dishes
- *   04 MENUS   Tasting menu and house specialties
+ *   04 MENUS   The tasting menu
  *   05 SEE     Gallery
  *   06 PROOF   Recognition
  *   ACTION     Reserve a table at Angel
