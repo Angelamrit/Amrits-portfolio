@@ -185,7 +185,7 @@ describe("content patches", () => {
   });
 
   it("returns the base untouched when there is no patch at all", () => {
-    const base = { name: "Private Event Menu" };
+    const base = { name: "House Specialties" };
     assert.equal(applyPatch(base, undefined), base);
   });
 });

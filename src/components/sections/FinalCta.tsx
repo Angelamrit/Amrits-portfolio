@@ -16,18 +16,18 @@ type Props = {
 };
 
 export async function FinalCta({
-  eyebrow = "Plan your private dining experience",
+  eyebrow = "Dinner at Angel",
   title = (
     <>
-      Bring the chef <Em shimmer>to your table.</Em>
+      Come dine <Em shimmer>with the chef.</Em>
     </>
   ),
-  body = "Private dinners, celebrations, corporate events and residencies, cooked by Chef Amrit and served with the care that earned Angel its Bib Gourmand.",
+  body = "Chef Amrit cooks every night at Angel in Jackson Heights. Reserve a table and taste the cooking that earned its Bib Gourmand.",
 }: Props) {
   const venue = await getVenue();
 
   return (
-    <section id="book" className="relative overflow-hidden surface-brown-deep tone-dark py-section">
+    <section id="reserve" className="relative overflow-hidden surface-brown-deep tone-dark py-section">
       <ImageFrame image={images.tableCandles} ratio="fill" reveal="fade" vignette sizes="100vw" quality={65} imgClassName="opacity-35" />
       <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-r from-brown-deep via-brown-deep/70 to-brown-deep/30" />
       <Orbs variant="gold" className="z-[1]" />
@@ -42,12 +42,14 @@ export async function FinalCta({
               </Heading>
               <p className="mt-8 max-w-xl text-lead text-fg/70">{body}</p>
               <div className="mt-12 flex flex-wrap gap-4">
-                <Button href={site.cta.href}>Request a Private Experience</Button>
-                {venue.resyUrl && (
-                  <Button href={venue.resyUrl} variant="outline">
-                    Reserve at Angel via Resy
-                  </Button>
+                {venue.resyUrl ? (
+                  <Button href={venue.resyUrl}>Reserve a Table</Button>
+                ) : (
+                  <Button href={site.cta.href}>{site.cta.label}</Button>
                 )}
+                <Button href="/angel" variant="glass">
+                  Visit Angel
+                </Button>
               </div>
             </div>
           </div>

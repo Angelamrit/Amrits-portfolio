@@ -23,7 +23,7 @@ export function Voices() {
     <Section id="recognition" tone="deep" orbs="gold" pattern divider grain className="scroll-mt-20">
       <Container>
         <Reveal>
-          <Eyebrow align="center">07 · Recognition</Eyebrow>
+          <Eyebrow align="center">06 · Recognition</Eyebrow>
         </Reveal>
         <Reveal delay={0.1}>
           <Heading as="h2" size="lg" className="mx-auto mt-8 max-w-3xl text-center">

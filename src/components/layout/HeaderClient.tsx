@@ -1,9 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, m, useScroll, useSpring } from "motion/react";
-import { MapPin, Star } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import type { NavItem } from "@/types/content";
 import { cn } from "@/lib/cn";
 import { site } from "@/data/site";
@@ -31,6 +29,10 @@ export function HeaderClient({
   const venue = useVenue();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  // Only the home page opens on a dark photograph. Everywhere else the page
+  // starts on the light oak, where a transparent bar leaves the gold wordmark
+  // unreadable, so the solid bar is shown from the first pixel.
+  const solid = scrolled || pathname !== "/";
   const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);
   const [panelKey, setPanelKey] = useState<string | null>(null);
@@ -41,8 +43,6 @@ export function HeaderClient({
   const openTimer = useRef<number | undefined>(undefined);
   const closeTimer = useRef<number | undefined>(undefined);
 
-  const { scrollYProgress } = useScroll();
-  const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: 0.3 });
 
   const navItems = items.filter((i) => i.href !== "/");
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));
@@ -148,13 +148,13 @@ export function HeaderClient({
           <div
             className={cn(
               "absolute inset-0 bg-brown/92 backdrop-blur-2xl transition-opacity duration-700 ease-luxe",
-              scrolled || panelKey ? "opacity-100" : "opacity-0",
+              solid || panelKey ? "opacity-100" : "opacity-0",
             )}
           />
           <div
             className={cn(
               "absolute inset-0 bg-gradient-to-b from-brown-deep/85 via-brown-deep/35 to-transparent transition-opacity duration-700",
-              scrolled || panelKey ? "opacity-0" : "opacity-100",
+              solid || panelKey ? "opacity-0" : "opacity-100",
             )}
           />
           <div
@@ -163,44 +163,6 @@ export function HeaderClient({
               scrolled ? "opacity-100" : "opacity-0",
             )}
           />
-        </div>
-
-        {/* ---------- credentials strip ---------- */}
-        <div
-          className={cn(
-            "overflow-hidden border-b border-fg/[0.07] transition-all duration-700 ease-luxe",
-            scrolled ? "max-h-0 opacity-0" : "max-h-12 opacity-100",
-          )}
-        >
-          <div className="mx-auto flex w-full max-w-wide items-center justify-between gap-3 px-5 py-2.5 sm:gap-6 sm:px-8 lg:px-12">
-            <p className="flex items-center gap-2 eyebrow text-[0.52rem] text-gold/85">
-              <Star aria-hidden className="size-3 shrink-0" strokeWidth={1.5} fill="currentColor" />
-              {/* Two labels rather than one: at this tracking the full line and
-                  "Reserve via Resy" together are wider than a 320px screen. */}
-              <span className="whitespace-nowrap sm:hidden">Bib Gourmand</span>
-              <span className="hidden whitespace-nowrap sm:inline">Michelin Guide · Bib Gourmand</span>
-            </p>
-            <p className="hidden items-center gap-2 eyebrow text-[0.52rem] text-fg/45 md:flex">
-              <MapPin aria-hidden className="size-3 shrink-0" strokeWidth={1.5} />
-              <span className="whitespace-nowrap">
-                {venue.address.street}, {venue.address.city}
-              </span>
-            </p>
-            <p className="flex items-center gap-4">
-              <span className="hidden eyebrow text-[0.52rem] text-fg/45 lg:inline">{venue.hours}</span>
-              {venue.resyUrl && (
-                <a
-                  href={venue.resyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="eyebrow whitespace-nowrap text-[0.52rem] text-gold-light/90 transition-colors hover:text-fg"
-                >
-                  <span className="sm:hidden">Reserve</span>
-                  <span className="hidden sm:inline">Reserve via Resy</span>
-                </a>
-              )}
-            </p>
-          </div>
         </div>
 
         {/* ---------- main bar ---------- */}
@@ -247,8 +209,8 @@ export function HeaderClient({
           </nav>
 
           <div className="flex items-center gap-3">
-            <Button href={site.cta.href} size="sm" className="hidden md:inline-flex" icon={false}>
-              Book
+            <Button href={venue.resyUrl ?? site.cta.href} size="sm" className="hidden md:inline-flex" icon={false}>
+              Reserve
             </Button>
             <button
               type="button"
@@ -269,41 +231,32 @@ export function HeaderClient({
         {/* ---------- scroll progress ---------- */}
         <div aria-hidden className="absolute inset-x-0 bottom-0 h-px">
           <div className="absolute inset-0 hairline-center opacity-70" />
-          <m.div
-            className="absolute inset-y-0 left-0 w-full origin-left bg-gradient-to-r from-gold-deep via-gold to-gold-light shadow-[0_0_12px_rgba(226,189,108,0.85)]"
-            style={{ scaleX: progress }}
-          />
+          {/* Driven by the page's scroll position in CSS (see .scroll-progress), not by script. */}
+          <div className="scroll-progress absolute inset-y-0 left-0 w-full origin-left bg-gradient-to-r from-gold-deep via-gold to-gold-light shadow-[0_0_12px_rgba(226,189,108,0.85)]" />
         </div>
 
         {/* ---------- mega menu ---------- */}
-        <AnimatePresence>
-          {activePanel && (
-            <div
-              key={activePanel.key}
-              onMouseEnter={clearTimers}
-              onMouseLeave={requestClose}
-              className="absolute inset-x-0 top-full hidden lg:block"
-            >
-              <MegaMenu panel={activePanel} onNavigate={() => setPanelKey(null)} />
-            </div>
-          )}
-        </AnimatePresence>
+        {activePanel && (
+          <div
+            key={activePanel.key}
+            onMouseEnter={clearTimers}
+            onMouseLeave={requestClose}
+            className="absolute inset-x-0 top-full hidden lg:block"
+          >
+            <MegaMenu panel={activePanel} onNavigate={() => setPanelKey(null)} />
+          </div>
+        )}
       </header>
 
       {/* dim the page behind the mega menu */}
-      <AnimatePresence>
-        {activePanel && (
-          <m.div
-            aria-hidden
-            className="fixed inset-0 z-[70] hidden bg-brown-deep/55 backdrop-blur-[2px] lg:block"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.35 }}
-            onMouseEnter={requestClose}
-          />
-        )}
-      </AnimatePresence>
+      {activePanel && (
+        <div
+          aria-hidden
+          className="enter fixed inset-0 z-[70] hidden bg-brown-deep/55 backdrop-blur-[2px] lg:block"
+          style={{ "--enter-y": "0px" } as CSSProperties}
+          onMouseEnter={requestClose}
+        />
+      )}
 
       <MobileMenu open={open} onClose={close} items={mobileItems} />
     </>

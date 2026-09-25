@@ -221,16 +221,10 @@
        a narrow screen. `clip` rather than `hidden`: `hidden` would make this a
        scroll container and break every `position: sticky` on the site. */
     overflow-x: clip;
-  }
-  html.lenis,
-  html.lenis body {
-    height: auto;
-  }
-  .lenis.lenis-smooth {
-    scroll-behavior: auto !important;
-  }
-  .lenis.lenis-stopped {
-    overflow: hidden;
+    /* Oak on the root too. With `color-scheme: dark` the browser's own blank
+       canvas is near-black, and that is what flashed between the moment a page
+       was requested and the moment the body painted. */
+    background-color: var(--color-bg);
   }
   body {
     @apply bg-bg text-fg font-sans antialiased;
@@ -1213,6 +1207,459 @@
 
 @media (prefers-reduced-motion: reduce) {
   .live-dot::after {
+    animation: none;
+  }
+}
+
+/*
+  Phones and tablets: keep the look, drop the per-frame cost.
+
+  On a phone GPU these were what made scrolling heavy. A backdrop blur has to
+  re-sample everything behind the panel on every scrolled frame, and the site
+  has dozens of glass panels plus a fixed, full-width blurred header; the
+  shimmer loops repaint their text every frame; the orbs are page-sized
+  animated layers; and the grain is an SVG noise texture blended over whole
+  sections. The panels are already 75-90% opaque, so without the blur they are
+  simply made a touch more solid and read the same. Laptops keep everything.
+
+  Unlayered on purpose, so it wins over the utilities without !important.
+*/
+@media (pointer: coarse), (max-width: 1023px) {
+  .glass,
+  .glass-strong,
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .glass {
+    background: linear-gradient(160deg, rgba(44, 27, 18, 0.93), rgba(31, 19, 13, 0.88));
+  }
+  .glass-strong {
+    background: linear-gradient(160deg, rgba(44, 27, 18, 0.97), rgba(31, 19, 13, 0.94));
+  }
+  .text-shimmer {
+    animation: none;
+  }
+  .orb {
+    animation: none;
+    will-change: auto;
+  }
+  .grain::after {
+    display: none;
+  }
+}
+
+/*
+  Scroll reveals (components/ui/Reveal.tsx). A single IntersectionObserver sets
+  `data-shown`; everything else is these transitions, which the browser runs
+  on the compositor.
+*/
+[data-reveal],
+[data-reveal-item] {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-y, 28px), 0);
+}
+[data-reveal] {
+  transition:
+    opacity var(--reveal-duration, 1.1s) cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0s),
+    transform var(--reveal-duration, 1.1s) cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0s);
+}
+[data-reveal-item] {
+  --reveal-item-delay: calc(var(--reveal-delay, 0s) + var(--reveal-i, 0) * var(--reveal-stagger, 0.08s));
+  transition:
+    opacity 1s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-item-delay),
+    transform 1s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-item-delay);
+}
+[data-reveal][data-shown],
+[data-reveal-group][data-shown] [data-reveal-item] {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal],
+  [data-reveal-item] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Hero entrance: pure CSS, so it starts with the first paint instead of after hydration. */
+.hero-in {
+  animation: hero-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--hero-delay, 0s);
+}
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-in {
+    animation: none;
+  }
+}
+
+/*
+  ---- Loading skeleton (components/layout/PageSkeleton.tsx) ----
+  Shown only while the next page is still arriving. It fades in rather than
+  snapping, and everything that moves is a transform, so the sheen runs on the
+  compositor.
+*/
+.skeleton-page {
+  animation: skeleton-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes skeleton-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* A gold thread racing along the top edge, under the header. */
+.skeleton-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  /* Above the header (z-80), so it reads as the header's own edge. */
+  z-index: 90;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.skeleton-progress::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, #a87c40 20%, #f0d9a0 60%, #e2bd6c 80%, transparent);
+  box-shadow: 0 0 10px rgba(226, 189, 108, 0.7);
+  animation: skeleton-progress 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes skeleton-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(260%);
+  }
+}
+
+.skeleton {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  isolation: isolate;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, var(--skeleton-sheen, rgba(255, 244, 214, 0.45)) 50%, transparent 80%);
+  transform: translateX(-100%);
+  animation: skeleton-sheen 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes skeleton-sheen {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Cocoa-tinted bars on the oak, with a crisp top edge like pressed glass. */
+.skeleton-on-oak {
+  background: linear-gradient(180deg, rgba(58, 32, 12, 0.2), rgba(58, 32, 12, 0.13));
+  box-shadow: inset 0 1px 0 rgba(255, 246, 222, 0.28);
+}
+/* Where the primary button will be: the chocolate lacquer pill, gold-rimmed. */
+.skeleton-pill {
+  --skeleton-sheen: rgba(240, 217, 160, 0.28);
+  background: linear-gradient(135deg, #3d2818 0%, #2c1b12 55%, #3a2517 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(226, 189, 108, 0.45),
+    0 8px 22px -10px rgba(38, 20, 8, 0.7);
+}
+/* The photograph: a lit chocolate frame with a gold hairline and a soft bloom. */
+.skeleton-frame {
+  --skeleton-sheen: rgba(240, 217, 160, 0.16);
+  display: block;
+  background:
+    radial-gradient(80% 60% at 30% 10%, rgba(226, 189, 108, 0.2), transparent 65%),
+    linear-gradient(160deg, #3d2818 0%, #2c1b12 50%, #1f130d 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(226, 189, 108, 0.35),
+    0 30px 70px -30px rgba(38, 20, 8, 0.8),
+    0 0 50px -12px rgba(226, 189, 108, 0.35);
+}
+.skeleton-on-brown {
+  --skeleton-sheen: rgba(240, 217, 160, 0.12);
+  background: rgba(246, 239, 226, 0.07);
+}
+.skeleton-card {
+  background: linear-gradient(160deg, rgba(61, 40, 24, 0.75), rgba(31, 19, 13, 0.6));
+  box-shadow:
+    inset 0 0 0 1px rgba(226, 189, 108, 0.16),
+    0 24px 50px -30px rgba(0, 0, 0, 0.7);
+  animation: hero-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.skeleton-line-accent {
+  background: linear-gradient(90deg, #6b4a26, #a87c40);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after,
+  .skeleton-progress::after {
+    animation: none;
+    opacity: 0;
+  }
+  .skeleton-card {
+    animation: none;
+  }
+}
+
+/* Image reveals (components/ui/ImageFrame.tsx): same shared observer as the text reveals. */
+[data-img-reveal] {
+  transition:
+    clip-path 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-img-reveal="clip"],
+[data-img-reveal="curtain"] {
+  clip-path: inset(0 0 100% 0);
+}
+[data-img-reveal="fade"] {
+  opacity: 0;
+}
+[data-img-reveal] > .img-reveal-scale {
+  transform: scale(1.12);
+  transition: transform 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-img-reveal="fade"] > .img-reveal-scale {
+  transform: scale(1.04);
+}
+[data-img-reveal] > .img-reveal-filament {
+  transition:
+    transform 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.4s ease 1.1s;
+}
+[data-img-reveal][data-shown] {
+  clip-path: inset(0);
+  opacity: 1;
+}
+[data-img-reveal][data-shown] > .img-reveal-scale {
+  transform: none;
+}
+[data-img-reveal][data-shown] > .img-reveal-filament {
+  transform: translateY(100%);
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-img-reveal],
+  [data-img-reveal] > .img-reveal-scale {
+    clip-path: none;
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  [data-img-reveal] > .img-reveal-filament {
+    display: none;
+  }
+}
+
+/*
+  Header reading-progress line. A native scroll-driven animation: the browser
+  ties it to the page scroll on the compositor, with no script running per
+  frame. Browsers without scroll timelines simply do not show the line.
+*/
+.scroll-progress {
+  transform: scaleX(0);
+}
+@supports (animation-timeline: scroll()) {
+  .scroll-progress {
+    animation: scroll-progress linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+@keyframes scroll-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/*
+  Manifesto (components/sections/Manifesto.tsx). The paragraph is a view
+  timeline; each word lights up across its own slice of it, in reading order,
+  between the paragraph entering the lower part of the screen and passing the
+  middle. Native and off the main thread; unsupported browsers and reduced
+  motion get the statement fully lit.
+*/
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .manifesto {
+      view-timeline: --manifesto block;
+    }
+    .manifesto-word {
+      animation: manifesto-word linear both;
+      animation-timeline: --manifesto;
+      animation-range:
+        cover calc(12% + 38% * var(--i) / var(--n))
+        cover calc(12% + 38% * (var(--i) + 1) / var(--n));
+    }
+  }
+}
+@keyframes manifesto-word {
+  from {
+    opacity: 0.16;
+    transform: translate3d(0, 6px, 0);
+  }
+}
+
+/*
+  Off-screen sections are not rendered until they are about to scroll in.
+
+  The pages are long, and on a phone the browser used to style and lay out
+  every section before it could paint the first screen — well over a second of
+  main-thread work on a mid-range phone. `content-visibility: auto` skips that
+  work for sections outside the viewport; the `auto` in the intrinsic size makes
+  the browser remember each section's real height once it has been rendered,
+  so the scrollbar settles instead of guessing again.
+*/
+.section-lazy {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
+/*
+  Background parallax (components/ui/Parallax.tsx), as a native view-timeline:
+  the layer drifts from -amount to +amount while its container crosses the
+  screen, run by the browser with no per-frame script. Browsers without scroll
+  timelines, and reduced motion, keep the layer still.
+*/
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .parallax {
+      view-timeline: --parallax block;
+    }
+    .parallax > .parallax-layer {
+      animation: parallax linear both;
+      animation-timeline: --parallax;
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+@keyframes parallax {
+  from {
+    transform: translate3d(0, calc(var(--parallax-amount, 70px) * -1), 0);
+  }
+  to {
+    transform: translate3d(0, var(--parallax-amount, 70px), 0);
+  }
+}
+
+/*
+  Small CSS replacements for what the animation library used to do.
+
+  - [data-xfade]: CrossFade layers (components/ui/CrossFade.tsx).
+  - .enter: a one-off entrance for things that mount (menus, panels, filtered
+    lists). Delay with `--enter-delay`, distance with `--enter-y`.
+  - .accordion: height open/close by transitioning grid rows, so no script
+    has to measure the content.
+  - .progress-run: the thin line that fills while a slideshow waits.
+*/
+[data-xfade="enter"][data-xfade-variant="fade"] {
+  animation: xfade-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+[data-xfade="exit"][data-xfade-variant="fade"] {
+  animation: xfade-out 0.9s ease both;
+}
+[data-xfade="enter"][data-xfade-variant="rise"] {
+  animation: xfade-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both;
+}
+[data-xfade="exit"][data-xfade-variant="rise"] {
+  animation: xfade-out 0.18s ease both;
+}
+@keyframes xfade-in {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+}
+@keyframes xfade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes xfade-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+}
+
+.enter {
+  animation: enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) var(--enter-delay, 0s) both;
+}
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--enter-y, 16px), 0);
+  }
+}
+
+/* A Tailwind utility (not a plain class) so responsive variants on the same
+   element — `lg:hidden` on the phone accordions — still override its display. */
+@utility accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.4s ease;
+  &[data-open] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+  & > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+.progress-run {
+  animation: progress-run var(--progress-duration, 5.2s) linear both;
+}
+@keyframes progress-run {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-xfade],
+  .enter,
+  .progress-run {
+    animation: none;
+  }
+  .accordion {
+    transition: none !important;
+  }
+}
+
+/* FilmstripFrame: each frame drifts slowly while it is on screen. */
+.filmstrip-drift {
+  animation: filmstrip-drift var(--drift-duration, 3.7s) linear both;
+}
+@keyframes filmstrip-drift {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .filmstrip-drift {
     animation: none;
   }
 }

@@ -88,7 +88,7 @@ export const images = {
   bar: placeholder("bar.jpg", "Bar with stools and warm light", 1600, 1067),
   cocktail: placeholder("cocktail.jpg", "A cocktail being poured over ice", 1400, 1750),
   // ---- Tables & events ----
-  tableCandles: placeholder("tableCandles.jpg", "Private table set with wine glasses", 1600, 1067),
+  tableCandles: placeholder("tableCandles.jpg", "Table set with wine glasses", 1600, 1067),
   tableSetting: placeholder("tableSetting.jpg", "Elegant table setting", 1600, 1067),
   tableFlorals: placeholder("tableFlorals.jpg", "Table with florals and glassware", 1600, 1067),
   banquet: placeholder("banquet.jpg", "Banquet tables dressed for an event", 1600, 1067),

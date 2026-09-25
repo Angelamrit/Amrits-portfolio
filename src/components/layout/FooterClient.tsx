@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowUp } from "lucide-react";
-import { useLenis } from "lenis/react";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 
 /**
@@ -36,14 +35,9 @@ export function LocalTime({ place }: { place: string }) {
   );
 }
 
-/** Scrolls to the top through Lenis when it is mounted, natively otherwise. Styled to match the wordmark's struck monogram. */
+/** Scrolls smoothly back to the top. Styled to match the wordmark's struck monogram. */
 export function BackToTop() {
-  const lenis = useLenis();
-
-  const onClick = () => {
-    if (lenis) lenis.scrollTo(0, { duration: 1.6 });
-    else window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const onClick = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
     <button

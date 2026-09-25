@@ -62,7 +62,7 @@ export interface Store {
    * Read-modify-write as one step.
    *
    * `readDoc` followed by `writeDoc` is two steps, and anything that can run
-   * twice at once — two guests submitting the booking form in the same second —
+   * twice at once — two admins saving the same document in the same second —
    * will read the same old value and one write will silently erase the other.
    * This runs `change` against the current value inside the same serialised
    * slot as the write, so concurrent updates queue rather than race. Returns

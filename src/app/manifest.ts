@@ -3,13 +3,17 @@ import { site } from "@/data/site";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: site.name,
+    name: `${site.name} · Angel Indian Restaurant`,
     short_name: site.shortName,
     description: site.description,
     start_url: "/",
     display: "standalone",
-    background_color: "#f7f4ee",
-    theme_color: "#14120f",
-    icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }],
+    // The brand's chocolate, matching the header and the viewport theme colour.
+    background_color: "#1f130d",
+    theme_color: "#2c1b12",
+    icons: [
+      { src: "/icon.svg", sizes: "any", type: "image/svg+xml" },
+      { src: "/apple-icon", sizes: "180x180", type: "image/png" },
+    ],
   };
 }

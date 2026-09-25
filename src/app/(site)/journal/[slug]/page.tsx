@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { articles, articleBySlug } from "@/data/journal";
 import { filterPlaceholders, showPlaceholders } from "@/lib/placeholders";
+import { site } from "@/data/site";
 import { buildMetadata } from "@/lib/seo/metadata";
+import { articleJsonLd, breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { ArticleBody } from "@/components/journal/ArticleBody";
 import { ArticleCard } from "@/components/journal/ArticleCard";
 import { FinalCta } from "@/components/sections/FinalCta";
@@ -38,7 +41,12 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const { slug } = await params;
   const a = articleBySlug(slug);
   if (!a) return {};
-  return buildMetadata({ title: a.title, description: a.excerpt, path: `/journal/${a.slug}`, image: a.cover.src });
+  return buildMetadata({
+    seo: { title: `${a.title} | ${site.name}`, description: a.excerpt },
+    path: `/journal/${a.slug}`,
+    type: "article",
+    article: { publishedTime: a.date, authors: [site.name] },
+  });
 }
 
 const fmt = (d: string) => new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
@@ -52,6 +60,15 @@ export default async function ArticlePage({ params }: { params: Promise<Params> 
 
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Journal", path: "/journal" },
+            { name: article.title, path: `/journal/${article.slug}` },
+          ]),
+          articleJsonLd(article),
+        ]}
+      />
       <header className="relative overflow-hidden surface-gold pt-36 pb-12 md:pt-44">
         <Orbs variant="mixed" pattern />
         <Container className="relative z-[2]">

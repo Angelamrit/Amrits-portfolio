@@ -7,7 +7,7 @@ import { clientIp } from "@/lib/rate-limit";
 export type { InquiryState };
 
 /**
- * The enquiry form's only entry point.
+ * The contact form's only entry point.
  *
  * A Server Action is a public POST endpoint. Next.js checks the request's
  * origin against the host and caps the body at 1MB, but everything past that is

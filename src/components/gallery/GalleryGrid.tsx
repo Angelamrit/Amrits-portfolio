@@ -2,21 +2,29 @@
 
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, m, useReducedMotion } from "motion/react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { GalleryCategory, GalleryItem } from "@/types/content";
 import { cn } from "@/lib/cn";
 
 type Category = { value: GalleryCategory | "all"; label: string };
 
-const ease = [0.16, 1, 0.3, 1] as const;
-
+/*
+ * Why two components: reading the query string with useSearchParams makes
+ * Next.js leave the whole component out of the pre-built HTML and render it in
+ * the browser, so visitors used to see an empty box until the JavaScript
+ * arrived. The page now puts the View, with no query, in the Suspense fallback —
+ * so the real content is in the static HTML from the first byte — and this
+ * wrapper takes over once the query can be read.
+ */
 export function GalleryGrid({ items, categories }: { items: GalleryItem[]; categories: Category[] }) {
+  const params = useSearchParams();
+  return <GalleryGridView items={items} categories={categories} fromUrl={params.get("category")} />;
+}
+
+export function GalleryGridView({ items, categories, fromUrl }: { items: GalleryItem[]; categories: Category[]; fromUrl: string | null }) {
   const router = useRouter();
   const pathname = usePathname();
-  const params = useSearchParams();
-  const fromUrl = params.get("category");
   const validFromUrl = categories.find((c) => c.value === fromUrl)?.value;
 
   const [filter, setFilter] = useState<GalleryCategory | "all">(validFromUrl ?? "all");
@@ -28,13 +36,16 @@ export function GalleryGrid({ items, categories }: { items: GalleryItem[]; categ
     setFilter(validFromUrl ?? "all");
   }
 
+  // Items only animate in after a filter change, not on the first load.
+  const [filtered, setFiltered] = useState(false);
+
   const select = (value: GalleryCategory | "all") => {
     setFilter(value);
+    setFiltered(true);
     router.replace(value === "all" ? pathname : `${pathname}?category=${value}`, { scroll: false });
   };
 
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const reduce = useReducedMotion();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   const visible = filter === "all" ? items : items.filter((i) => i.category === filter);
@@ -85,14 +96,13 @@ export function GalleryGrid({ items, categories }: { items: GalleryItem[]; categ
                   selected ? "text-charcoal" : "text-fg/65 hover:text-fg",
                 )}
               >
-                {selected && (
-                  <m.span
-                    layoutId="gallery-filter"
-                    aria-hidden
-                    className="absolute inset-0 rounded-pill bg-gradient-to-r from-gold-light via-gold to-gold-deep"
-                    transition={{ type: "spring", stiffness: 320, damping: 32 }}
-                  />
-                )}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "absolute inset-0 rounded-pill bg-gradient-to-r from-gold-light via-gold to-gold-deep transition-opacity duration-300",
+                    selected ? "opacity-100" : "opacity-0",
+                  )}
+                />
                 <span className="relative">{c.label}</span>
               </button>
             );
@@ -102,17 +112,13 @@ export function GalleryGrid({ items, categories }: { items: GalleryItem[]; categ
       </div>
 
       <ul className="mt-10 columns-1 gap-4 sm:columns-2 lg:columns-3 [&>li]:mb-4 [&>li]:break-inside-avoid">
-        <AnimatePresence initial={false}>
-          {visible.map((item, i) => {
+        {visible.map((item, i) => {
             const ratio = item.span === "wide" ? "aspect-[4/3]" : item.span === "tall" ? "aspect-[3/4]" : "aspect-square";
             return (
-              <m.li
-                key={item.id}
-                layout={!reduce}
-                initial={reduce ? false : { opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.6, ease, delay: Math.min(i * 0.03, 0.4) }}
+              <li
+                key={`${filter}-${item.id}`}
+                className={filtered ? "enter" : undefined}
+                style={filtered ? ({ "--enter-delay": `${Math.min(i * 0.03, 0.4)}s` } as CSSProperties) : undefined}
               >
                 <button
                   type="button"
@@ -137,10 +143,9 @@ export function GalleryGrid({ items, categories }: { items: GalleryItem[]; categ
                     </span>
                   )}
                 </button>
-              </m.li>
+              </li>
             );
           })}
-        </AnimatePresence>
       </ul>
 
       <dialog

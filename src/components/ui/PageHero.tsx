@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { ImageAsset } from "@/types/content";
 import { cn } from "@/lib/cn";
 import { Container } from "./Container";
@@ -6,7 +6,6 @@ import { Eyebrow } from "./Eyebrow";
 import { Heading } from "./Heading";
 import { ImageFrame } from "./ImageFrame";
 import { Orbs } from "./Orbs";
-import { Reveal } from "./Reveal";
 
 type Props = {
   eyebrow: string;
@@ -29,23 +28,23 @@ export function PageHero({ eyebrow, title, lead, image, cinematicImage = false, 
       <Container className="relative z-[2]">
         <div className={cn("grid gap-12 lg:gap-16", image ? "lg:grid-cols-12 lg:items-end" : "")}>
           <div className={cn(image ? "lg:col-span-7" : "max-w-4xl")}>
-            <Reveal>
+            <div className="hero-in" style={{ "--hero-delay": "0.05s" } as CSSProperties}>
               <Eyebrow>{eyebrow}</Eyebrow>
-            </Reveal>
-            <Reveal delay={0.1}>
+            </div>
+            <div className="hero-in" style={{ "--hero-delay": "0.12s" } as CSSProperties}>
               <Heading as="h1" size="lg" className="mt-8">
                 {title}
               </Heading>
-            </Reveal>
+            </div>
             {lead && (
-              <Reveal delay={0.2}>
+              <div className="hero-in" style={{ "--hero-delay": "0.2s" } as CSSProperties}>
                 <p className="mt-8 max-w-xl text-lead text-fg/65">{lead}</p>
-              </Reveal>
+              </div>
             )}
             {children && (
-              <Reveal delay={0.3}>
+              <div className="hero-in" style={{ "--hero-delay": "0.28s" } as CSSProperties}>
                 <div className="mt-10">{children}</div>
-              </Reveal>
+              </div>
             )}
           </div>
           {image && (

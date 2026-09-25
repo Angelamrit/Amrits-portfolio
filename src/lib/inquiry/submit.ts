@@ -1,14 +1,12 @@
 import "server-only";
 import { z } from "zod";
-import { inquirySchema, type InquiryField, type InquiryInput } from "@/lib/validation/inquiry";
+import { inquirySchema, type InquiryField } from "@/lib/validation/inquiry";
 import { inquiryEmailConfigured, sendAutoReplyEmail, sendInquiryEmail } from "@/lib/email/resend";
 import { rateLimit, type Rule } from "@/lib/rate-limit";
 import { cleanFieldValue } from "@/lib/sanitize";
-import { markEmailed, recordWebsiteBooking } from "@/lib/bookings/bookings";
-import { store } from "@/lib/store";
 
 /**
- * Everything the enquiry form does, with the request itself passed in.
+ * Everything the contact form does, with the request itself passed in.
  *
  * The Server Action in `app/contact/actions.ts` is only the adapter that reads
  * the request headers and hands the work here. Keeping the logic out of the
@@ -22,35 +20,12 @@ export type InquiryState =
   | { status: "error"; fieldErrors: Partial<Record<InquiryField, string>>; formError?: string; values: Record<string, string> }
   | { status: "success"; name: string; email?: string };
 
-/** What the booking store hands back: enough to reference the booking in the chef's email. */
-export type SavedBooking = { id: string; ref: string; durable: boolean };
-
 export type InquiryContext = {
   /** Best-effort client address; the key every per-client limit hangs off. */
   readonly ip: string;
   /** Injectable clock, so the fill-time trap can be exercised. */
   readonly now?: () => number;
-  /**
-   * Where a valid enquiry is kept. Injectable so the tests can assert on what
-   * was stored without writing into the real data directory; the default is
-   * the dashboard's booking store. Returns `null` when it could not be saved.
-   */
-  readonly saveBooking?: (inquiry: InquiryInput) => Promise<SavedBooking | null>;
-  /** Records on the stored booking that the chef's email went out. */
-  readonly markEmailed?: (id: string) => Promise<unknown>;
 };
-
-async function saveToDashboard(inquiry: InquiryInput): Promise<SavedBooking | null> {
-  try {
-    const booking = await recordWebsiteBooking(inquiry);
-    return { id: booking.id, ref: booking.ref, durable: store.durable };
-  } catch (error) {
-    // Logged with the enquiry itself, so a storage failure never loses the
-    // guest's details even when the email below fails too.
-    console.error("[inquiry:store-error]", error, { name: inquiry.name, email: inquiry.email });
-    return null;
-  }
-}
 
 /** A form filled in faster than this was filled in by a script, not a guest. */
 const MIN_FILL_MS = 3000;
@@ -95,9 +70,9 @@ const SEND_RULE_PER_EMAIL: Rule = { limit: 3, windowMs: DAY };
 const SEND_RULE_GLOBAL: Rule = { limit: 120, windowMs: DAY };
 
 const TOO_MANY =
-  "We have had a lot of enquiries from your connection in the last few minutes. Please try again shortly, or call the restaurant and we will take the details over the phone.";
+  "We have had a lot of messages from your connection in the last few minutes. Please try again shortly, or call the restaurant and we will take the details over the phone.";
 const UNDELIVERABLE =
-  "We could not send your enquiry just now. Please try again in a moment — if it keeps failing, call the restaurant and we will pick it up from there.";
+  "We could not send your message just now. Please try again in a moment — if it keeps failing, call the restaurant and we will pick it up from there.";
 
 function fieldErrorsFrom<T>(error: z.ZodError<T>): Partial<Record<InquiryField, string>> {
   const byField = z.flattenError(error).fieldErrors as Record<string, string[] | undefined>;
@@ -153,28 +128,12 @@ export async function handleInquiry(input: Record<string, string>, ctx: InquiryC
     return { status: "error", fieldErrors: {}, formError: TOO_MANY, values };
   }
 
-  // Stored first, emailed second. The dashboard is the record and the email is
-  // the notification, so an enquiry whose email bounces, lands in spam or is
-  // archived by accident is still sitting in the chef's bookings list.
-  const saved = await (ctx.saveBooking ?? saveToDashboard)(inquiry);
+  const { delivered } = await sendInquiryEmail(inquiry);
 
-  const { delivered } = await sendInquiryEmail(inquiry, saved ? { ref: saved.ref, id: saved.id } : undefined);
-  if (delivered && saved) {
-    await (ctx.markEmailed ?? markEmailed)(saved.id).catch((error: unknown) => {
-      console.error("[inquiry:mark-emailed-error]", error);
-    });
-  }
-
-  // "Received" means the chef can actually see it: the email landed, or it is
-  // in a store that survives a restart. A store on a temporary filesystem does
-  // not count — it would be thanking the guest for something that will vanish.
-  //
-  // With neither, the unconfigured case is a local dry run, where reporting
-  // success is what lets the form be exercised without a Resend key. In
-  // production it is a lost enquiry, so the guest is told the truth and asked
-  // to call instead.
-  const received = delivered || Boolean(saved?.durable);
-  if (!received && (inquiryEmailConfigured() || process.env.NODE_ENV === "production")) {
+  // With no mailer configured, a local dry run reports success so the form can
+  // be exercised without a Resend key. In production that is a lost message,
+  // so the guest is told the truth and asked to call instead.
+  if (!delivered && (inquiryEmailConfigured() || process.env.NODE_ENV === "production")) {
     return { status: "error", fieldErrors: {}, formError: UNDELIVERABLE, values };
   }
 

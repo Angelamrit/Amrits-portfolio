@@ -254,5 +254,5 @@ export const pressMarquee = [
   "Owner & Head Chef, Angel Indian Restaurant",
   "Jackson Heights, Queens",
   "Trained at Rahi & Adda, New York",
-  "Private Dining · Events · Residencies",
+  "Predominantly vegetarian · 100% Halal",
 ];

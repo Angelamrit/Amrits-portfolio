@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   BarChart3,
-  CalendarCheck,
   ChefHat,
   ExternalLink,
   House,
@@ -26,20 +25,19 @@ import { signOut } from "@/app/admin/actions";
  * will open the dashboard a few times a week, not a developer who lives in it.
  * So the navigation is short, grouped by what the chef is thinking about
  * rather than by how the code is organised, and labelled in plain words: the
- * guests who want to book, the people visiting the site, and the site itself.
+ * the people visiting the site and the site itself.
  *
  * On a phone the four things used most sit in a tab bar at the bottom of the
  * screen, where a thumb already is, and everything else is one tap away in
  * the drawer.
  */
 
-type Item = { href: string; label: string; icon: typeof House; badge?: "bookings" };
+type Item = { href: string; label: string; icon: typeof House };
 
 const groups: { heading?: string; items: Item[] }[] = [
   {
     items: [
       { href: "/admin", label: "Home", icon: House },
-      { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck, badge: "bookings" },
       { href: "/admin/visitors", label: "Visitors", icon: BarChart3 },
     ],
   },
@@ -57,36 +55,19 @@ const groups: { heading?: string; items: Item[] }[] = [
 /** What the phone tab bar shows. "More" opens the drawer for the rest. */
 const tabs: Item[] = [
   { href: "/admin", label: "Home", icon: House },
-  { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck, badge: "bookings" },
   { href: "/admin/visitors", label: "Visitors", icon: BarChart3 },
+  { href: "/admin/menus", label: "Menus", icon: UtensilsCrossed },
 ];
 
 function isActive(pathname: string, href: string) {
   return href === "/admin" ? pathname === "/admin" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function Badge({ count, className }: { count: number; className?: string }) {
-  if (count <= 0) return null;
-  return (
-    <span
-      className={cn(
-        "grid min-w-5 place-items-center rounded-pill bg-gold px-1.5 py-0.5 text-[0.62rem] font-bold leading-none tnum text-charcoal shadow-[0_0_12px_rgba(226,189,108,0.6)]",
-        className,
-      )}
-      aria-label={`${count} new`}
-    >
-      {count > 99 ? "99+" : count}
-    </span>
-  );
-}
-
 function NavList({
   pathname,
-  newBookings,
   onNavigate,
 }: {
   pathname: string;
-  newBookings: number;
   onNavigate?: () => void;
 }) {
   return (
@@ -94,7 +75,7 @@ function NavList({
       {groups.map((group, index) => (
         <div key={group.heading ?? index} className="flex flex-col gap-1">
           {group.heading && <p className="eyebrow mb-1 px-3.5 text-[0.55rem] text-fg/30">{group.heading}</p>}
-          {group.items.map(({ href, label, icon: Icon, badge }) => {
+          {group.items.map(({ href, label, icon: Icon }) => {
             const active = isActive(pathname, href);
             return (
               <Link
@@ -119,7 +100,6 @@ function NavList({
                   aria-hidden
                 />
                 <span className="flex-1">{label}</span>
-                {badge === "bookings" && <Badge count={newBookings} />}
               </Link>
             );
           })}
@@ -131,11 +111,9 @@ function NavList({
 
 function Rail({
   pathname,
-  newBookings,
   onNavigate,
 }: {
   pathname: string;
-  newBookings: number;
   onNavigate?: () => void;
 }) {
   return (
@@ -150,7 +128,7 @@ function Rail({
         </span>
       </Link>
 
-      <NavList pathname={pathname} newBookings={newBookings} onNavigate={onNavigate} />
+      <NavList pathname={pathname} onNavigate={onNavigate} />
 
       <div className="mt-auto flex flex-col gap-1">
         <span aria-hidden className="hairline-full mb-2" />
@@ -177,7 +155,7 @@ function Rail({
   );
 }
 
-export function AdminShell({ children, newBookings = 0 }: { children: ReactNode; newBookings?: number }) {
+export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "/admin";
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -215,7 +193,7 @@ export function AdminShell({ children, newBookings = 0 }: { children: ReactNode;
 
       {/* Desktop rail */}
       <aside className="glass fixed inset-y-0 left-0 z-30 hidden w-[264px] border-y-0 border-l-0 lg:block">
-        <Rail pathname={pathname} newBookings={newBookings} />
+        <Rail pathname={pathname} />
       </aside>
 
       {/* Phone / tablet top bar */}
@@ -233,7 +211,7 @@ export function AdminShell({ children, newBookings = 0 }: { children: ReactNode;
         aria-label="Main sections"
         className="glass-strong fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-x-0 border-b-0 pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
-        {tabs.map(({ href, label, icon: Icon, badge }) => {
+        {tabs.map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href);
           return (
             <Link
@@ -247,7 +225,6 @@ export function AdminShell({ children, newBookings = 0 }: { children: ReactNode;
             >
               <span className="relative">
                 <Icon aria-hidden className="size-5" strokeWidth={active ? 1.9 : 1.5} />
-                {badge === "bookings" && <Badge count={newBookings} className="absolute -right-3 -top-2" />}
               </span>
               {label}
               {active && <span aria-hidden className="absolute inset-x-6 top-0 h-0.5 rounded-pill bg-gold" />}
@@ -286,7 +263,7 @@ export function AdminShell({ children, newBookings = 0 }: { children: ReactNode;
             >
               <X className="size-4" strokeWidth={1.6} aria-hidden />
             </button>
-            <Rail pathname={pathname} newBookings={newBookings} onNavigate={() => setDrawerOpen(false)} />
+            <Rail pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
           </div>
         </div>
       )}

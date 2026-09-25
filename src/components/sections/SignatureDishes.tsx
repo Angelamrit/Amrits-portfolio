@@ -14,7 +14,7 @@ export async function SignatureDishes() {
   return (
     <Section id="signature-dishes" tone="base" orbs="gold" pattern divider className="scroll-mt-20">
       <Container>
-        <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between md:[&>*:last-child]:shrink-0">
           <div className="max-w-3xl">
             <Reveal>
               <Eyebrow>03 · Signature Dishes</Eyebrow>

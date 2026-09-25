@@ -1,8 +1,4 @@
-"use client";
-
 import Image from "next/image";
-import { m, useInView, useReducedMotion } from "motion/react";
-import { useRef } from "react";
 import type { ImageAsset } from "@/types/content";
 import { cn } from "@/lib/cn";
 
@@ -52,8 +48,6 @@ type Props = {
   quality?: number;
 };
 
-const ease = [0.16, 1, 0.3, 1] as const;
-
 export function ImageFrame({
   image,
   ratio = "4/5",
@@ -72,13 +66,12 @@ export function ImageFrame({
   imgClassName,
   quality = 78,
 }: Props) {
-  const reduce = useReducedMotion();
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.2 });
-  const animate = reveal !== "none" && !reduce;
-  const shown = !animate || inView;
+  // The reveal is CSS (see "Image reveals" in globals.css), started by the
+  // shared observer in PageEffects; reduced motion is handled there too. A
+  // priority image is above the fold and usually the page's largest paint, so
+  // it is never held back behind a reveal — it shows from the first frame.
+  const animate = reveal !== "none" && !priority;
   const isFill = ratio === "fill";
-  const clips = reveal === "clip" || reveal === "curtain";
 
   const img = (
     <Image
@@ -99,38 +92,23 @@ export function ImageFrame({
   );
 
   const frame = (
-    <m.div
+    <div
+      data-img-reveal={animate ? reveal : undefined}
+      suppressHydrationWarning
       className={cn(
         "group relative h-full w-full overflow-hidden bg-sand",
         rounded && !isFill && "rounded-frame",
         ratios[ratio],
         vignette && "vignette",
       )}
-      initial={false}
-      animate={clips ? { clipPath: shown ? "inset(0% 0% 0% 0%)" : "inset(0% 0% 100% 0%)" } : { opacity: shown ? 1 : 0 }}
-      transition={{ duration: 1.4, ease }}
-      style={animate ? undefined : { clipPath: "none", opacity: 1 }}
     >
-      <m.div
-        className="absolute inset-0"
-        initial={false}
-        animate={{ scale: shown ? 1 : clips ? 1.12 : 1.04 }}
-        transition={{ duration: 1.6, ease }}
-      >
-        {img}
-      </m.div>
+      <div className="img-reveal-scale absolute inset-0">{img}</div>
 
       {/* The reveal edge: a gold filament that travels down with the curtain. */}
       {reveal === "curtain" && animate && (
-        <m.div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 z-[3]"
-          initial={false}
-          animate={{ y: shown ? "100%" : "0%", opacity: shown ? 0 : 1 }}
-          transition={{ y: { duration: 1.4, ease }, opacity: { duration: 0.4, delay: shown ? 1.1 : 0 } }}
-        >
+        <div aria-hidden className="img-reveal-filament pointer-events-none absolute inset-0 z-[3]">
           <span className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-gold-light to-transparent shadow-[0_0_30px_6px_rgba(240,217,160,0.5)]" />
-        </m.div>
+        </div>
       )}
 
       {sheen && (
@@ -145,12 +123,11 @@ export function ImageFrame({
           />
         </>
       )}
-    </m.div>
+    </div>
   );
 
   const wrapped = (
     <div
-      ref={ref}
       className={cn(
         isFill ? "absolute inset-0" : "relative",
         glow && !isFill && "rounded-frame border-gradient shadow-glow-lg",

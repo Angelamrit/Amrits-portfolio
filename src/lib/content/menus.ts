@@ -22,9 +22,8 @@ const dietaryTag = z.enum(["vegetarian", "vegan", "gluten-free", "contains-nuts"
  *
  * `dishId` and the free-text `name`/`description` are alternatives: a course
  * either points at a dish on the dishes list, and inherits its description and
- * dietary tags, or spells itself out. The editor offers both because the
- * private event menu is written in prose while the tasting menu is a sequence
- * of real dishes.
+ * dietary tags, or spells itself out. The editor offers both so a course can
+ * be written in prose when it is not a single dish on the list.
  */
 const courseSchema = z.object({
   title: z.string().trim().min(1, "Every course needs a heading.").max(80),
