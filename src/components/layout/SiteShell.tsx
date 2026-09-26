@@ -8,6 +8,7 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { SkipLink } from "./SkipLink";
 import { NavigationSkeleton } from "./NavigationSkeleton";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 /**
  * Everything that wraps a page of the public site: the oak backdrop, the
@@ -54,6 +55,9 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       {/* Must stay directly after <main>: see FIRST_SCREEN_REVEAL. */}
       <script dangerouslySetInnerHTML={{ __html: FIRST_SCREEN_REVEAL }} />
       <Footer />
+      {/* The assistant belongs to the public site, so it mounts here rather than
+          in the root layout — which is what keeps it off /admin. */}
+      <ChatWidget />
       <PageEffects />
       <NavigationSkeleton />
     </VenueProvider>

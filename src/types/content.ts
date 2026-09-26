@@ -194,4 +194,3 @@ export type Testimonial = {
   context?: string;
   isPlaceholder: boolean;
 };
-

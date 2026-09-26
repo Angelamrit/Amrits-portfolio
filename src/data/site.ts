@@ -39,8 +39,11 @@ export const site: SiteConfig = {
       postal: "11372",
       country: "US",
     },
-    // TODO: confirm the exact Resy listing URL with the chef.
-    resyUrl: "https://resy.com/cities/new-york-ny/venues/angel-indian-restaurant",
+    // Taken from the Reserve link on angelindianrestaurant.com and confirmed to
+    // load the venue's booking page. Note the "-ny" suffix: without it Resy
+    // returns its "we can't find that page" screen, which is a client-side 404 —
+    // the URL still answers 200, so only loading it in a browser catches this.
+    resyUrl: "https://resy.com/cities/new-york-ny/venues/angel-indian-restaurant-ny",
     menuUrl: "https://www.angelindianrestaurant.com/menu",
     mapsUrl: "https://maps.google.com/?q=Angel+Indian+Restaurant+75-18+37th+Ave+Jackson+Heights+NY+11372",
     hours: "Dinner only",

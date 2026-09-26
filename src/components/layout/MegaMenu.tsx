@@ -67,6 +67,12 @@ export function MegaMenu({ panel, onNavigate }: { panel: MegaPanelData; onNaviga
               panel.items.length > 4 ? "sm:grid-cols-2 xl:grid-cols-3" : "sm:grid-cols-2 xl:grid-cols-3",
             )}
           >
+            {/*
+              Keyed by name, not href: several cards can legitimately share a
+              destination — both Angel dining rooms link to /angel — so the href
+              is a destination rather than an identity, and React saw duplicates.
+              Names are unique within a panel.
+            */}
             {panel.items.map((item, i) => (
               <li key={item.name}>
                 <Link
