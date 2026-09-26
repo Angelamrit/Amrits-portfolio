@@ -10,6 +10,7 @@ import {
 } from "../src/lib/chat/kb.ts";
 import { buildSystemInstruction } from "../src/lib/chat/prompt.ts";
 import { SCOPE_REPLY } from "../src/lib/chat/gate.ts";
+import { MAX_OUTPUT_TOKENS } from "../src/lib/chat/client.ts";
 
 const KB_PATH = new URL(
   "../src/lib/chat/kb-data/Amrit_Chatbot_Knowledge_Base_Final_v1.8.json",
@@ -214,12 +215,30 @@ test("the tasting menu rule confirms existence only", () => {
   assert.match(prompt, /Course count, course sequence, price and ordering procedure are NOT confirmed/);
 });
 
-test("a broad menu question must not be answered by listing everything", () => {
-  // Regression: asking "menu" made the assistant enumerate all 84 items, which
-  // ran into maxOutputTokens and cut off mid-dish.
-  assert.match(prompt, /is not a request to list everything/i);
-  assert.match(prompt, /Never enumerate the whole menu/i);
-  assert.match(prompt, /List individual dishes only when the question narrows/i);
+test("menu answers are shaped to the question asked", () => {
+  // Three shapes: an overview, the full menu on request, or just what was asked.
+  assert.ok(prompt.includes("**An overview**"));
+  assert.ok(prompt.includes("**The full menu**"));
+  assert.ok(prompt.includes("**Something specific**"));
+
+  // A request for the full menu must be answered, not deflected to the page.
+  assert.match(prompt, /give every dish the menu section below holds/i);
+  assert.match(prompt, /do not answer this one by pointing at the menu page/i);
+
+  // An overview must not be a wall of prose or a redirect either.
+  assert.match(prompt, /not a paragraph of prose and not a redirect to the menu page/i);
+
+  // Recommendations stay grounded.
+  assert.match(prompt, /Never invent a recommendation/i);
+});
+
+test("the output cap allows the full menu to finish", () => {
+  // The full menu measures ~1,400 output tokens as names and prices. At the old
+  // cap of 700 the reply was guillotined mid-dish.
+  assert.ok(
+    MAX_OUTPUT_TOKENS >= 2000,
+    `cap is ${MAX_OUTPUT_TOKENS}, too low for a full menu`,
+  );
 });
 
 test("menu prices are present and flagged volatile", () => {
@@ -239,9 +258,10 @@ test("secrets and instruction disclosure are forbidden", () => {
 });
 
 test("the voice rules forbid internal vocabulary and filler", () => {
-  assert.match(prompt, /polished, warm, concise and natural/i);
+  assert.match(prompt, /polished, warm, conversational and concise/i);
   assert.match(prompt, /Never refer to your own workings/i);
-  assert.match(prompt, /No preamble, no restating the question/i);
+  assert.match(prompt, /Answer first, then offer at most one useful next step/i);
+  assert.match(prompt, /never like documentation/i);
   for (const term of ["knowledge base", "snapshot", "record", "prompt", "model", "verification"]) {
     assert.ok(
       new RegExp(`Nothing about[^.]*${term}`, "i").test(prompt),
@@ -265,7 +285,8 @@ test("the KB style rule instructing 'I do not have verified information' is not 
 
 test("price wording is natural rather than internal", () => {
   assert.match(prompt, /never as "snapshot", "record" or any other internal term/i);
-  assert.match(prompt, /say it is the current menu price and may change/i);
+  assert.match(prompt, /Mention that once, where it is genuinely useful/i);
+  assert.match(prompt, /never as a disclaimer repeated in every paragraph/i);
 });
 
 test("refusals are one fixed sentence, never an explanation", () => {

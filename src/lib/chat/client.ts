@@ -19,8 +19,15 @@ import { GoogleGenAI } from "@google/genai";
  */
 export const CHAT_MODEL = "gemini-3.5-flash-lite";
 
-/** Short answers only — this is a concierge FAQ bot, not an essay writer. */
-export const MAX_OUTPUT_TOKENS = 700;
+/**
+ * Headroom for the longest answer the assistant is asked to give.
+ *
+ * Most replies are a short paragraph, and the prompt keeps them that way — this
+ * is a ceiling, not a target. It is set by the one legitimate long answer: the
+ * full menu runs to roughly 1,400 tokens as names and prices, or 2,100 with
+ * descriptions. At the previous 700 the reply was guillotined mid-dish.
+ */
+export const MAX_OUTPUT_TOKENS = 3000;
 
 /**
  * Returns a client, or null when GEMINI_API_KEY is not set. Callers must handle

@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { classifyInput, MAX_INPUT_LENGTH, type GateReason } from "@/lib/chat/gate";
 import { MAX_MODEL_TURN_LENGTH, trimHistory } from "@/lib/validation/chat";
-import { hasReservationIntent } from "@/lib/chat/reservation";
+import { detectIntent, type IntentMatch } from "@/lib/chat/intent";
 
 export type ChatRole = "user" | "model";
 
@@ -14,11 +14,11 @@ export type ChatTurn = {
   /** True while the model's reply is still streaming in. */
   streaming?: boolean;
   /**
-   * Set when the visitor asked about booking a table, so the reply can carry a
-   * Reserve on Resy action. Decided from the question, not from the reply, so
-   * the action does not depend on how the model phrased itself.
+   * The handoff this reply should offer, if any. Decided from the visitor's
+   * question rather than from the reply, so the action does not depend on how
+   * the model phrased itself.
    */
-  cta?: "resy";
+  cta?: IntentMatch;
 };
 
 /**
@@ -89,7 +89,10 @@ export function useChat() {
 
       const askedId = nextId();
       const replyId = nextId();
-      const cta = hasReservationIntent(message) ? ("resy" as const) : undefined;
+      // The previous reply's handoff is carried in, so a bare follow-up such as
+      // "How do I do that?" keeps the event or reservation context.
+      const previous = [...turns].reverse().find((t) => t.role === "model" && t.cta)?.cta ?? null;
+      const cta = detectIntent(message, { previous }) ?? undefined;
       setTurns((prev) => [
         ...prev,
         { id: askedId, role: "user", text: message },

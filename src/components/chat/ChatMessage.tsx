@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 import { parseMarkdown, type Span } from "@/lib/chat/markdown";
 import { Button } from "@/components/ui/Button";
 import { site } from "@/data/site";
+import type { IntentMatch } from "@/lib/chat/intent";
 import type { ChatTurn } from "./useChat";
 
 function Spans({ spans }: { spans: Span[] }) {
@@ -68,6 +69,30 @@ function MarkdownBody({ text }: { text: string }) {
   );
 }
 
+/**
+ * The assistant never completes a booking or an enquiry itself. Each intent ends
+ * at a workflow the site already has: Resy for a table, and the existing contact
+ * wizard for an occasion — deep-linked with `?experience=`, which that wizard
+ * already reads and validates, so nothing is duplicated here.
+ */
+function ChatCta({ cta }: { cta: IntentMatch }) {
+  if (cta.intent === "resy") {
+    if (!site.restaurant.resyUrl) return null;
+    return (
+      <Button href={site.restaurant.resyUrl} variant="primary" size="sm" className="mt-3 w-full">
+        Reserve a Table
+      </Button>
+    );
+  }
+
+  const href = cta.experience ? `/contact?experience=${cta.experience}` : "/contact";
+  return (
+    <Button href={href} variant="primary" size="sm" className="mt-3 w-full">
+      Plan Your Celebration
+    </Button>
+  );
+}
+
 export function ChatMessage({ turn }: { turn: ChatTurn }) {
   const isUser = turn.role === "user";
 
@@ -77,7 +102,10 @@ export function ChatMessage({ turn }: { turn: ChatTurn }) {
         className={cn(
           // rounded-frame is the project's own radius token; rounded-2xl was the
           // one value in this widget with nothing behind it in the design system.
-          "max-w-[85%] rounded-frame px-4 py-3 font-sans text-[0.82rem] leading-relaxed",
+          // break-words is load-bearing at narrow widths: a long unbroken token
+          // — a URL, a run-on dish name — overflowed the bubble by 161px at
+          // 320px before this, because overflow-wrap defaults to `normal`.
+          "max-w-[85%] rounded-frame px-4 py-3 font-sans text-[0.82rem] leading-relaxed break-words",
           isUser
             ? "bg-gradient-to-r from-gold-light via-gold to-gold-deep text-charcoal"
             : "border border-line bg-surface-2/70 text-fg",
@@ -90,19 +118,7 @@ export function ChatMessage({ turn }: { turn: ChatTurn }) {
           ) : (
             <>
               <MarkdownBody text={turn.text} />
-              {turn.cta === "resy" && site.restaurant.resyUrl && (
-                // The assistant never takes a booking; this hands the visitor to
-                // Resy. Rendered from the reservation intent on their question,
-                // so it appears whatever wording the reply used.
-                <Button
-                  href={site.restaurant.resyUrl}
-                  variant="primary"
-                  size="sm"
-                  className="mt-3 w-full"
-                >
-                  Reserve on Resy
-                </Button>
-              )}
+              {turn.cta && <ChatCta cta={turn.cta} />}
             </>
           )
         ) : (

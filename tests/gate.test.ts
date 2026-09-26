@@ -196,6 +196,20 @@ test("profanity matching does not catch ordinary words", () => {
   }
 });
 
+test("recommendation questions reach the model", () => {
+  // Regression: "What should I try?" was refused — every other word in it is
+  // structural, so the question turns entirely on "try".
+  for (const q of [
+    "What should I try?",
+    "What do you suggest?",
+    "What's the best dish?",
+    "What is your favourite?",
+    "Is the biryani worth it?",
+  ]) {
+    allowed(q);
+  }
+});
+
 test("KB-derived lexicon widens scope to menu items", () => {
   blocked("Do you have Lakhanpur De Bhalle?", "off_topic");
   allowed("Do you have Lakhanpur De Bhalle?", { lexicon: ["lakhanpur", "bhalle"] });

@@ -143,6 +143,9 @@ export const CORE_SCOPE_TERMS = [
   "appetizer", "starter", "main", "course", "dessert", "bread", "side", "drink",
   "cocktail", "wine", "beer", "bar", "byob", "special", "signature", "recommend",
   "popular", "spice", "spicy", "mild", "portion", "price", "cost", "expensive", "cheap",
+  // Asking for a recommendation. "What should I try?" was refused because none
+  // of these were listed — the words carry the whole question.
+  "try", "suggest", "best", "favourite", "favorite", "worth", "must have", "good here",
   "vegan", "vegetarian", "veg", "halal", "meat", "chicken", "lamb", "goat", "fish",
   "paneer", "tandoor", "biryani", "curry", "naan", "samosa", "pakora", "lassi", "chai",
   "allerg", "gluten", "dairy", "diet", "dietary",

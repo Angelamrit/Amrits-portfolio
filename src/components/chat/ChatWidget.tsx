@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import { MAX_INPUT_LENGTH } from "@/lib/chat/gate";
 import { Button } from "@/components/ui/Button";
 import { Orbs } from "@/components/ui/Orbs";
+import { MOBILE_BREAKPOINT, focusIsUnclaimed, prefersAutoFocus } from "./focus";
 import { ChatMessage } from "./ChatMessage";
 import { useChat } from "./useChat";
 
@@ -53,6 +54,47 @@ export function ChatWidget() {
     if (!open) cancel();
   }, [open, cancel]);
 
+  /**
+   * Size the full-bleed mobile panel to the *visual* viewport.
+   *
+   * `100dvh` accounts for collapsing browser chrome but not for the virtual
+   * keyboard: a fixed, full-height panel keeps its size when the keyboard opens,
+   * so the composer ends up behind it. visualViewport reports the area actually
+   * left to the page, and its offsetTop covers the browser scrolling the page up
+   * to reveal the focused field.
+   *
+   * Scoped to this panel deliberately. The alternative — `interactive-widget=
+   * resizes-content` on the document viewport — would change how every fixed
+   * element on the site behaves.
+   */
+  const [viewport, setViewport] = useState<{ height: number; top: number } | null>(null);
+  useEffect(() => {
+    const vv = typeof window === "undefined" ? undefined : window.visualViewport;
+    if (!open || !vv) return;
+
+    const update = () => {
+      setViewport(
+        window.innerWidth < MOBILE_BREAKPOINT ? { height: vv.height, top: vv.offsetTop } : null,
+      );
+    };
+
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    // window resize and orientationchange are belt and braces: a viewport change
+    // that does not also fire visualViewport's own resize would otherwise leave
+    // the panel sized to the previous viewport.
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+      setViewport(null);
+    };
+  }, [open]);
+
   // Escape, focus trap and body scroll lock, matching MobileMenu.
   useEffect(() => {
     if (!open) return;
@@ -86,12 +128,18 @@ export function ChatWidget() {
     };
 
     document.addEventListener("keydown", onKey);
-    const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 80);
+
+    // Focus the composer on open only where there is a real pointer. On a touch
+    // device that focus summons the virtual keyboard the instant the panel
+    // appears, covering half the conversation before anything has been asked.
+    const focusTimer = prefersAutoFocus()
+      ? window.setTimeout(() => inputRef.current?.focus(), 80)
+      : undefined;
 
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", onKey);
-      window.clearTimeout(focusTimer);
+      if (focusTimer !== undefined) window.clearTimeout(focusTimer);
 
       // Standard dialog behaviour: send focus back to the trigger. Only when
       // focus still belongs to the panel — never steal it from wherever the
@@ -107,6 +155,24 @@ export function ChatWidget() {
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
   }, [turns]);
+
+  /**
+   * Hand the composer back once a reply has finished, so the next question can
+   * be typed straight away.
+   *
+   * Only after the visitor has actually sent something — this must not be the
+   * back door that reopens the keyboard on a freshly opened mobile panel — and
+   * only when focus is not somewhere they deliberately put it.
+   */
+  const hasAsked = turns.length > 0;
+  const wasBusy = useRef(false);
+  useEffect(() => {
+    const finished = wasBusy.current && !busy;
+    wasBusy.current = busy;
+    if (!finished || !open || !hasAsked) return;
+    if (!focusIsUnclaimed(panelRef.current)) return;
+    inputRef.current?.focus();
+  }, [busy, open, hasAsked]);
 
   const submit = (text: string) => {
     if (busy) return;
@@ -161,12 +227,16 @@ export function ChatWidget() {
               // pre-existing quirk, not something introduced here. MobileMenu
               // pairs the same Tailwind class with its panel for the same reason.
               "tone-dark glass-strong backdrop-blur-2xl fixed z-[95] flex flex-col overflow-hidden",
-              "inset-x-0 bottom-0 top-0 rounded-none",
-              // dvh, not vh: on mobile browsers vh ignores the collapsing
-              // toolbar and the on-screen keyboard, which pushed the input
-              // out of view while typing.
-              "sm:inset-x-auto sm:top-auto sm:right-6 sm:bottom-6 sm:h-[min(34rem,calc(100dvh-6rem))] sm:w-[23rem] sm:rounded-frame",
+              // Full bleed below sm, sized by height rather than by a bottom
+              // inset so the visual-viewport measurement above can refine it
+              // when the keyboard appears. dvh is the no-JS baseline.
+              "inset-x-0 top-0 h-[100dvh] rounded-none",
+              // The 3rem reserve only bites on short viewports — landscape
+              // phones — where the old 6rem left the transcript under half the
+              // panel. Taller screens still clamp at 34rem, unchanged.
+              "sm:inset-x-auto sm:top-auto sm:right-6 sm:bottom-6 sm:h-[min(34rem,calc(100dvh-3rem))] sm:w-[23rem] sm:rounded-frame",
             )}
+            style={viewport ? { height: viewport.height, top: viewport.top } : undefined}
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
@@ -175,7 +245,12 @@ export function ChatWidget() {
             {/* Same ambient drift MobileMenu uses, at its quietest setting. */}
             <Orbs variant="subtle" />
 
-            <header className="relative z-[2] flex items-center justify-between gap-3 border-b border-line px-5 py-4">
+            {/* Safe-area padding applies only to the full-bleed layout, which is
+                the one that meets the notch and the home indicator; the docked
+                card already sits inside the viewport. Short landscape viewports
+                give the header less vertical room so the transcript keeps most
+                of the panel. */}
+            <header className="relative z-[2] flex items-center justify-between gap-3 border-b border-line px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] min-[400px]:px-5 sm:py-4 sm:pt-4">
               <div>
                 {/* Cormorant needs room to read as display type; at 1.05rem it
                     looked like a UI label rather than a masthead. font-light
@@ -201,7 +276,7 @@ export function ChatWidget() {
               ref={logRef}
               data-lenis-prevent
               aria-busy={busy}
-              className="relative z-[2] flex-1 space-y-3 overflow-y-auto overscroll-contain px-5 py-4"
+              className="relative z-[2] min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4 min-[400px]:px-5"
             >
               <p className="font-sans text-[0.8rem] leading-relaxed text-muted">{OPENING_LINE}</p>
 
@@ -244,7 +319,7 @@ export function ChatWidget() {
               }}
               // px-5 matches the header and transcript, so the input's left edge
               // lines up with the text above it instead of sitting 4px inside.
-              className="relative z-[2] flex items-center gap-2 border-t border-line px-5 py-3"
+              className="relative z-[2] flex items-center gap-2 border-t border-line px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] min-[400px]:px-5 sm:pb-3"
             >
               <label htmlFor="chat-input" className="sr-only">
                 Ask a question
