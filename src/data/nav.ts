@@ -2,14 +2,13 @@ import type { NavItem } from "@/types/content";
 
 /**
  * Navigation follows the story of the portfolio:
- * who he is → where he cooks → what he offers → what he cooks → proof → contact.
+ * who he is → where he cooks → what he cooks → proof → contact.
  */
 export const nav: NavItem[] = [
   { label: "Home", href: "/" },
   { label: "The Chef", href: "/about" },
   { label: "Angel", href: "/angel" },
-  { label: "Experiences", href: "/experiences" },
-  { label: "Menus", href: "/menus" },
+  { label: "Menu", href: "/menus" },
   { label: "Gallery", href: "/gallery" },
   { label: "Press", href: "/press" },
   // Journal moves into the header once the first articles are published.

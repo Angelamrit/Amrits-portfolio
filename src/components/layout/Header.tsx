@@ -1,18 +1,19 @@
 import { primaryNav, visibleNav } from "@/data/nav";
-import { experiences } from "@/data/experiences";
-import { menus } from "@/data/menus";
+import { getMenus } from "@/lib/content/menus";
 import { restaurant } from "@/data/restaurant";
-import { galleryCategories, galleryByCategory } from "@/data/gallery";
+import { galleryCategories } from "@/data/gallery";
+import { getGallery } from "@/lib/content/gallery";
 import type { GalleryCategory } from "@/types/content";
 import { HeaderClient } from "./HeaderClient";
 import type { MegaPanelData } from "./MegaMenu";
 
 /** Dropdown content for the nav items that have children. */
-function buildPanels(): MegaPanelData[] {
+async function buildPanels(): Promise<MegaPanelData[]> {
+  const [menus, gallery] = await Promise.all([getMenus(), getGallery()]);
   const galleryItems = galleryCategories
     .filter((c) => c.value !== "all")
     .map((c) => {
-      const first = galleryByCategory(c.value as GalleryCategory)[0];
+      const first = gallery.find((item) => item.category === (c.value as GalleryCategory));
       return first
         ? {
             href: `/gallery?category=${c.value}`,
@@ -36,7 +37,7 @@ function buildPanels(): MegaPanelData[] {
       ctaHref: "/angel",
       note: `${restaurant.features.slice(0, 3).join(" · ")}`,
       items: restaurant.locations.map((loc) => ({
-        href: "/angel",
+        href: `/angel#${loc.kind}`,
         name: loc.name,
         blurb: loc.highlights.join(" · "),
         meta: loc.kind === "original" ? "Since October 2019" : "New dining room",
@@ -45,30 +46,12 @@ function buildPanels(): MegaPanelData[] {
       })),
     },
     {
-      key: "/experiences",
-      eyebrow: "Private Experiences",
-      title: "Six ways to book",
-      accent: "Chef Amrit.",
-      blurb: "Beyond the restaurant, he brings the kitchen of Angel to your home, your celebration or your residency.",
-      cta: "View all experiences",
-      ctaHref: "/experiences",
-      note: "Every experience begins with a consultation and a menu designed around your guests.",
-      items: experiences.map((e) => ({
-        href: `/experiences/${e.slug}`,
-        name: e.name,
-        blurb: e.short,
-        meta: e.guestRange,
-        src: e.image.src,
-        alt: e.image.alt,
-      })),
-    },
-    {
       key: "/menus",
-      eyebrow: "Menus",
+      eyebrow: "Menu",
       title: "Course by",
       accent: "course.",
-      blurb: "Two menus served at Angel, and one framework designed around your private event.",
-      cta: "Explore all menus",
+      blurb: "The chef's seven-course tasting menu, served at Angel.",
+      cta: "Explore the menu",
       ctaHref: "/menus",
       note: "Predominantly vegetarian · 100% Halal · vegan and gluten-free options",
       items: menus.map((m) => ({
@@ -85,7 +68,7 @@ function buildPanels(): MegaPanelData[] {
       eyebrow: "Gallery",
       title: "The plates, the tables,",
       accent: "the hands.",
-      blurb: "Signature dishes, private dining rooms, events and the quiet work of the kitchen before service.",
+      blurb: "Signature dishes, the dining rooms, celebrations and the quiet work of the kitchen before service.",
       cta: "Open the full gallery",
       ctaHref: "/gallery",
       items: galleryItems,
@@ -93,6 +76,6 @@ function buildPanels(): MegaPanelData[] {
   ];
 }
 
-export function Header() {
-  return <HeaderClient items={primaryNav} mobileItems={visibleNav} panels={buildPanels()} />;
+export async function Header() {
+  return <HeaderClient items={primaryNav} mobileItems={visibleNav} panels={await buildPanels()} />;
 }

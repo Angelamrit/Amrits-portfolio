@@ -1,26 +1,29 @@
-import { Button } from "@/components/ui/Button";
-import { Container } from "@/components/ui/Container";
-import { Eyebrow } from "@/components/ui/Eyebrow";
-import { Heading, Em } from "@/components/ui/Heading";
-import { Orbs } from "@/components/ui/Orbs";
+import type { Metadata } from "next";
+import { site } from "@/data/site";
+import { SiteShell } from "@/components/layout/SiteShell";
+import { NotFoundContent } from "@/components/layout/NotFoundContent";
 
+export const metadata: Metadata = {
+  title: { absolute: `Page Not Found | ${site.name}` },
+  robots: { index: false, follow: true },
+};
+
+/**
+ * The 404 for a visit to any address that does not exist. Next.js serves this
+ * root file for those requests, outside the `(site)` group, so it brings the
+ * site's header and footer itself — otherwise a mistyped address would land on
+ * a page with no way back into the site.
+ *
+ * Its sibling `(site)/not-found.tsx` covers not-found inside the group (for
+ * example during client-side navigation) and is deliberately just the message:
+ * Next.js embeds each layout's not-found tree in every page's payload, and
+ * letting the group inherit this one put a second full copy of the header and
+ * footer into every page.
+ */
 export default function NotFound() {
   return (
-    <section className="relative flex min-h-[70vh] items-center overflow-hidden bg-bg pt-32 pb-24">
-      <Orbs variant="mixed" pattern />
-      <Container className="relative z-[2]">
-        <Eyebrow>404</Eyebrow>
-        <Heading as="h1" size="lg" className="mt-8">
-          This table <Em>isn&rsquo;t set.</Em>
-        </Heading>
-        <p className="mt-6 max-w-md text-lead text-fg/65">The page you were looking for has moved or never existed.</p>
-        <div className="mt-10 flex flex-wrap gap-4">
-          <Button href="/">Back to home</Button>
-          <Button href="/contact" variant="glass">
-            Book a private experience
-          </Button>
-        </div>
-      </Container>
-    </section>
+    <SiteShell>
+      <NotFoundContent />
+    </SiteShell>
   );
 }

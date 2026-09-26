@@ -8,7 +8,7 @@ import { images } from "./images";
 export const restaurant: RestaurantProfile = {
   name: "Angel Indian Restaurant",
   shortName: "Angel",
-  tagline: "Punjabi roots. Bold flavours. A Michelin Bib Gourmand in Jackson Heights.",
+  tagline: "Indian roots. Bold flavours. A Michelin Bib Gourmand in Jackson Heights.",
   namesake: "Named after Chef Amrit's daughter",
   founded: "October 2019",
   intro:
@@ -29,20 +29,20 @@ export const restaurant: RestaurantProfile = {
       name: "Angel, Jackson Heights",
       kind: "original",
       description:
-        "The original room on 37th Avenue, where the menu moves from Punjabi street food to slow-cooked regional delicacies. The dishes that earned the Bib Gourmand are still served here, family style.",
-      highlights: ["House specialties", "Street food to regional delicacies", "Predominantly vegetarian, 100% Halal"],
+        "The original room on 37th Avenue, where the menu moves from Indian street food to slow-cooked regional delicacies. The dishes that earned the Bib Gourmand are still served here, family style.",
+      highlights: ["Street food to regional delicacies", "Predominantly vegetarian, 100% Halal"],
       image: images.diningRoomGreen,
     },
     {
       name: "Angel, the new dining room",
       kind: "upscale",
       description:
-        "A sleek, formal, dinner-only dining room with a full bar and a curated chef's tasting menu served alongside the house specialties. The expansion Chef Vikas Khanna called a “pride of India.”",
+        "A sleek, formal, dinner-only dining room with a full bar and a curated chef's tasting menu. The expansion Chef Vikas Khanna called a “pride of India.”",
       highlights: ["Chef's tasting menu", "Full bar and cocktails", "Reservations via Resy"],
-      image: images.diningRoomDark,
+      image: images.angelDiningRoom,
     },
   ],
-  heroImage: images.diningRoomDark,
+  heroImage: images.angelDiningRoom,
   storyImage: images.kitchenLine,
   barImage: images.bar,
   thenNow: {
@@ -52,7 +52,7 @@ export const restaurant: RestaurantProfile = {
       caption: "Six burners, one tandoor, one fridge and a two-person team.",
     },
     after: {
-      image: images.diningRoomDark,
+      image: images.angelDiningRoom,
       label: "Today",
       caption: "A Michelin Bib Gourmand, twenty-plus staff and a new upscale dining room.",
     },

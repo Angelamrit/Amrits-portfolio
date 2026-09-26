@@ -2,18 +2,22 @@
   "name": "cheif_genuine_site",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "node --dns-result-order=ipv4first node_modules/next/dist/bin/next dev",
     "build": "next build",
     "start": "node --dns-result-order=ipv4first node_modules/next/dist/bin/next start",
+    "test": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./test/alias-hook.mjs --test \"test/**/*.test.ts\"",
+    "test:watch": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./test/alias-hook.mjs --test --watch \"test/**/*.test.ts\"",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --conditions=react-server --test tests/*.test.ts"
+    "admin:password": "node scripts/admin-password.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.23.0",
     "clsx": "^2.1.1",
-    "lenis": "^1.3.26",
     "lucide-react": "^1.46.0",
     "motion": "^13.3.0",
     "next": "16.3.5",

@@ -32,8 +32,15 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...but the template, which carries no secrets, is meant to be committed.
 !.env.example
+# Belt and braces: the negation above must never re-admit a filled-in local file.
 .env.local
+
+# dashboard data: visit logs, content overrides and uploaded photography.
+# Site content that should ship with the code lives in src/data; this is the
+# chef's own edits and his visitors' numbers, and neither belongs in git.
+/.data/
 
 # vercel
 .vercel

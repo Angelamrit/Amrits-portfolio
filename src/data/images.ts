@@ -31,11 +31,31 @@ const placeholder = (
 
 export const images = {
   // ---- Chef ----
-  hero: placeholder("hero.jpg", "Flames rising from the pass in a professional kitchen", 2000, 1250),
+  /**
+   * Chef Amrit at the range. Supplied by the chef, so it is not a stock
+   * placeholder despite sitting in that folder, and must not be swapped out
+   * when the rest of the placeholders are replaced.
+   */
+  hero: {
+    src: "/images/placeholders/hero.jpg",
+    alt: "Chef Amrit Pal Singh in chef's whites at the range, flames leaping from the pan he is tilting over the burner",
+    width: 1453,
+    height: 1082,
+  },
   chefPortrait: placeholder("chefPortrait.jpg", "Placeholder portrait of a chef in whites, arms folded", 1400, 1750),
   chefPlating: placeholder("chefPlating.jpg", "Chef plating under the heat lamps at the pass", 1600, 1067),
   chefCooking: placeholder("chefCooking.jpg", "Chef working over the stove", 1600, 1067),
-  chefFlame: placeholder("chefFlame.jpg", "Chef cooking with open flame", 1600, 1067),
+  /**
+   * The gallery's "Open flame" tile: the same photograph of the chef as the
+   * home hero, kept as its own file so the two can diverge later. Supplied by
+   * the chef, so not a stock placeholder despite sitting in that folder.
+   */
+  chefFlame: {
+    src: "/images/placeholders/chefFlame.jpg",
+    alt: "Chef Amrit Pal Singh at the range, flame rising from the pan in his hand",
+    width: 1453,
+    height: 1082,
+  },
   // ---- Dishes ----
   dahiBatataPuri: placeholder("dahiBatataPuri.jpg", "Chaat plates on a blue table", 1400, 1400),
   kalePakora: placeholder("kalePakora.jpg", "Golden fried snacks with green chilli", 1400, 1400),
@@ -56,13 +76,19 @@ export const images = {
   curriesRice: placeholder("curriesRice.jpg", "Bowls of curry with rice", 1400, 1400),
   ricePlate: placeholder("ricePlate.jpg", "Spiced rice on a silver plate", 1400, 1400),
   // ---- Restaurant & bar ----
-  diningRoomDark: placeholder("diningRoomDark.jpg", "Moody, upscale dining room", 1600, 1067),
+  /** Real photograph of Angel's new dining room, supplied by the chef. Not a placeholder. */
+  angelDiningRoom: {
+    src: "/images/restaurant/angel-dining-room.jpg",
+    alt: "Angel's new dining room: the gold script sign, a long banquette and pendant lights running down the room",
+    width: 932,
+    height: 563,
+  },
   diningRoomGreen: placeholder("diningRoomGreen.jpg", "Dining room with greenery and soft seating", 1600, 1067),
   diningRoomLoft: placeholder("diningRoomLoft.jpg", "Restaurant interior", 1600, 1067),
   bar: placeholder("bar.jpg", "Bar with stools and warm light", 1600, 1067),
   cocktail: placeholder("cocktail.jpg", "A cocktail being poured over ice", 1400, 1750),
   // ---- Tables & events ----
-  tableCandles: placeholder("tableCandles.jpg", "Private table set with wine glasses", 1600, 1067),
+  tableCandles: placeholder("tableCandles.jpg", "Table set with wine glasses", 1600, 1067),
   tableSetting: placeholder("tableSetting.jpg", "Elegant table setting", 1600, 1067),
   tableFlorals: placeholder("tableFlorals.jpg", "Table with florals and glassware", 1600, 1067),
   banquet: placeholder("banquet.jpg", "Banquet tables dressed for an event", 1600, 1067),
