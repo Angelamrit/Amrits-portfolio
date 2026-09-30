@@ -52,7 +52,10 @@ export function MeetTheChef() {
                   <p className="mt-1 font-display text-xl leading-none">Angel Indian Restaurant</p>
                 </div>
               </Reveal>
-              <Reveal delay={0.55} className="absolute -bottom-6 right-6">
+              {/* In normal flow below the portrait, never over it: absolutely
+                  positioned, it sat across the bottom of the photo. */}
+              <Reveal delay={0.55} className="mt-10 flex items-center justify-end gap-4">
+                <span aria-hidden className="h-px w-12 bg-gradient-to-r from-transparent to-accent/70" />
                 <p className="font-display text-3xl italic text-gold-gradient">“{chef.philosophy.quote}”</p>
               </Reveal>
             </div>

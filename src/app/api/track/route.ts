@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { beaconSchema } from "@/lib/analytics/schema";
 import { recordPageView } from "@/lib/analytics/record";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { sameOrigin } from "@/lib/same-origin";
 
 /**
  * Where the site's own visit counter posts.
@@ -26,30 +27,6 @@ const MAX_BODY_BYTES = 2_048;
 const PER_IP = { limit: 120, windowMs: 60_000 };
 
 const noStore = { "Cache-Control": "no-store", "Content-Length": "0" } as const;
-
-/**
- * Same-origin only.
- *
- * `Sec-Fetch-Site` is set by the browser and cannot be overridden by page
- * script, so when it is present it is the strongest signal available. Older
- * browsers that do not send it fall back to comparing `Origin` against the
- * host. Neither stops a script run outside a browser — nothing on a public
- * endpoint can — but together they keep another site from pointing its traffic
- * at this counter.
- */
-function sameOrigin(requestHeaders: Headers): boolean {
-  const fetchSite = requestHeaders.get("sec-fetch-site");
-  if (fetchSite) return fetchSite === "same-origin";
-
-  const origin = requestHeaders.get("origin");
-  if (!origin) return true;
-
-  try {
-    return new URL(origin).host === requestHeaders.get("host");
-  } catch {
-    return false;
-  }
-}
 
 export async function POST(request: Request) {
   const requestHeaders = await headers();

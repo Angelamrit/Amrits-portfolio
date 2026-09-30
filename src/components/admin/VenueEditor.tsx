@@ -7,7 +7,7 @@ import { idleState, type EditorState } from "@/lib/content/state";
 import { resetVenueToOriginal, saveVenue } from "@/app/admin/(dashboard)/restaurant/actions";
 import { Panel } from "./Panel";
 import { SaveBar, useUnsavedChangesWarning } from "./SaveBar";
-import { TextField } from "./FormControls";
+import { TextField, useFieldSetters } from "./FormControls";
 
 /**
  * The restaurant's details.
@@ -43,10 +43,29 @@ export function VenueEditor({ initial, isEdited }: { initial: VenueDraft; isEdit
   const dirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(baseline), [draft, baseline]);
   useUnsavedChangesWarning(dirty);
 
-  const update = <K extends keyof VenueDraft>(key: K, value: VenueDraft[K]) =>
-    setDraft((current) => ({ ...current, [key]: value }));
+  // One stable handler per field, so a keystroke re-renders only its own field.
+  const set = useFieldSetters(initial, setDraft);
 
   const patch: VenuePatch = { ...draft, notes: draft.notes.map((note) => note.trim()).filter(Boolean) };
+
+  // The server's rules, shown on the field that breaks them. A link typed as
+  // "resy.com/…" without the https:// used to fail with a sentence in the save
+  // bar that did not say which of five links it meant.
+  const link = (value: string) =>
+    value.trim() && !/^https?:\/\//.test(value.trim()) ? "Links must start with https://" : undefined;
+  const errors = {
+    name: draft.name.trim() ? undefined : "The restaurant needs a name.",
+    contactEmail:
+      draft.contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.contactEmail.trim())
+        ? "That is not an email address."
+        : undefined,
+    resyUrl: link(draft.resyUrl),
+    menuUrl: link(draft.menuUrl),
+    mapsUrl: link(draft.mapsUrl),
+    instagram: link(draft.instagram),
+    facebook: link(draft.facebook),
+  };
+  const problem = Object.values(errors).some(Boolean) ? "Fix the field marked in red before saving." : undefined;
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -54,17 +73,17 @@ export function VenueEditor({ initial, isEdited }: { initial: VenueDraft; isEdit
 
       <Panel title="The restaurant" hint="Shown in the footer, the header bar and the structured data search engines read.">
         <div className="grid gap-4 md:grid-cols-2">
-          <TextField label="Name" value={draft.name} maxLength={90} onChange={(v) => update("name", v)} className="md:col-span-2" />
-          <TextField label="Street" value={draft.street} maxLength={120} onChange={(v) => update("street", v)} className="md:col-span-2" />
-          <TextField label="City" value={draft.city} maxLength={80} onChange={(v) => update("city", v)} />
-          <TextField label="State" value={draft.region} maxLength={40} onChange={(v) => update("region", v)} hint={'Two letters, e.g. "NY".'} />
-          <TextField label="ZIP code" value={draft.postal} maxLength={20} onChange={(v) => update("postal", v)} />
-          <TextField label="Country" value={draft.country} maxLength={40} onChange={(v) => update("country", v)} hint={'Two letters, e.g. "US".'} />
+          <TextField label="Name" value={draft.name} maxLength={90} error={errors.name} onChange={set.name} className="md:col-span-2" />
+          <TextField label="Street" value={draft.street} maxLength={120} onChange={set.street} className="md:col-span-2" />
+          <TextField label="City" value={draft.city} maxLength={80} onChange={set.city} />
+          <TextField label="State" value={draft.region} maxLength={40} onChange={set.region} hint={'Two letters, e.g. "NY".'} />
+          <TextField label="ZIP code" value={draft.postal} maxLength={20} onChange={set.postal} />
+          <TextField label="Country" value={draft.country} maxLength={40} onChange={set.country} hint={'Two letters, e.g. "US".'} />
           <TextField
             label="Opening hours"
             value={draft.hours}
             maxLength={120}
-            onChange={(v) => update("hours", v)}
+            onChange={set.hours}
             hint={'Free text, shown in the header bar. e.g. "Dinner only".'}
             className="md:col-span-2"
           />
@@ -77,21 +96,24 @@ export function VenueEditor({ initial, isEdited }: { initial: VenueDraft; isEdit
             label="Telephone"
             value={draft.phone}
             maxLength={40}
-            onChange={(v) => update("phone", v)}
+            onChange={set.phone}
             hint="Shown on the Contact page, and when the contact form cannot send."
           />
           <TextField
             label="Contact email shown to guests"
             value={draft.contactEmail}
             maxLength={160}
-            onChange={(v) => update("contactEmail", v)}
+            error={errors.contactEmail}
+            onChange={set.contactEmail}
             hint="Where contact-form messages are actually delivered is set on the server, not here."
           />
           <TextField
             label="Reservations link"
             value={draft.resyUrl}
             maxLength={300}
-            onChange={(v) => update("resyUrl", v)}
+            error={errors.resyUrl}
+            placeholder="https://resy.com/…"
+            onChange={set.resyUrl}
             hint='Every "Reserve a Table" button on the site.'
             className="md:col-span-2"
           />
@@ -99,7 +121,9 @@ export function VenueEditor({ initial, isEdited }: { initial: VenueDraft; isEdit
             label="Full menu link"
             value={draft.menuUrl}
             maxLength={300}
-            onChange={(v) => update("menuUrl", v)}
+            error={errors.menuUrl}
+            placeholder="https://…"
+            onChange={set.menuUrl}
             hint='Every "View the full menu at Angel" button.'
             className="md:col-span-2"
           />
@@ -107,11 +131,13 @@ export function VenueEditor({ initial, isEdited }: { initial: VenueDraft; isEdit
             label="Map link"
             value={draft.mapsUrl}
             maxLength={300}
-            onChange={(v) => update("mapsUrl", v)}
+            error={errors.mapsUrl}
+            placeholder="https://maps.google.com/…"
+            onChange={set.mapsUrl}
             className="md:col-span-2"
           />
-          <TextField label="Instagram" value={draft.instagram} maxLength={300} onChange={(v) => update("instagram", v)} />
-          <TextField label="Facebook" value={draft.facebook} maxLength={300} onChange={(v) => update("facebook", v)} />
+          <TextField label="Instagram" value={draft.instagram} maxLength={300} error={errors.instagram} placeholder="https://instagram.com/…" onChange={set.instagram} />
+          <TextField label="Facebook" value={draft.facebook} maxLength={300} error={errors.facebook} placeholder="https://facebook.com/…" onChange={set.facebook} />
         </div>
       </Panel>
 
@@ -125,16 +151,13 @@ export function VenueEditor({ initial, isEdited }: { initial: VenueDraft; isEdit
                 maxLength={80}
                 aria-label={`Badge ${index + 1}`}
                 onChange={(event) =>
-                  update(
-                    "notes",
-                    draft.notes.map((existing, i) => (i === index ? event.target.value : existing)),
-                  )
+                  set.notes(draft.notes.map((existing, i) => (i === index ? event.target.value : existing)))
                 }
                 className="w-full rounded-xl border border-fg/12 bg-fg/[0.04] px-3.5 py-2.5 font-sans text-[0.9rem] text-fg transition-all duration-300 hover:border-fg/20 focus:border-gold/70 focus:bg-fg/[0.07] focus:outline-none"
               />
               <button
                 type="button"
-                onClick={() => update("notes", draft.notes.filter((_, i) => i !== index))}
+                onClick={() => set.notes(draft.notes.filter((_, i) => i !== index))}
                 aria-label={`Remove badge ${index + 1}`}
                 className="mt-1 grid size-8 shrink-0 place-items-center rounded-lg text-fg/40 transition-colors duration-300 hover:bg-red-400/10 hover:text-red-200"
               >
@@ -144,7 +167,7 @@ export function VenueEditor({ initial, isEdited }: { initial: VenueDraft; isEdit
           ))}
           <button
             type="button"
-            onClick={() => update("notes", [...draft.notes, ""])}
+            onClick={() => set.notes([...draft.notes, ""])}
             disabled={draft.notes.length >= 8}
             className="mt-1 inline-flex w-fit items-center gap-2 rounded-pill border border-fg/15 px-3.5 py-2 text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-fg/55 transition-colors duration-300 hover:border-gold/50 hover:text-gold-light disabled:pointer-events-none disabled:opacity-35"
           >
@@ -160,6 +183,7 @@ export function VenueEditor({ initial, isEdited }: { initial: VenueDraft; isEdit
         dirty={dirty}
         resetPending={resetPending}
         canReset={isEdited}
+        problem={problem}
         onReset={() => {
           if (!window.confirm("Put the restaurant details back to the version that ships with the site?")) return;
           startTransition(() => resetAction());

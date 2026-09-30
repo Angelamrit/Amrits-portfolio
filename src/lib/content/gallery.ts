@@ -5,6 +5,7 @@ import { gallery as baseGallery, galleryCategories } from "@/data/gallery";
 import { store } from "@/lib/store";
 import type { GalleryCategory, GalleryItem, ImageAsset } from "@/types/content";
 import { EXTENSIONS, readImage } from "./image-size";
+import { MAX_UPLOAD_BYTES } from "./upload-limits";
 
 /**
  * The gallery, which is the one part of the site the chef can add to rather
@@ -26,9 +27,6 @@ import { EXTENSIONS, readImage } from "./image-size";
  */
 
 const DOC = "gallery";
-
-/** Photographs are big and the store is the server's own disk; this keeps one upload from filling it. */
-export const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
 
 const categoryValues = galleryCategories
   .map((entry) => entry.value)
@@ -59,6 +57,13 @@ type Upload = {
   featured?: boolean;
   span?: "wide" | "tall" | "square";
   uploadedAt: number;
+  /**
+   * `false` for a photograph uploaded for one dish from the dish editor. It is
+   * kept in the same library — so it can be picked again for any dish — but
+   * never appears on the public gallery wall, where a close-up meant for a
+   * menu card would be out of place. Absent (older uploads) means `true`.
+   */
+  inGallery?: boolean;
 };
 
 type GalleryDoc = {
@@ -72,8 +77,7 @@ type GalleryDoc = {
 
 const emptyDoc: GalleryDoc = { version: 1, updatedAt: 0, patches: {}, added: [], hidden: [], order: [] };
 
-async function readDoc(): Promise<GalleryDoc> {
-  const doc = await store.readDoc<GalleryDoc>(DOC);
+function normalise(doc: GalleryDoc | null): GalleryDoc {
   if (!doc || doc.version !== 1) return emptyDoc;
   return {
     ...emptyDoc,
@@ -85,8 +89,25 @@ async function readDoc(): Promise<GalleryDoc> {
   };
 }
 
-async function writeDoc(doc: GalleryDoc): Promise<void> {
-  await store.writeDoc<GalleryDoc>(DOC, { ...doc, version: 1, updatedAt: Date.now() });
+async function readDoc(): Promise<GalleryDoc> {
+  return normalise(await store.readDoc<GalleryDoc>(DOC));
+}
+
+/**
+ * Every write is a read-modify-write inside the store's own queue.
+ *
+ * The gallery takes several small actions in quick succession — hide one
+ * picture, move another, upload a third — and each rewrites the same
+ * document. Read-then-write as two steps let a second action read the
+ * document before the first had written it, and one change silently
+ * disappeared.
+ */
+async function changeDoc(change: (doc: GalleryDoc) => GalleryDoc): Promise<void> {
+  await store.updateDoc<GalleryDoc>(DOC, (current) => ({
+    ...change(normalise(current)),
+    version: 1,
+    updatedAt: Date.now(),
+  }));
 }
 
 /** Uploads are served through a route of their own, not from `/public`. */
@@ -138,7 +159,7 @@ export async function getGalleryForAdmin(): Promise<{ items: (GalleryItem & { hi
     uploaded: false,
   }));
 
-  const uploaded = doc.added.map((upload) => ({
+  const uploaded = doc.added.filter((upload) => upload.inGallery !== false).map((upload) => ({
     ...applyGalleryPatch(uploadToItem(upload), doc.patches[upload.id]),
     hidden: hidden.has(upload.id),
     uploaded: true,
@@ -186,22 +207,58 @@ export async function getGalleryByCategory(category: GalleryCategory): Promise<G
   return (await getGallery()).filter((item) => item.category === category);
 }
 
-export async function saveGalleryPatch(id: string, patch: GalleryPatch): Promise<void> {
+/**
+ * Uploaded photographs as images another part of the site can use — the dish
+ * editor offers them beside the shipped photography. Keyed by upload id.
+ */
+export async function getUploadedImages(): Promise<Map<string, { image: ImageAsset; label: string }>> {
   const doc = await readDoc();
-  await writeDoc({ ...doc, patches: { ...doc.patches, [id]: patch } });
+  return new Map(
+    doc.added.map((upload) => {
+      const patch = doc.patches[upload.id];
+      const alt = patch?.alt || upload.alt;
+      return [upload.id, { image: { ...uploadToItem(upload).image, alt }, label: patch?.caption || upload.caption || alt }];
+    }),
+  );
 }
 
-export async function setHidden(id: string, hidden: boolean): Promise<void> {
-  const doc = await readDoc();
-  const next = new Set(doc.hidden);
-  if (hidden) next.add(id);
-  else next.delete(id);
-  await writeDoc({ ...doc, hidden: [...next] });
+/** Whether an id names a picture that exists, shipped or uploaded — so a write can never name a ghost. */
+function knownIds(doc: GalleryDoc): Set<string> {
+  return new Set([...baseGallery.map((item) => item.id), ...doc.added.map((upload) => upload.id)]);
 }
 
+export async function saveGalleryPatch(id: string, patch: GalleryPatch): Promise<boolean> {
+  let found = false;
+  await changeDoc((doc) => {
+    found = knownIds(doc).has(id);
+    return found ? { ...doc, patches: { ...doc.patches, [id]: patch } } : doc;
+  });
+  return found;
+}
+
+export async function setHidden(id: string, hidden: boolean): Promise<boolean> {
+  let found = false;
+  await changeDoc((doc) => {
+    found = knownIds(doc).has(id);
+    if (!found) return doc;
+    const next = new Set(doc.hidden);
+    if (hidden) next.add(id);
+    else next.delete(id);
+    return { ...doc, hidden: [...next] };
+  });
+  return found;
+}
+
+/**
+ * Stores a new running order. Ids that no longer exist are dropped, and any
+ * picture the order leaves out keeps its place at the end (see `sortByOrder`),
+ * so a stale order sent from an old tab can reorder but never lose a picture.
+ */
 export async function setOrder(ids: string[]): Promise<void> {
-  const doc = await readDoc();
-  await writeDoc({ ...doc, order: ids });
+  await changeDoc((doc) => {
+    const known = knownIds(doc);
+    return { ...doc, order: [...new Set(ids)].filter((id) => known.has(id)) };
+  });
 }
 
 /**
@@ -215,8 +272,8 @@ export async function setOrder(ids: string[]): Promise<void> {
  */
 export async function addUpload(
   bytes: Uint8Array,
-  { alt, category }: { alt: string; category: GalleryCategory },
-): Promise<{ ok: true; id: string } | { ok: false; reason: string }> {
+  { alt, category, inGallery = true }: { alt: string; category: GalleryCategory; inGallery?: boolean },
+): Promise<{ ok: true; id: string; src: string } | { ok: false; reason: string }> {
   if (bytes.byteLength === 0) return { ok: false, reason: "That file was empty." };
   if (bytes.byteLength > MAX_UPLOAD_BYTES) {
     return { ok: false, reason: `Photographs must be under ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)}MB.` };
@@ -230,7 +287,6 @@ export async function addUpload(
 
   await store.putBlob({ key, bytes, contentType: read.type });
 
-  const doc = await readDoc();
   const upload: Upload = {
     id,
     key,
@@ -239,38 +295,45 @@ export async function addUpload(
     alt,
     category,
     uploadedAt: Date.now(),
+    ...(inGallery ? {} : { inGallery: false }),
   };
 
   // Newest first, and pinned to the front of the running order so a picture
   // just uploaded is the first thing on the screen rather than something to
-  // go hunting for.
-  await writeDoc({
+  // go hunting for. A dish-only photograph has no place in that order.
+  await changeDoc((doc) => ({
     ...doc,
     added: [upload, ...doc.added],
-    order: doc.order.length > 0 ? [id, ...doc.order] : [],
-  });
+    order: inGallery && doc.order.length > 0 ? [id, ...doc.order] : doc.order,
+  }));
 
-  return { ok: true, id };
+  return { ok: true, id, src: uploadSrc(key) };
 }
 
 /** Uploads are removed for real — they exist nowhere else, so there is nothing to fall back to. */
 export async function deleteUpload(id: string): Promise<boolean> {
-  const doc = await readDoc();
-  const upload = doc.added.find((entry) => entry.id === id);
-  if (!upload) return false;
+  let removed: Upload | undefined;
 
-  await store.deleteBlob(upload.key);
+  // The record goes first and the bytes second: a crash in between leaves an
+  // orphaned file on disk, which is harmless, rather than a gallery entry
+  // pointing at a file that no longer exists, which is a broken picture.
+  await changeDoc((doc) => {
+    removed = doc.added.find((entry) => entry.id === id);
+    if (!removed) return doc;
 
-  const patches = { ...doc.patches };
-  delete patches[id];
-
-  await writeDoc({
-    ...doc,
-    added: doc.added.filter((entry) => entry.id !== id),
-    patches,
-    hidden: doc.hidden.filter((entry) => entry !== id),
-    order: doc.order.filter((entry) => entry !== id),
+    const patches = { ...doc.patches };
+    delete patches[id];
+    return {
+      ...doc,
+      added: doc.added.filter((entry) => entry.id !== id),
+      patches,
+      hidden: doc.hidden.filter((entry) => entry !== id),
+      order: doc.order.filter((entry) => entry !== id),
+    };
   });
+
+  if (!removed) return false;
+  await store.deleteBlob(removed.key);
   return true;
 }
 

@@ -12,11 +12,11 @@ import {
   LogOut,
   Menu as MenuIcon,
   Store,
-  UtensilsCrossed,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { signOut } from "@/app/admin/actions";
+import { confirmLeave } from "./SaveBar";
 
 /**
  * The frame every dashboard page sits in.
@@ -44,7 +44,6 @@ const groups: { heading?: string; items: Item[] }[] = [
   {
     heading: "Your website",
     items: [
-      { href: "/admin/menus", label: "Menus", icon: UtensilsCrossed },
       { href: "/admin/dishes", label: "Dishes", icon: ChefHat },
       { href: "/admin/restaurant", label: "Restaurant details", icon: Store },
       { href: "/admin/gallery", label: "Photos", icon: Images },
@@ -56,7 +55,7 @@ const groups: { heading?: string; items: Item[] }[] = [
 const tabs: Item[] = [
   { href: "/admin", label: "Home", icon: House },
   { href: "/admin/visitors", label: "Visitors", icon: BarChart3 },
-  { href: "/admin/menus", label: "Menus", icon: UtensilsCrossed },
+  { href: "/admin/dishes", label: "Dishes", icon: ChefHat },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -82,6 +81,7 @@ function NavList({
                 key={href}
                 href={href}
                 onClick={onNavigate}
+                onNavigate={confirmLeave}
                 data-active={active}
                 aria-current={active ? "page" : undefined}
                 className={cn(
@@ -118,7 +118,7 @@ function Rail({
 }) {
   return (
     <div className="flex h-full flex-col gap-8 overflow-y-auto p-6">
-      <Link href="/admin" onClick={onNavigate} className="group flex items-center gap-3">
+      <Link href="/admin" onClick={onNavigate} onNavigate={confirmLeave} className="group flex items-center gap-3">
         <span className="grid size-10 shrink-0 place-items-center rounded-full border border-gold/30 bg-gold/10 font-display text-lg text-gold transition-shadow duration-500 group-hover:shadow-glow">
           A
         </span>
@@ -141,7 +141,7 @@ function Rail({
           <ExternalLink className="size-[1.05rem] shrink-0 text-fg/40" strokeWidth={1.5} aria-hidden />
           View the website
         </Link>
-        <form action={signOut}>
+        <form action={signOut} onSubmit={confirmLeave}>
           <button
             type="submit"
             className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-[0.88rem] text-fg/60 transition-colors duration-300 hover:bg-red-400/10 hover:text-red-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
@@ -198,7 +198,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
       {/* Phone / tablet top bar */}
       <header className="glass sticky top-0 z-30 flex items-center gap-3 border-x-0 border-t-0 px-4 py-3 lg:hidden">
-        <Link href="/admin" className="flex items-center gap-2.5">
+        <Link href="/admin" onNavigate={confirmLeave} className="flex items-center gap-2.5">
           <span className="grid size-8 place-items-center rounded-full border border-gold/30 bg-gold/10 font-display text-base text-gold">
             A
           </span>
@@ -217,6 +217,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <Link
               key={href}
               href={href}
+              onNavigate={confirmLeave}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "relative flex flex-col items-center gap-1 px-2 pb-2.5 pt-3 text-[0.64rem] transition-colors duration-300",

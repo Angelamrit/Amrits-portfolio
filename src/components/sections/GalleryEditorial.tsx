@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { gallery } from "@/data/gallery";
+import { getGallery } from "@/lib/content/gallery";
 import type { GalleryItem } from "@/types/content";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
@@ -48,10 +48,20 @@ function Strip({ items, reverse = false }: { items: GalleryItem[]; reverse?: boo
   );
 }
 
-/** Chapter 05: a two-row cinematic film strip of the kitchen, the plates and the tables. */
+/**
+ * Chapter 05: a two-row cinematic film strip of the kitchen, the plates and the tables.
+ *
+ * Read through the content layer, so it is the gallery as the chef has
+ * arranged it in the dashboard — his uploads and captions included, hidden
+ * pictures left out — with the ones he marked as featured leading the strip.
+ */
 export async function GalleryEditorial() {
-  const rowA = gallery.slice(0, 9);
-  const rowB = gallery.slice(9, 18);
+  const gallery = await getGallery();
+  const ordered = [...gallery.filter((item) => item.featured), ...gallery.filter((item) => !item.featured)];
+  const rowA = ordered.slice(0, 9);
+  // A second row of two or three pictures would loop so tightly it stutters;
+  // with that few, one row carries the strip on its own.
+  const rowB = ordered.length >= 12 ? ordered.slice(9, 18) : [];
   return (
     <Section id="gallery" tone="base" orbs="subtle" divider className="scroll-mt-20">
       <Container>
@@ -80,8 +90,8 @@ export async function GalleryEditorial() {
       </Container>
 
       <Reveal delay={0.2} className="mt-16 space-y-4">
-        <Strip items={rowA} />
-        <Strip items={rowB} reverse />
+        {rowA.length > 0 && <Strip items={rowA} />}
+        {rowB.length > 0 && <Strip items={rowB} reverse />}
       </Reveal>
     </Section>
   );

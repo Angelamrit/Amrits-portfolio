@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, m } from "motion/react";
+import { AnimatePresence, LazyMotion, domAnimation, m } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, Send, X } from "lucide-react";
@@ -208,6 +208,13 @@ export function ChatWidget() {
         <MessageCircle className="size-5" strokeWidth={1.75} />
       </button>
 
+      {/*
+        `m` is motion's slim component: it carries no animation code of its own
+        and only animates inside LazyMotion. Without this wrapper the panel
+        mounted at its `initial` state (opacity 0) and stayed there, so the
+        launcher hid itself and nothing appeared in its place.
+      */}
+      <LazyMotion features={domAnimation}>
       <AnimatePresence>
         {open && (
           <m.div
@@ -352,6 +359,7 @@ export function ChatWidget() {
           </m.div>
         )}
       </AnimatePresence>
+      </LazyMotion>
     </>
   );
 }

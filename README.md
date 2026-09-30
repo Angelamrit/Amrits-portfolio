@@ -82,22 +82,26 @@ Put the printed line in `.env.local` (development) or the host's environment (pr
 ADMIN_PASSWORD_HASH=scrypt:32768:8:1:…
 ```
 
+Judge the dashboard's speed on a production build (`npm run build && npm start`), not on `npm run dev`. The development server runs React in development mode and compiles each screen the first time it is opened, which makes typing in the editors and the first tap on every screen several times slower than the deployed dashboard — measured at 8× slower per keystroke on the dish editor.
+
 A plain `ADMIN_PASSWORD` is accepted instead if you would rather not run the script; the hash is safer, because anything that can read the environment then learns nothing it can sign in with. Sessions are a signed, http-only cookie lasting 12 hours. Changing the password signs every open session out.
 
 ### What it does
 
 | Screen | What it is for |
 |---|---|
-| Home | One-tap shortcuts to the jobs the chef comes here to do, and a glance at visitor numbers |
-| Visitors | Visitors, page views, visits, traffic over time, most-read pages, referrers, devices, hours of the day and the latest arrivals, over 24 hours to 12 months |
+| Home | One-tap shortcuts to the jobs the chef comes here to do, the week's visitors against the week before, the most-read pages, and which parts of the website he has edited or hidden |
+| Visitors | Visitors, page views, visits, traffic over time, most-read pages (by name), referrers, devices, hours of the day and the latest arrivals, over 24 hours to 12 months. Days and hours are New York time, the restaurant's own clock; the log itself stays in UTC |
 | Menus | Names, intros, notes, and the courses themselves — add, remove, reorder, point a course at a dish or write it out |
 | Dishes | Names, taglines, descriptions, dietary tags, signature flag, order, and which photograph is used |
 | Restaurant details | Address, hours, telephone, reservations and menu links, social links, the badges beside the restaurant |
-| Photos | Upload photographs, caption them, set the description screen readers read, reorder, hide, delete |
+| Photos | Upload photographs (choose or drag in, up to 12MB each), caption them, set the description screen readers read, reorder, hide, delete. Uploads can also be chosen as a dish's photograph, and the home page's photo strip follows this screen |
 
 On a phone, Home, Visitors and Menus sit in a tab bar at the bottom of the screen.
 
 Every content screen has a **Reset to original** that discards the stored edits and returns to the version in `src/data/`.
+
+Edits are never lost by accident: leaving a screen with unsaved changes (by the sidebar, the tab bar, the back link, signing out or closing the tab) asks first, fields the server would refuse are marked in red before saving, and a save made after the 12-hour session has run out answers with "sign in again, then save" instead of redirecting — the form keeps what was typed.
 
 ### How edits reach the site
 
@@ -168,7 +172,7 @@ Photography is nearly all of this site's weight, so this is the caching change t
 - **The enquiry form** is the only input the site accepts, and is treated accordingly. Every submission meets, in order: a five-second cooldown per connection, so one client cannot hammer the endpoint; a ceiling on attempts; a honeypot field; a signed, single-use challenge with an invisible proof of work that the browser fetches and solves while the guest types (`src/lib/inquiry/challenge.ts`, `src/lib/inquiry/proof.ts`), which a script that posts straight at the endpoint cannot produce and which cannot be replayed; sanitising and server-side validation with Zod; and the send limits per connection, per address and per day. No CAPTCHA and no third-party service: the challenge is an HMAC signed by the server itself. Only the form's eight fields are ever read from a request, so a padded body costs nothing; a caught bot is answered with a decoy "success" after about the time a real send takes, so timing gives nothing away; every call to the mail API is held to eight seconds; the guest's auto-reply goes out after the response, so nobody waits for a second email; the in-memory counters and the ledger of spent tokens are capped at every insert; and both Server Actions catch everything, so the form can degrade to an honest sentence but never to the error boundary. `src/lib/inquiry/submit.ts` explains each decision at the point it is made.
 - **Secrets** live only in the environment, never in `src/data`. `.env*` is gitignored; `.env.example` documents what is needed.
 - **The dashboard** is closed by default: with no credential configured there is nothing behind `/admin`. The password is stored as a scrypt hash, compared in constant time, and sign-in is rate limited per address and globally so a distributed run at it is capped too. Every failure — wrong password, no password configured, too many attempts — returns the same sentence, so nothing is learned by probing. `proxy.ts` turns anonymous requests away before a dashboard route renders, and every Server Action behind it checks the session again next to the data it is about to change, because a Server Action is a public endpoint whether or not a page links to it.
-- **Uploads** are accepted only as JPEG, PNG or WebP, and the type is read from the file's own header rather than taken from the browser's word for it. The stored filename is generated on the server; nothing from the upload's own name is used. They are served from a route with `nosniff` and their real type.
+- **Uploads** go to `POST /api/admin/upload`, one file per request, rather than through a Server Action: actions cap a body at 1MB, and raising that limit is site-wide, so it would also apply to the public contact form. The route checks the session and the same-origin headers before it reads anything, refuses a body over 12MB from its declared length, and is rate limited. Files are accepted only as JPEG, PNG or WebP, and the type is read from the file's own header rather than taken from the browser's word for it. The stored filename is generated on the server; nothing from the upload's own name is used. They are served from a route with `nosniff` and their real type.
 
 One limitation to know about: the rate limiter counts in the server's own memory (`src/lib/rate-limit.ts`), and so does the ledger of spent challenge tokens. On a single long-lived Node process that is exactly right. On a serverless platform, or across several instances, each worker keeps its own counts and the effective limit is multiplied by the number of live workers. If the site is deployed that way, swap the body of `rateLimit` for a shared store — Upstash Redis or Vercel KV — which is all the signature was designed to allow. Volumetric denial of service is a job for the host's edge (Vercel and Cloudflare both do it by default); what the application can do, and does, is make sure one connection can never make it do more than a lookup every five seconds.
 

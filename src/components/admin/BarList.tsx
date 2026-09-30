@@ -49,12 +49,16 @@ export function BarList({
                 className="absolute inset-y-[3px] left-0 rounded-r-[4px] bg-[color:var(--color-chart-1)] opacity-[0.28] transition-[width,opacity] duration-700 ease-luxe group-hover/row:opacity-45"
                 style={{ width: `${share * 100}%` }}
               />
-              <span className="relative min-w-0 flex-1 truncate font-sans text-[0.84rem] text-fg/85">
+              <span
+                className="relative min-w-0 flex-1 truncate font-sans text-[0.84rem] text-fg/85"
+                title={row.display && row.display !== row.label ? row.label : undefined}
+              >
                 {row.display ?? row.label}
               </span>
               <span className="relative flex shrink-0 items-baseline gap-2">
+                {/* A phone has no hover, so there the second figure is simply shown. */}
                 {row.secondary !== undefined && (
-                  <span className="text-[0.7rem] tnum text-fg/0 transition-colors duration-300 group-hover/row:text-fg/45">
+                  <span className="text-[0.7rem] tnum text-fg/35 transition-colors duration-300 group-hover/row:text-fg/45 [@media(hover:hover)]:text-fg/0">
                     {exact(row.secondary)} {row.secondaryLabel ?? secondaryLabel}
                   </span>
                 )}
@@ -67,6 +71,18 @@ export function BarList({
     </ol>
   );
 }
+
+/**
+ * The slot colours, written out in full. Tailwind only emits a theme variable
+ * it can find spelled out in the source, so `var(--color-chart-${slot})` left
+ * the third and fourth undefined — the tablet share drew as nothing at all.
+ */
+const SLOT_COLOURS = {
+  1: "var(--color-chart-1)",
+  2: "var(--color-chart-2)",
+  3: "var(--color-chart-3)",
+  4: "var(--color-chart-4)",
+} as const;
 
 /**
  * The device split: a small fixed set of named categories, so each gets its own
@@ -90,7 +106,7 @@ export function ShareBars({
           <span
             key={row.label}
             className="h-full first:rounded-l-pill last:rounded-r-pill"
-            style={{ width: `${Math.max(1.5, row.share * 100)}%`, background: `var(--color-chart-${row.slot})` }}
+            style={{ width: `${Math.max(1.5, row.share * 100)}%`, background: SLOT_COLOURS[row.slot] }}
           />
         ))}
       </div>
@@ -102,7 +118,7 @@ export function ShareBars({
               <span
                 aria-hidden
                 className="size-2.5 shrink-0 rounded-[3px]"
-                style={{ background: `var(--color-chart-${row.slot})` }}
+                style={{ background: SLOT_COLOURS[row.slot] }}
               />
               <span className="truncate font-sans text-[0.84rem] capitalize text-fg/85">{row.label}</span>
             </span>
