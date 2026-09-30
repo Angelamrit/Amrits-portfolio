@@ -10,6 +10,8 @@
  * end in a link to an existing workflow.
  */
 
+import { SCOPE_REPLY } from "./gate.ts";
+
 export type ChatIntent = "resy" | "event";
 
 /** Which occasion to preselect in the existing contact wizard, when it is clear. */
@@ -70,6 +72,18 @@ const FOLLOW_UP_MARKERS = [
   "more info", "more information", "tell me more", "go on",
 ];
 
+/**
+ * A date, day or time. Naming one is the commonest way a visitor continues a
+ * booking or a celebration — "what about October 15?", "can I do it on
+ * Saturday?", "what about tomorrow?" — and none of those phrases carries a
+ * booking word of its own, so the handoff used to vanish on the second turn.
+ *
+ * The assistant still cannot see a diary; this only decides which existing
+ * workflow the button points at, never whether the date is free.
+ */
+const DATE_MARKERS =
+  /\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b|\b(?:mon|tue|tues|wed|wednes|thu|thur|thurs|fri|sat|satur|sun)(?:day)?\b|\b(?:today|tonight|tomorrow|weekend|this week|next week|next month|this month)\b|\b\d{1,2}(?:st|nd|rd|th)?\b/;
+
 function normalize(input: string): string {
   return input
     .normalize("NFKC")
@@ -124,7 +138,31 @@ export function detectIntent(raw: string, options: IntentOptions = {}): IntentMa
     return previous;
   }
 
+  // A bare date continues whatever was already being arranged. Without this,
+  // "I want to host a birthday event" followed by "What about October 15?" lost
+  // the celebration handoff and offered nothing at all.
+  if (previous && DATE_MARKERS.test(text)) {
+    return previous;
+  }
+
   return null;
+}
+
+/**
+ * The handoff a reply should actually carry.
+ *
+ * `detectIntent` runs on the visitor's wording before the answer exists, which
+ * is what keeps the button steady while the reply streams in. That guess can be
+ * wrong: "Do you cater?" matches an event term but catering is not a listed
+ * service, and "What experiences are available?" matches a booking term. Both
+ * are refused, and both were rendering a call-to-action button underneath the
+ * refusal sentence. The refusal is meant to be one sentence and nothing else,
+ * so a refused reply carries no handoff.
+ *
+ * Routing is unchanged — this only withdraws a handoff the answer disowned.
+ */
+export function ctaForReply(cta: IntentMatch | undefined, replyText: string): IntentMatch | undefined {
+  return replyText === SCOPE_REPLY ? undefined : cta;
 }
 
 /** Kept for the reservation-specific checks; equivalent to a "resy" match. */

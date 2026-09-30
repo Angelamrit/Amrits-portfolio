@@ -5,7 +5,7 @@ import { classifyInput } from "@/lib/chat/gate";
 import { buildScopeLexicon, loadKnowledgeBase, KnowledgeBaseError } from "@/lib/chat/kb";
 import { buildSystemInstruction } from "@/lib/chat/prompt";
 import { CHAT_MODEL, MAX_OUTPUT_TOKENS, getGeminiClient } from "@/lib/chat/client";
-import { checkRateLimit, clientKey } from "@/lib/chat/rate-limit";
+import { checkRateLimit, checkUnscopedRateLimit, clientKey } from "@/lib/chat/rate-limit";
 
 /**
  * Chat endpoint.
@@ -59,11 +59,15 @@ function textResponse(body: string, init: ResponseInit = {}): Response {
   });
 }
 
+const THROTTLED =
+  "You're sending messages very quickly. Please wait a moment and try again.";
+
 export async function POST(request: Request): Promise<Response> {
   // 1. Rate limit before any parsing work.
-  const limit = checkRateLimit(clientKey(request));
+  const caller = clientKey(request);
+  const limit = checkRateLimit(caller);
   if (!limit.ok) {
-    return textResponse("You're sending messages very quickly. Please wait a moment and try again.", {
+    return textResponse(THROTTLED, {
       status: 429,
       headers: { "Retry-After": String(limit.retryAfterSeconds) },
     });
@@ -109,7 +113,20 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
-  // 5. Model call.
+  // 5. Unrecognised-but-plausible input is allowed through, so it is throttled
+  // instead of refused. This is what keeps the free-tier quota protected now
+  // that the gate no longer turns a question away for lacking a known word.
+  if (!decision.scopeSignal) {
+    const unscoped = checkUnscopedRateLimit(caller);
+    if (!unscoped.ok) {
+      return textResponse(THROTTLED, {
+        status: 429,
+        headers: { "Retry-After": String(unscoped.retryAfterSeconds), "X-Chat-Scope": "throttled" },
+      });
+    }
+  }
+
+  // 6. Model call.
   const client = getGeminiClient();
   if (!client) {
     return textResponse(CONTACT_FALLBACK, {
@@ -132,12 +149,23 @@ export async function POST(request: Request): Promise<Response> {
         systemInstruction: buildSystemInstruction(kb),
         maxOutputTokens: MAX_OUTPUT_TOKENS,
         temperature: 0.2,
-        // A grounded FAQ assistant does not need deep reasoning, and the free
-        // tier is request- and token-limited, so ask for the least thinking the
-        // model allows. Note that `thinkingBudget: 0` is rejected with a 400 on
-        // the Gemini 3.x family — thinking cannot be switched off outright, and
+        // LOW rather than MINIMAL, and the difference is factual accuracy, not
+        // polish. At MINIMAL this assistant quoted the Goat Dum Biryani at
+        // $25.00 instead of $25.99 on eleven of twelve asks, and once gave
+        // $20.99 — the price of the Vegetable Dum Biryani three lines above it.
+        //
+        // Measured, not guessed. The same question against a three-line prompt
+        // answers correctly at MINIMAL, so the model can read the figure; it is
+        // retrieving it from ~7,500 tokens of near-identical menu rows that it
+        // cannot do. Temperature made no difference at either 0.2 or 0; the
+        // thinking level was the whole of it.
+        //
+        // This costs more per request than MINIMAL, which was chosen for the
+        // free tier's budget. A wrong price on a menu is worse than a smaller
+        // budget. Note that `thinkingBudget: 0` is rejected with a 400 on the
+        // Gemini 3.x family — thinking cannot be switched off outright, and
         // `thinkingLevel` is the supported control.
-        thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
         abortSignal,
       },
     });
@@ -169,6 +197,10 @@ export async function POST(request: Request): Promise<Response> {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-store",
         "X-Chat-Mode": "live",
+        // Whether this request matched known in-scope vocabulary. Tells us how
+        // much traffic now reaches the model on the model's own judgement rather
+        // than on a keyword match, which is the thing to watch after this change.
+        "X-Chat-Scope": decision.scopeSignal ? "signal" : "none",
       },
     });
   } catch (error) {

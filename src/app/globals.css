@@ -107,6 +107,7 @@
   --animate-spin-slow: spin 8s linear infinite;
   --animate-shimmer: shimmer 3.2s linear infinite;
   --animate-pulse-glow: pulse-glow 3s ease-in-out infinite;
+  --animate-chat-thinking: chat-thinking 1.4s ease-in-out infinite;
   --animate-kenburns: kenburns 26s ease-in-out infinite alternate;
   --animate-ember: ember 9s ease-in infinite;
   --animate-marquee-reverse: marquee-reverse 40s linear infinite;
@@ -148,6 +149,29 @@
   @keyframes pulse-glow {
     0%, 100% { opacity: 0.55; }
     50% { opacity: 1; }
+  }
+  /*
+   * The assistant's three dots while it is thinking.
+   *
+   * Separate from pulse-glow, which is a 3s ambient breathe shared with the
+   * live-dot and orb treatments. Borrowed for the chat indicator it read as
+   * frozen: a 160ms stagger across a 3000ms cycle is a 5% phase offset, so
+   * the three dots rose and fell together and a seven-second wait looked
+   * stalled.
+   *
+   * 1.4s with a hold from 80% to 100% gives each dot its own beat and a
+   * clear travelling wave. Only opacity and transform animate, so it stays
+   * on the compositor and costs nothing measurable while it runs.
+   */
+  @keyframes chat-thinking {
+    0%, 80%, 100% {
+      opacity: 0.3;
+      transform: translateY(0);
+    }
+    40% {
+      opacity: 1;
+      transform: translateY(-3px);
+    }
   }
 }
 

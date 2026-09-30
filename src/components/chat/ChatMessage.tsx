@@ -126,11 +126,20 @@ export function ChatMessage({ turn }: { turn: ChatTurn }) {
             </>
           )
         ) : (
-          <span className="flex items-center gap-1" aria-label="Thinking">
+          // role=status so a screen reader is told the assistant is working;
+          // the wait is several seconds and silence reads as a dead control.
+          // The dots are aria-hidden — the label carries the meaning, and
+          // three announced bullets would not.
+          <span role="status" aria-label="Thinking" className="flex items-center gap-1 py-1">
             {[0, 1, 2].map((i) => (
               <span
                 key={i}
-                className="size-1.5 animate-pulse-glow rounded-full bg-gold"
+                aria-hidden
+                className="size-1.5 animate-chat-thinking rounded-full bg-gold"
+                // 160ms against the 1.4s cycle is a ~11% phase offset, which is
+                // what makes the three read as a travelling wave rather than a
+                // single pulse. Under prefers-reduced-motion the global rule
+                // collapses the animation and the dots simply sit still.
                 style={{ animationDelay: `${i * 160}ms` }}
               />
             ))}

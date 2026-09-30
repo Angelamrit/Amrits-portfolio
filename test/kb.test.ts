@@ -400,3 +400,48 @@ test("the scope lexicon picks up menu vocabulary", () => {
   // vocabulary must not widen the gate either.
   assert.ok(!lexicon.some((t) => t.includes("lakhanpur")));
 });
+
+test("the prompt tells the assistant to quote prices exactly", () => {
+  // Behavioural regression: "How much is the Goat Dum Biryani?" ($25.99) was
+  // answered $25.00 on one ask and $20.99 on another — the latter belonging to
+  // Vegetable Dum Biryani, one line away in the same category.
+  const instruction = buildSystemInstruction(loadKnowledgeBase());
+  assert.match(instruction, /digit for digit/i, "price fidelity rule missing");
+  assert.match(instruction, /neighbouring line|nearby dish/i, "nothing warns against adjacent rows");
+  assert.match(instruction, /Never round a price/i, "nothing forbids rounding");
+});
+
+test("the prompt places date questions inside the existing workflows", () => {
+  // Behavioural regression: "What about October 15?" in an open celebration
+  // thread was answered with the fixed refusal, because no rule said where a
+  // date belonged. There is no availability data anywhere in this project, so
+  // the rule routes the question without ever answering it.
+  const instruction = buildSystemInstruction(loadKnowledgeBase());
+  assert.match(instruction, /particular date, day or time/i, "no rule for dates in a reservation");
+  assert.match(instruction, /stays with the occasion/i, "no rule for dates while planning an occasion");
+  assert.match(instruction, /never say (?:a date is free|the date is available)/i, "dates must never be reported as free");
+});
+
+test("the chat route asks for enough thinking to quote a price correctly", () => {
+  // Behavioural regression, measured against the live model. At
+  // ThinkingLevel.MINIMAL the assistant answered "How much is the Goat Dum
+  // Biryani?" ($25.99) with $25.00 on eleven of twelve asks, and once with
+  // $20.99 — the Vegetable Dum Biryani, three lines above it in the same
+  // category. At LOW it answered $25.99 twelve times out of twelve.
+  //
+  // The cause is retrieval, not arithmetic: the same question against a
+  // three-line prompt is answered correctly at MINIMAL, so the model can read
+  // the figure but cannot find it reliably in ~7,500 tokens of near-identical
+  // menu rows. Temperature was ruled out — 0.2 and 0 behaved identically.
+  //
+  // Asserted at source because the value is a constant in the request config,
+  // and dropping back to MINIMAL to save free-tier budget would silently
+  // reintroduce wrong prices.
+  const route = readFileSync(new URL("../src/app/api/chat/route.ts", import.meta.url), "utf8");
+  assert.match(
+    route,
+    /thinkingConfig:\s*\{\s*thinkingLevel:\s*ThinkingLevel\.LOW\s*\}/,
+    "the chat route must request LOW thinking; MINIMAL returns wrong menu prices",
+  );
+  assert.doesNotMatch(route, /ThinkingLevel\.MINIMAL/, "MINIMAL is not accurate enough for menu prices");
+});

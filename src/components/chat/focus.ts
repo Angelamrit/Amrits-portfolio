@@ -23,6 +23,30 @@ export function prefersAutoFocus(matchMedia: typeof window.matchMedia | undefine
 }
 
 /**
+ * Where focus goes when the panel opens.
+ *
+ * Something inside the panel must take it, and take it promptly: opening marks
+ * the launcher `aria-hidden` and scales it away in the same commit, so a
+ * launcher that is still focused at that moment is focus hidden from assistive
+ * technology — which Chrome blocks outright, and which left touch devices with
+ * focus stranded on an invisible button for as long as the panel stayed open.
+ *
+ * The composer is the right destination where there is a real pointer. On a
+ * touch device it is not: focusing a text field summons the virtual keyboard
+ * over the conversation before anything has been asked. The panel itself is,
+ * which is why it carries `tabIndex={-1}` — it moves focus off the launcher and
+ * announces the dialog without opening a keyboard.
+ */
+export function initialFocusTarget<T>(
+  panel: T | null,
+  composer: T | null,
+  autoFocus: boolean = prefersAutoFocus(),
+): T | null {
+  if (autoFocus && composer) return composer;
+  return panel ?? composer ?? null;
+}
+
+/**
  * Whether focus is currently nobody's in particular, and so is ours to take back
  * after a reply lands.
  *

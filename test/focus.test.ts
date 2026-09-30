@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { MOBILE_BREAKPOINT, focusIsUnclaimed, prefersAutoFocus } from "../src/components/chat/focus.ts";
+import { MOBILE_BREAKPOINT, focusIsUnclaimed, initialFocusTarget, prefersAutoFocus } from "../src/components/chat/focus.ts";
 
 /** Minimal stand-ins: the rules under test only read these few properties. */
 const el = (props: Partial<{ disabled: boolean; connected: boolean }> = {}) =>
@@ -63,4 +63,54 @@ test("the mobile breakpoint matches the panel's full-bleed layout", () => {
   // The panel is full-bleed below Tailwind's `sm`, which is where the virtual
   // keyboard and the visual-viewport sizing matter.
   assert.equal(MOBILE_BREAKPOINT, 640);
+});
+
+test("launcher must not remain focused when it becomes hidden during chatbot opening", () => {
+  // The bug: opening set aria-hidden and scale-0 on the launcher in the same
+  // React commit that mounted the panel, then waited 80ms before moving focus.
+  // Chrome blocks aria-hidden on an element whose descendant retains focus, and
+  // on touch — where the 80ms timer never ran — focus stayed on the invisible
+  // launcher for as long as the panel was open.
+  //
+  // The rule that prevents it: opening must always yield somewhere inside the
+  // panel to put focus, whatever the device.
+  const panel = el();
+  const composer = el();
+
+  assert.notEqual(
+    initialFocusTarget(panel, composer, true),
+    null,
+    "a pointer device must have a focus destination",
+  );
+  assert.notEqual(
+    initialFocusTarget(panel, composer, false),
+    null,
+    "a touch device must have one too — this is the case that stranded focus",
+  );
+
+  // Still nothing to focus if the panel has not mounted; the caller no-ops
+  // rather than reaching for the launcher it is about to hide.
+  assert.equal(initialFocusTarget(null, null, true), null);
+});
+
+test("the open-focus destination suits the device", () => {
+  const panel = el();
+  const composer = el();
+
+  // Pointer: the composer, so a question can be typed straight away.
+  assert.equal(initialFocusTarget(panel, composer, true), composer);
+
+  // Touch: the panel itself. Focusing the composer here summons the virtual
+  // keyboard over the conversation before anything has been asked, which is the
+  // behaviour the previous fix existed to prevent — it must survive this one.
+  assert.equal(initialFocusTarget(panel, composer, false), panel);
+  assert.notEqual(
+    initialFocusTarget(panel, composer, false),
+    composer,
+    "touch must never open the keyboard on panel open",
+  );
+
+  // A pointer device with no composer yet still lands inside the panel rather
+  // than leaving focus on the launcher.
+  assert.equal(initialFocusTarget(panel, null, true), panel);
 });
