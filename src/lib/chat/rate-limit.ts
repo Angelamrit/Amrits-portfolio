@@ -78,7 +78,7 @@ export function clientKey(request: Request): string {
 
 export type RateLimitResult = { ok: true } | { ok: false; retryAfterSeconds: number };
 
-export function checkRateLimit(key: string, now = Date.now()): RateLimitResult {
+function consume(key: string, budget: number, now: number): RateLimitResult {
   const existing = windows.get(key);
 
   if (!existing || now >= existing.resetAt) {
@@ -90,12 +90,36 @@ export function checkRateLimit(key: string, now = Date.now()): RateLimitResult {
     return { ok: true };
   }
 
-  if (existing.count >= MAX_REQUESTS_PER_WINDOW) {
+  if (existing.count >= budget) {
     return { ok: false, retryAfterSeconds: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)) };
   }
 
   existing.count += 1;
   return { ok: true };
+}
+
+export function checkRateLimit(key: string, now = Date.now()): RateLimitResult {
+  return consume(key, MAX_REQUESTS_PER_WINDOW, now);
+}
+
+/**
+ * The tighter budget spent by a message the gate did not recognise as being
+ * about the restaurant.
+ *
+ * The gate no longer refuses unrecognised input — a keyword list cannot tell
+ * "Who runs the place?" from noise, and refusing on that basis was turning away
+ * real questions. This is what replaces the quota protection that refusal was
+ * quietly providing: an unusual question still reaches the model, but a caller
+ * sending a stream of unrecognised messages runs out of budget well before the
+ * ordinary limit.
+ *
+ * Tracked in its own window, keyed separately from the main one, so spending the
+ * unscoped budget never eats into a visitor's allowance for normal questions.
+ */
+export const MAX_UNSCOPED_REQUESTS_PER_WINDOW = 4;
+
+export function checkUnscopedRateLimit(key: string, now = Date.now()): RateLimitResult {
+  return consume(`${key}:unscoped`, MAX_UNSCOPED_REQUESTS_PER_WINDOW, now);
 }
 
 /** Test seam — resets the in-memory windows. */
