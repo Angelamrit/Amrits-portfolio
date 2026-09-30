@@ -42,7 +42,34 @@ export const images = {
     width: 1453,
     height: 1082,
   },
-  chefPortrait: placeholder("chefPortrait.jpg", "Placeholder portrait of a chef in whites, arms folded", 1400, 1750),
+  /** Real photograph of the chef (amrit2), supplied by him. Not a placeholder. */
+  chefPortrait: {
+    src: "/images/chef/portrait-arms-folded.jpg",
+    alt: "Chef Amrit Pal Singh in chef's whites and a cap, arms folded, against a warm-lit wall",
+    width: 1400,
+    height: 2100,
+  },
+  /** The About page's opening photograph (amrit3, brightened and sharpened), supplied by the chef. Not a placeholder. */
+  chefAtTheBar: {
+    src: "/images/chef/bar-cheers-enhanced.jpg",
+    alt: "Chef Amrit Pal Singh behind the bar at Angel in chef's whites and a cap, two guests raising glasses of red wine in the foreground",
+    width: 1400,
+    height: 2100,
+  },
+  /** The About page's Philosophy photograph (_DSC6926), supplied by the chef. Not a placeholder. */
+  chefBehindTheBar: {
+    src: "/images/chef/behind-the-bar.jpg",
+    alt: "Chef Amrit Pal Singh behind the bar at Angel, hands together, glasses of red wine and a bottle in the foreground",
+    width: 1400,
+    height: 2491,
+  },
+  /** The About page's Milestones photograph (_DSC6845), supplied by the chef. Not a placeholder. */
+  chefKitchenPrep: {
+    src: "/images/chef/slicing-onions.jpg",
+    alt: "Chef Amrit Pal Singh in a cap and whites, slicing red onions on a board in the kitchen",
+    width: 1400,
+    height: 2491,
+  },
   chefPlating: placeholder("chefPlating.jpg", "Chef plating under the heat lamps at the pass", 1600, 1067),
   chefCooking: placeholder("chefCooking.jpg", "Chef working over the stove", 1600, 1067),
   /**
@@ -83,12 +110,25 @@ export const images = {
     width: 932,
     height: 563,
   },
+  /** The footer's photograph of Angel's dining room (_DSC6669, Snapseed edit), supplied by the chef. Not a placeholder. */
+  angelDiningTables: {
+    src: "/images/restaurant/dining-room-tables.jpg",
+    alt: "Tables at Angel set with glasses and folded napkins along a wood-panelled wall, a herringbone floor running to the door",
+    width: 2400,
+    height: 1350,
+  },
   diningRoomGreen: placeholder("diningRoomGreen.jpg", "Dining room with greenery and soft seating", 1600, 1067),
   diningRoomLoft: placeholder("diningRoomLoft.jpg", "Restaurant interior", 1600, 1067),
   bar: placeholder("bar.jpg", "Bar with stools and warm light", 1600, 1067),
   cocktail: placeholder("cocktail.jpg", "A cocktail being poured over ice", 1400, 1750),
   // ---- Tables & events ----
-  tableCandles: placeholder("tableCandles.jpg", "Table set with wine glasses", 1600, 1067),
+  /** Real photograph from Angel (M ali), supplied by the chef. Not a placeholder. */
+  tableCandles: {
+    src: "/images/restaurant/bar-wine-poured.jpg",
+    alt: "Two glasses of red wine set down on the bar at Angel for two guests, a bottle and the back bar behind",
+    width: 2400,
+    height: 1600,
+  },
   tableSetting: placeholder("tableSetting.jpg", "Elegant table setting", 1600, 1067),
   tableFlorals: placeholder("tableFlorals.jpg", "Table with florals and glassware", 1600, 1067),
   banquet: placeholder("banquet.jpg", "Banquet tables dressed for an event", 1600, 1067),
