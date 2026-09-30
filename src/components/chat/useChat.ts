@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { classifyInput, MAX_INPUT_LENGTH, type GateReason } from "@/lib/chat/gate";
 import { MAX_MODEL_TURN_LENGTH, trimHistory } from "@/lib/validation/chat";
-import { detectIntent, type IntentMatch } from "@/lib/chat/intent";
+import { ctaForReply, detectIntent, type IntentMatch } from "@/lib/chat/intent";
 
 export type ChatRole = "user" | "model";
 
@@ -25,6 +25,10 @@ export type ChatTurn = {
  * Gate reasons the browser can decide on its own. Scope decisions (vague_wh,
  * off_topic) depend on menu and topic vocabulary that only exists server-side,
  * so they are deferred — the server still answers them without calling Gemini.
+ *
+ * `injection` is decided here too: it matches the shape of the request rather
+ * than anything in the knowledge base, so the browser reaches the same verdict.
+ * The server repeats the check regardless and remains the authority.
  */
 const LOCAL_GATE_REASONS: ReadonlySet<GateReason> = new Set<GateReason>([
   "empty",
@@ -33,6 +37,7 @@ const LOCAL_GATE_REASONS: ReadonlySet<GateReason> = new Set<GateReason>([
   "gibberish",
   "greeting",
   "profanity",
+  "injection",
 ]);
 
 const NETWORK_ERROR =
@@ -105,7 +110,7 @@ export function useChat() {
 
       const settle = (text: string) =>
         setTurns((prev) =>
-          prev.map((t) => (t.id === replyId ? { ...t, text, streaming: false } : t)),
+          prev.map((t) => (t.id === replyId ? { ...t, text, cta: ctaForReply(t.cta, text), streaming: false } : t)),
         );
 
       // Declared outside the try so a failure mid-answer can still keep
@@ -121,7 +126,12 @@ export function useChat() {
         });
 
         if (!response.body) {
-          settle(await response.text().catch(() => NETWORK_ERROR));
+          // Coalesced to NETWORK_ERROR rather than passed through: an empty
+          // body settles the turn to an empty string, and an empty assistant
+          // turn is exactly what renders the thinking dots — so the visitor
+          // would be left watching them animate for ever with no reply coming.
+          const body = await response.text().catch(() => "");
+          settle(body.trim() || NETWORK_ERROR);
           return;
         }
 
@@ -133,7 +143,7 @@ export function useChat() {
           if (done) break;
           accumulated += decoder.decode(value, { stream: true });
           setTurns((prev) =>
-            prev.map((t) => (t.id === replyId ? { ...t, text: accumulated } : t)),
+            prev.map((t) => (t.id === replyId ? { ...t, text: accumulated, cta: ctaForReply(t.cta, accumulated) } : t)),
           );
         }
         accumulated += decoder.decode();

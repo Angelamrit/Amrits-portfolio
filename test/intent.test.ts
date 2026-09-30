@@ -138,3 +138,40 @@ test("reservation and event questions both pass the input gate", () => {
     assert.equal(classifyInput(q).allow, true, `gate should allow: "${q}"`);
   }
 });
+
+test("a date continues whatever was already being arranged", () => {
+  // Behavioural regression: "I want to host a birthday event" followed by
+  // "What about October 15?" lost the celebration handoff entirely — the second
+  // turn matched no booking or occasion word, so the button vanished.
+  const event = { intent: "event", experience: "dinner-parties" } as const;
+  for (const q of [
+    "What about October 15?",
+    "Can I do it in October?",
+    "What about tomorrow?",
+    "Can I do it on Saturday?",
+    "Is next Saturday possible?",
+  ]) {
+    assert.deepEqual(detectIntent(q, { previous: event }), event, `event context lost on "${q}"`);
+  }
+
+  const table = { intent: "resy" } as const;
+  for (const q of ["What about October 15?", "What about Saturday?", "What about tomorrow?"]) {
+    assert.deepEqual(detectIntent(q, { previous: table }), table, `table context lost on "${q}"`);
+  }
+});
+
+test("a date carries the previous handoff, it does not invent one", () => {
+  // With no conversation behind it, a bare date is not a booking request.
+  for (const q of ["What about October 15?", "What about tomorrow?", "Can I do it on Saturday?"]) {
+    assert.equal(detectIntent(q), null, `"${q}" must not conjure a handoff from nothing`);
+  }
+});
+
+test("a follow-up with its own subject does not inherit the old handoff", () => {
+  // The carry-forward is for bare continuations. A question that changes the
+  // subject must not keep showing a reservation button.
+  const event = { intent: "event", experience: "dinner-parties" } as const;
+  for (const q of ["What vegetarian dishes do you have?", "Who is the chef?", "Where are you located?"]) {
+    assert.equal(detectIntent(q, { previous: event }), null, `"${q}" should not inherit the event handoff`);
+  }
+});
