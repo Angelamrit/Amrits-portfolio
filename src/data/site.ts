@@ -44,7 +44,8 @@ export const site: SiteConfig = {
     // returns its "we can't find that page" screen, which is a client-side 404 —
     // the URL still answers 200, so only loading it in a browser catches this.
     resyUrl: "https://resy.com/cities/new-york-ny/venues/angel-indian-restaurant-ny",
-    menuUrl: "https://www.angelindianrestaurant.com/menu",
+    // The restaurant's new website. Every "Full menu" button on this site opens it.
+    menuUrl: "https://angel-restaurant-sand.vercel.app/menu",
     mapsUrl: "https://maps.google.com/?q=Angel+Indian+Restaurant+75-18+37th+Ave+Jackson+Heights+NY+11372",
     hours: "Dinner only",
     notes: ["Predominantly vegetarian", "100% Halal", "Full bar", "Chef's tasting menu"],
