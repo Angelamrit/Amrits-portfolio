@@ -80,10 +80,27 @@ function ChatCta({ cta }: { cta: IntentMatch }) {
   // code shipped with, which is what every other Reserve button stopped using.
   const { resyUrl } = useVenue();
 
+  /*
+   * Two departures from the standard Button, both forced by how narrow a chat
+   * bubble is. The bubble is 85% of a panel that is 320px wide on a small
+   * phone, so the button has around 220px of usable width.
+   *
+   * The arrow is dropped. At that width "Plan Your Celebration" wrapped onto
+   * two lines and the arrow was left stranded beside the block, reading as a
+   * misaligned icon rather than an affordance. It earns its place on a wide
+   * page button; here it only costs the label the room it needed.
+   *
+   * Tracking comes down from the system's 0.22em to 0.12em. Measured: the
+   * label needs 263px at 0.22em and 230px at 0.12em, which is what brings it
+   * onto one line. Below roughly 340px it still wraps, but centred and without
+   * a stray icon it wraps cleanly.
+   */
+  const ctaClass = "mt-3 w-full tracking-[0.12em]";
+
   if (cta.intent === "resy") {
     if (!resyUrl) return null;
     return (
-      <Button href={resyUrl} variant="primary" size="sm" className="mt-3 w-full">
+      <Button href={resyUrl} variant="primary" size="sm" icon={false} className={ctaClass}>
         Reserve a Table
       </Button>
     );
@@ -91,7 +108,7 @@ function ChatCta({ cta }: { cta: IntentMatch }) {
 
   const href = cta.experience ? `/contact?experience=${cta.experience}` : "/contact";
   return (
-    <Button href={href} variant="primary" size="sm" className="mt-3 w-full">
+    <Button href={href} variant="primary" size="sm" icon={false} className={ctaClass}>
       Plan Your Celebration
     </Button>
   );

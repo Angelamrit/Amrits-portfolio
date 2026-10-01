@@ -1,19 +1,18 @@
 import { z } from "zod";
-import { FinishReason, ThinkingLevel } from "@google/genai";
 import { chatRequestSchema } from "@/lib/validation/chat";
 import { classifyInput } from "@/lib/chat/gate";
 import { buildScopeLexicon, loadKnowledgeBase, KnowledgeBaseError } from "@/lib/chat/kb";
 import { buildSystemInstruction } from "@/lib/chat/prompt";
-import { CHAT_MODEL, MAX_OUTPUT_TOKENS, getGeminiClient } from "@/lib/chat/client";
+import { CHAT_MODEL, MAX_OUTPUT_TOKENS, REASONING_EFFORT, getOpenAIClient } from "@/lib/chat/client";
 import { checkRateLimit, checkUnscopedRateLimit, clientKey } from "@/lib/chat/rate-limit";
 
 /**
  * Chat endpoint.
  *
  * Order matters here. Validation and the deterministic gate run before anything
- * touches Gemini, because the knowledge base requires that greetings, noise and
- * out-of-scope input never invoke the model, and because the free tier is
- * quota-limited per day.
+ * touches the model, because the knowledge base requires that greetings, noise
+ * and out-of-scope input never invoke it, and because every avoided call is a
+ * request not billed.
  *
  * Nothing in this file ever returns internal detail to the caller: validation
  * errors, knowledge-base errors and SDK errors are logged server-side and
@@ -99,7 +98,7 @@ export async function POST(request: Request): Promise<Response> {
     return textResponse(CONTACT_FALLBACK, { status: 503 });
   }
 
-  // 4. Deterministic gate. Blocked input never reaches Gemini.
+  // 4. Deterministic gate. Blocked input never reaches the model.
   const hasContext = parsed.history.some((m) => m.role === "model");
   const decision = classifyInput(parsed.message, {
     lexicon: buildScopeLexicon(kb),
@@ -113,10 +112,18 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
-  // 5. Unrecognised-but-plausible input is allowed through, so it is throttled
-  // instead of refused. This is what keeps the free-tier quota protected now
-  // that the gate no longer turns a question away for lacking a known word.
-  if (!decision.scopeSignal) {
+  // 5. Unrecognised-but-plausible input is allowed through rather than refused,
+  // so it is throttled instead. That protects the budget against a stranger
+  // firing noise at a cold endpoint.
+  //
+  // It must not be spent on a conversation already under way. Ordinary
+  // follow-ups carry no vocabulary of their own — "What about October 15?",
+  // "How many people can come?", "How do I get started?" — so a perfectly
+  // normal seven-turn exchange drew four against this budget and the next one
+  // inside the minute was turned away mid-conversation. An open thread is the
+  // thing that separates a visitor from a script: the visitor has already been
+  // answered at least once. Everyone still pays the ordinary limit above.
+  if (!decision.scopeSignal && !hasContext) {
     const unscoped = checkUnscopedRateLimit(caller);
     if (!unscoped.ok) {
       return textResponse(THROTTLED, {
@@ -127,7 +134,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   // 6. Model call.
-  const client = getGeminiClient();
+  const client = getOpenAIClient();
   if (!client) {
     return textResponse(CONTACT_FALLBACK, {
       status: 200,
@@ -139,48 +146,54 @@ export async function POST(request: Request): Promise<Response> {
   const abortSignal = AbortSignal.any([request.signal, AbortSignal.timeout(GENERATION_TIMEOUT_MS)]);
 
   try {
-    const stream = await client.models.generateContentStream({
-      model: CHAT_MODEL,
-      contents: [
-        ...parsed.history.map((m) => ({ role: m.role, parts: [{ text: m.text }] })),
-        { role: "user" as const, parts: [{ text: parsed.message }] },
-      ],
-      config: {
-        systemInstruction: buildSystemInstruction(kb),
-        maxOutputTokens: MAX_OUTPUT_TOKENS,
-        temperature: 0.2,
-        // LOW rather than MINIMAL, and the difference is factual accuracy, not
-        // polish. At MINIMAL this assistant quoted the Goat Dum Biryani at
-        // $25.00 instead of $25.99 on eleven of twelve asks, and once gave
-        // $20.99 — the price of the Vegetable Dum Biryani three lines above it.
-        //
-        // Measured, not guessed. The same question against a three-line prompt
-        // answers correctly at MINIMAL, so the model can read the figure; it is
-        // retrieving it from ~7,500 tokens of near-identical menu rows that it
-        // cannot do. Temperature made no difference at either 0.2 or 0; the
-        // thinking level was the whole of it.
-        //
-        // This costs more per request than MINIMAL, which was chosen for the
-        // free tier's budget. A wrong price on a menu is worse than a smaller
-        // budget. Note that `thinkingBudget: 0` is rejected with a 400 on the
-        // Gemini 3.x family — thinking cannot be switched off outright, and
-        // `thinkingLevel` is the supported control.
-        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
-        abortSignal,
+    const stream = await client.responses.create(
+      {
+        model: CHAT_MODEL,
+        // The system instruction travels as `instructions`, which the Responses
+        // API keeps separate from the conversation. Visitor text can therefore
+        // never occupy the same channel as the rules, which is the structural
+        // half of the injection defence — the deterministic gate is the other.
+        instructions: buildSystemInstruction(kb),
+        input: [
+          // Our transcript calls the assistant's turns "model"; the API calls
+          // them "assistant". The wire format the browser sees is unchanged.
+          ...parsed.history.map((m) => ({
+            role: m.role === "model" ? ("assistant" as const) : ("user" as const),
+            content: m.text,
+          })),
+          { role: "user" as const, content: parsed.message },
+        ],
+        max_output_tokens: MAX_OUTPUT_TOKENS,
+        // Measured against the three near-identical Dum Biryani rows before it
+        // was chosen; see REASONING_EFFORT. `temperature` is not an option here
+        // — reasoning models reject it with a 400.
+        reasoning: { effort: REASONING_EFFORT },
+        // Nothing is retained on OpenAI's side. Visitors are anonymous and the
+        // transcript belongs to their browser, so there is no reason to leave a
+        // copy of it with a third party.
+        store: false,
+        stream: true,
       },
-    });
+      { signal: abortSignal },
+    );
 
     const body = new ReadableStream<Uint8Array>({
       async start(controller) {
         const encoder = new TextEncoder();
         try {
-          let finishReason: FinishReason | undefined;
-          for await (const chunk of stream) {
-            const text = chunk.text;
-            if (text) controller.enqueue(encoder.encode(text));
-            finishReason = chunk.candidates?.[0]?.finishReason ?? finishReason;
+          // Set from the terminal event rather than inferred: the API says so
+          // explicitly when the answer was cut at the token ceiling.
+          let truncated = false;
+          for await (const event of stream) {
+            // Each text delta is forwarded the moment it arrives. Collecting
+            // them first would add the whole generation to the visible wait.
+            if (event.type === "response.output_text.delta") {
+              controller.enqueue(encoder.encode(event.delta));
+            } else if (event.type === "response.incomplete") {
+              truncated = event.response?.incomplete_details?.reason === "max_output_tokens";
+            }
           }
-          if (finishReason === FinishReason.MAX_TOKENS) {
+          if (truncated) {
             controller.enqueue(encoder.encode(TRUNCATED_NOTE));
           }
           controller.close();

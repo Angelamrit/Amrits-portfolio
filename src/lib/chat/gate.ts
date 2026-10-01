@@ -21,7 +21,7 @@
  *
  * The knowledge base's `answer_policy.input_decision_flow` still governs steps
  * 2-4 — greetings, gibberish, emoji-only, empty and context-free inputs never
- * invoke the model, because the Gemini free tier is quota-limited per day and a
+ * invoke the model, because every model call is billed and a
  * visitor typing "hi" must not cost a request. Step 6, which asked for the same
  * treatment of off-topic input, is now split: named domains are still refused
  * here, and anything ambiguous is refused by the model instead.
