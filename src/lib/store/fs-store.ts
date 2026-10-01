@@ -2,6 +2,7 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { mkdir, readFile, readdir, rename, rm, stat, writeFile, appendFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { safeDay, safeName, serialise } from "./shared";
 import type { BlobInfo, StoredBlob, Store } from "./types";
 
 /**
@@ -35,19 +36,6 @@ function resolveRoot(): string {
 }
 
 /**
- * Names arrive from route params and form fields, so they are never trusted to
- * stay inside the data directory. Only this alphabet is allowed, which rules
- * out `..`, absolute paths, NUL bytes and Windows drive letters in one check
- * rather than trying to spot each of them.
- */
-function safeName(name: string): string {
-  if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/.test(name) || name.includes("..")) {
-    throw new Error(`Unsafe store key: ${JSON.stringify(name)}`);
-  }
-  return name;
-}
-
-/**
  * Writes that must not be observed half-finished: the bytes go to a uniquely
  * named neighbour first and are then renamed over the target, which is atomic
  * on every filesystem this will run on. Without it a crash mid-write leaves a
@@ -63,31 +51,6 @@ async function writeAtomic(path: string, contents: string | Uint8Array) {
     await rm(temp, { force: true }).catch(() => {});
     throw error;
   }
-}
-
-/**
- * Serialises work per key.
- *
- * Two admin tabs saving the same menu at the same moment, or two visits landing
- * in the same millisecond, would otherwise interleave a read-modify-write and
- * lose one of them. Chaining onto the previous promise for that key is enough
- * here because a single Node process serves the writes; if this ever runs on
- * several instances the file adapter is already the wrong answer and the
- * interface in `types.ts` is the seam to replace.
- */
-const queues = new Map<string, Promise<unknown>>();
-
-function serialise<T>(key: string, work: () => Promise<T>): Promise<T> {
-  const previous = queues.get(key) ?? Promise.resolve();
-  // `work` runs whether the previous write resolved or rejected: one failure
-  // must not poison every later write to the same key. The swallowed copy is
-  // what the next caller waits on, so the chain never carries a rejection.
-  const next = previous.then(work, work);
-  queues.set(
-    key,
-    next.catch(() => {}),
-  );
-  return next;
 }
 
 async function readIfPresent(path: string): Promise<string | null> {
@@ -109,6 +72,9 @@ export function createFsStore(): Store {
   // wiped without warning. Worth knowing about on the dashboard rather than
   // discovering when a month of numbers disappears.
   const looksEphemeral = /(^|[\\/])(tmp|temp)([\\/]|$)/i.test(root);
+  // On Vercel the project directory is read-only: every write fails outright.
+  // This adapter only runs there when the cloud storage keys are missing.
+  const onVercel = Boolean(process.env.VERCEL);
 
   async function listEventDays(): Promise<string[]> {
     try {
@@ -126,7 +92,12 @@ export function createFsStore(): Store {
   return {
     kind: "Plain files",
     location: root,
-    durable: !looksEphemeral,
+    durable: !looksEphemeral && !onVercel,
+    warning: onVercel
+      ? "Saving is switched off: this site is on Vercel, where the dashboard keeps its data in Upstash Redis and Vercel Blob, and they are not connected yet. Connect both to the project (see .env.example) and redeploy."
+      : looksEphemeral
+        ? "This server is writing to a temporary folder, so edits and visitor numbers will be lost when it restarts. Set DATA_DIR to a directory that persists."
+        : undefined,
 
     async readDoc<T>(name: string): Promise<T | null> {
       const raw = await readIfPresent(join(contentDir, `${safeName(name)}.json`));
@@ -172,7 +143,7 @@ export function createFsStore(): Store {
     },
 
     async appendEvent(day: string, line: string): Promise<void> {
-      const path = join(analyticsDir, `${safeName(day)}.jsonl`);
+      const path = join(analyticsDir, `${safeDay(day)}.jsonl`);
       await serialise(path, async () => {
         await mkdir(analyticsDir, { recursive: true });
         await appendFile(path, `${line}\n`);
@@ -180,7 +151,7 @@ export function createFsStore(): Store {
     },
 
     async readEvents(day: string): Promise<string[]> {
-      const raw = await readIfPresent(join(analyticsDir, `${safeName(day)}.jsonl`));
+      const raw = await readIfPresent(join(analyticsDir, `${safeDay(day)}.jsonl`));
       if (raw === null) return [];
       return raw.split("\n").filter((line) => line.length > 0);
     },

@@ -140,7 +140,8 @@ describe("admin passwords", () => {
 });
 
 describe("uploaded photographs", () => {
-  const jpeg = new Uint8Array(readFileSync("public/images/placeholders/bar.jpg"));
+  // A fixture of its own, so the test does not break whenever the site's photography changes.
+  const jpeg = new Uint8Array(readFileSync("test/fixtures/sample.jpg"));
 
   it("reads the real dimensions out of a JPEG's own header", () => {
     const read = readImage(jpeg);

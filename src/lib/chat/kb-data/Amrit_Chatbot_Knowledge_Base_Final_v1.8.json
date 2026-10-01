@@ -28,7 +28,7 @@
     "must_not_call_michelin_starred": true,
     "must_not_claim_unconfirmed_services": true,
     "must_distinguish_current_from_historical": true,
-    "fallback": "I don't have verified information about that in the current Angel knowledge base. For the latest details, please contact Angel Indian Restaurant at 347-848-0098 or info@angelindianrestaurant.com.",
+    "fallback": "I don't have verified information about that in the current Angel knowledge base. For the latest details, please contact Angel Indian Restaurant at 347-848-0098 or angelrestaurant278@gmail.com.",
     "strict_relevance_and_input_rules": {
       "scope": "Answer only questions materially related to Chef Amrit Pal Singh, Angel Indian Restaurant, its confirmed locations, menus, food, services, reservations, recognition, press, contact/visit information, and other approved portfolio content.",
       "greetings_and_small_talk": "Do not generate a substantive chatbot answer to greetings such as hi, hello, hey, good morning, thanks, thank you, bye, or similar small-talk-only messages. Do not call the AI model for these inputs. The UI may show a fixed non-AI input hint such as \"Ask me about Chef Amrit or Angel Indian Restaurant\" if the product team wants a visible response.",
@@ -226,7 +226,7 @@
     {
       "id": "restaurant-006",
       "topic": "Email",
-      "fact": "The current official email is info@angelindianrestaurant.com.",
+      "fact": "The current official email is angelrestaurant278@gmail.com.",
       "status": "confirmed_current",
       "sources": [
         "S1",
@@ -455,15 +455,6 @@
       ]
     },
     {
-      "id": "client-007",
-      "topic": "Current team",
-      "fact": "The confirmed M. Ali brief states that Angel now employs over 20 people.",
-      "status": "confirmed_client_current",
-      "sources": [
-        "S13"
-      ]
-    },
-    {
       "id": "client-008",
       "topic": "Recognition positioning",
       "fact": "The confirmed M. Ali brief states that Angel gained critical acclaim, earned a place in the Michelin Guide and received Michelin Bib Gourmand recognition.",
@@ -615,7 +606,7 @@
     {
       "id": "operational-001",
       "topic": "Current contact and hours snapshot",
-      "fact": "As of 17 September 2026, the project-provided current operational update confirms the current address as 75-18 37th Ave, Jackson Heights, NY 11372; phone 347-848-0098; email info@angelindianrestaurant.com; Monday closed; Tuesday-Sunday 12:00 PM-10:00 PM.",
+      "fact": "As of 17 September 2026, the project-provided current operational update confirms the current address as 75-18 37th Ave, Jackson Heights, NY 11372; phone 347-848-0098; email angelrestaurant278@gmail.com; Monday closed; Tuesday-Sunday 12:00 PM-10:00 PM.",
       "status": "confirmed_current_project_update",
       "sources": [
         "S15"
@@ -1549,7 +1540,6 @@
       "October 2019 Angel opening and six-burner stove/one tandoor/refrigerator setup",
       "Initial two-person operation and Chef Amrit cooking, taking orders and cleaning",
       "Angel paid its own rent in the first month",
-      "Current team of over 20 people",
       "Vikas Khanna attributed statements supplied in the brief",
       "Simple but good philosophy with bold flavors and strong Punjabi roots",
       "Angel named after Chef Amrit’s daughter",
@@ -2172,7 +2162,7 @@
     "status": "confirmed_current_project_update",
     "address": "75-18 37th Ave, Jackson Heights, NY 11372",
     "phone": "347-848-0098",
-    "email": "info@angelindianrestaurant.com",
+    "email": "angelrestaurant278@gmail.com",
     "hours": {
       "monday": "Closed",
       "tuesday": "12:00 PM-10:00 PM",

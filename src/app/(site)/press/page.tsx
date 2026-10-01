@@ -37,34 +37,43 @@ export default async function PressPage() {
     <>
       <JsonLd data={breadcrumbJsonLd([{ name: "Press", path: "/press" }])} />
       {/* ---------- cinematic hero ---------- */}
-      <section className="tone-dark relative overflow-hidden bg-brown-deep pt-40 pb-16 grain md:pt-48 md:pb-20">
-        <Parallax amount={70}>
-          <ImageFrame image={images.chefPlating} ratio="fill" reveal="none" sizes="100vw" quality={65} imgClassName="opacity-40" />
+      {/* The photograph carries this section: the copy is kept short and set at md, and the
+          shading only darkens the left, behind the text, and the foot, where it meets the next
+          section. On wide screens the section is tall and the copy sits at its foot, so the
+          chef shows above and beside it. On a phone, a background would put his face under
+          the header and the copy across him, so there the whole photograph runs as a band
+          below the header and the copy follows it. */}
+      <section className="tone-dark relative overflow-hidden bg-brown-deep pt-20 pb-16 grain md:pt-48 md:pb-20 lg:flex lg:min-h-[46rem] lg:flex-col lg:justify-end">
+        <Parallax amount={70} className="hidden md:block">
+          <ImageFrame image={images.chefInterview} ratio="fill" reveal="none" sizes="100vw" quality={70} imgClassName="opacity-85" />
         </Parallax>
-        <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-b from-brown-deep/90 via-brown-deep/55 to-brown-deep" />
-        <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-r from-brown-deep/95 via-brown-deep/45 to-transparent" />
+        <div aria-hidden className="absolute inset-0 z-[1] hidden bg-gradient-to-b from-brown-deep/55 via-transparent via-45% to-brown-deep md:block" />
+        <div aria-hidden className="absolute inset-0 z-[1] hidden bg-gradient-to-r from-brown-deep/85 via-brown-deep/35 to-transparent md:block" />
+        <div
+          className="relative mask-[linear-gradient(to_bottom,#000_72%,transparent)] md:hidden"
+          style={{ aspectRatio: `${images.chefInterview.width} / ${images.chefInterview.height}` }}
+        >
+          {/* Same sizes and quality as the background above, so both resolve to one file. */}
+          <ImageFrame image={images.chefInterview} ratio="fill" reveal="none" sizes="100vw" quality={70} priority />
+        </div>
         <Orbs variant="gold" className="z-[1]" />
 
-        <Container className="relative z-[2]">
+        <Container className="relative z-[2] -mt-8 md:mt-0">
           <div className="grid gap-10 lg:grid-cols-12 lg:items-end">
-            <div className="lg:col-span-8">
+            <div className="lg:col-span-6">
               <Reveal>
                 <Eyebrow>Press &amp; Recognition</Eyebrow>
               </Reveal>
               <Reveal delay={0.1}>
-                <Heading as="h1" size="xl" className="mt-8">
-                  What the critics <Em shimmer>actually wrote.</Em>
+                <Heading as="h1" size="md" className="mt-6">
+                  Noticed by <Em shimmer>the critics.</Em>
                 </Heading>
               </Reveal>
               <Reveal delay={0.2}>
-                <p className="mt-8 max-w-2xl text-lead text-fg/75">
-                  The MICHELIN Guide, Bon App&eacute;tit, The Infatuation, Time Out New York, Resy and Hell Gate have all sat down at Angel.
-                  Every line on this page was read at its source before it was printed here, and nothing is claimed that cannot be opened
-                  and checked.
-                </p>
+                <p className="mt-4 max-w-md text-fg/80">From the MICHELIN Guide to Bon App&eacute;tit, in their own words.</p>
               </Reveal>
               <Reveal delay={0.3}>
-                <StatRow stats={pressStats} glass className="mt-10 max-w-xl" />
+                <StatRow stats={pressStats} glass className="mt-8 max-w-xl" />
               </Reveal>
             </div>
           </div>

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Orbs } from "@/components/ui/Orbs";
 import { MOBILE_BREAKPOINT, focusIsUnclaimed, initialFocusTarget } from "./focus";
 import { ChatMessage } from "./ChatMessage";
+import { LAUNCHER_CLASS } from "./launcher";
 import { useChat } from "./useChat";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -23,9 +24,13 @@ const SUGGESTIONS = [
   "What vegetarian dishes are on the menu?",
 ];
 
-export function ChatWidget() {
+/**
+ * `initialOpen` is for `ChatLauncher`: when a visitor taps its stand-in button
+ * before this has loaded, the widget arrives already open, so the tap is not lost.
+ */
+export function ChatWidget({ initialOpen = false }: { initialOpen?: boolean }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initialOpen);
   const [draft, setDraft] = useState("");
   const { turns, busy, send, cancel } = useChat();
 
@@ -208,13 +213,7 @@ export function ChatWidget() {
         // control behind. Matches how StickyBookCta hides itself.
         tabIndex={open ? -1 : 0}
         aria-hidden={open}
-        className={cn(
-          "fixed right-3 bottom-22 z-[75] flex size-13 items-center justify-center rounded-pill md:right-6 md:bottom-6",
-          "bg-gradient-to-r from-gold-light via-gold to-gold-deep text-charcoal",
-          "shadow-glow transition-all duration-500 ease-luxe",
-          "hover:-translate-y-0.5 hover:shadow-glow-lg focus-visible:outline-gold",
-          open && "scale-0 opacity-0",
-        )}
+        className={cn(LAUNCHER_CLASS, open && "scale-0 opacity-0")}
       >
         <MessageCircle className="size-5" strokeWidth={1.75} />
       </button>

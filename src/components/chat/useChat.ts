@@ -2,7 +2,9 @@
 
 import { useCallback, useRef, useState } from "react";
 import { classifyInput, MAX_INPUT_LENGTH, type GateReason } from "@/lib/chat/gate";
-import { MAX_MODEL_TURN_LENGTH, trimHistory } from "@/lib/validation/chat";
+// Not from lib/validation/chat: that file carries the Zod schema, and this hook
+// runs on every page.
+import { MAX_MODEL_TURN_LENGTH, trimHistory } from "@/lib/chat/history";
 import { ctaForReply, detectIntent, type IntentMatch } from "@/lib/chat/intent";
 
 export type ChatRole = "user" | "model";

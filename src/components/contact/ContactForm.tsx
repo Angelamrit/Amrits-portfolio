@@ -13,7 +13,10 @@ import {
 import { Check } from "lucide-react";
 import { requestChallenge, submitInquiry, type InquiryState } from "@/app/(site)/contact/actions";
 import { CHALLENGE_MIN_AGE_MS, solveProof } from "@/lib/inquiry/proof";
-import { topicLabels, topicOptions, type InquiryField, type Topic } from "@/lib/validation/inquiry";
+// The topics come from their own module and the field names as a type only, so
+// this form does not pull the Zod schema into the browser.
+import { topicLabels, topicOptions, type Topic } from "@/lib/inquiry/topics";
+import type { InquiryField } from "@/lib/validation/inquiry";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Field";

@@ -44,7 +44,8 @@ export const site: SiteConfig = {
     // returns its "we can't find that page" screen, which is a client-side 404 —
     // the URL still answers 200, so only loading it in a browser catches this.
     resyUrl: "https://resy.com/cities/new-york-ny/venues/angel-indian-restaurant-ny",
-    menuUrl: "https://www.angelindianrestaurant.com/menu",
+    // The restaurant's new website. Every "Full menu" button on this site opens it.
+    menuUrl: "https://angel-restaurant-sand.vercel.app/menu",
     mapsUrl: "https://maps.google.com/?q=Angel+Indian+Restaurant+75-18+37th+Ave+Jackson+Heights+NY+11372",
     hours: "Dinner only",
     notes: ["Predominantly vegetarian", "100% Halal", "Full bar", "Chef's tasting menu"],
@@ -52,11 +53,16 @@ export const site: SiteConfig = {
   social: {
     // TODO: add verified handles.
   },
+  // Shown on the Contact page, and the address the chatbot gives out. Contact
+  // form messages go to INQUIRY_TO_EMAIL, set to the same address.
+  contactEmail: "angelrestaurant278@gmail.com",
   cta: { label: "Reserve a Table", href: "/contact" },
   thankYou: {
-    // TODO: record a 20–30 second clip of Chef Amrit and drop it at public/video/chef-thank-you.mp4
-    videoUrl: "/video/chef-thank-you.mp4",
-    poster: images.chefPlating,
+    // No clip has been recorded yet, so the thank-you page and the auto-reply show
+    // the photo and the note alone. To add one, put a 20–30 second clip at
+    // public/video/chef-thank-you.mp4 and set this to "/video/chef-thank-you.mp4".
+    videoUrl: null,
+    poster: images.chefInterview,
     headline: "A message from Chef Amrit",
     message:
       "Thank you for writing to me. I read every message myself, and I will be in touch within two working days. I hope to welcome you to Angel soon.",

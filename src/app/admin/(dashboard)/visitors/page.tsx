@@ -247,14 +247,6 @@ export default async function VisitorsPage({
           </li>
         </ul>
 
-        {!store.durable && (
-          <p className="mt-6 flex items-start gap-3 rounded-xl border border-[#e59a93]/30 bg-[#e59a93]/[0.07] px-4 py-3.5 text-[0.82rem] leading-relaxed text-[#e59a93]">
-            <span className="mt-0.5 shrink-0">⚠</span>
-            This server is writing to a temporary folder, so these numbers will be lost when it restarts. Set
-            <span className="mx-1 font-mono text-[0.78rem]">DATA_DIR</span>
-            to a directory that persists.
-          </p>
-        )}
       </Panel>
 
       <p className="pb-4 text-center text-[0.72rem] text-fg/45">

@@ -12,7 +12,7 @@ export const restaurant: RestaurantProfile = {
   namesake: "Named after Chef Amrit's daughter",
   founded: "October 2019",
   intro:
-    "Angel is where Chef Amrit's cooking lives every night. Opened in October 2019 with a six-burner stove, one tandoor and a single fridge, it has grown into a Michelin Bib Gourmand restaurant with a team of more than twenty and a new upscale dining room.",
+    "Outside, a gold sign and a green awning on 37th Avenue, the windows strung with lights. Inside, a warm, full dining room where Chef Amrit's cooking lives every night: the Indian food that earned Angel a Michelin Bib Gourmand.",
   story: [
     "In October 2019, Chef Amrit opened Angel in Jackson Heights, Queens, with almost nothing: a six-burner stove, one tandoor and a fridge. It was a two-person operation. He cooked, took the orders and cleaned the floors himself.",
     "The neighbourhood answered immediately. Angel paid its own rent in the very first month, and word travelled quickly through a borough that knows Indian food better than anywhere in America.",
@@ -21,7 +21,7 @@ export const restaurant: RestaurantProfile = {
   features: ["Predominantly vegetarian", "100% Halal", "Full bar", "Dinner only", "Chef's tasting menu", "Housemade paneer"],
   facts: [
     { value: "2019", label: "Opened" },
-    { value: "20+", label: "Team" },
+    { value: "Growing", label: "Team" },
     { value: "Bib Gourmand", label: "Michelin Guide" },
   ],
   locations: [
@@ -32,6 +32,13 @@ export const restaurant: RestaurantProfile = {
         "The original room on 37th Avenue, where the menu moves from Indian street food to slow-cooked regional delicacies. The dishes that earned the Bib Gourmand are still served here, family style.",
       highlights: ["Street food to regional delicacies", "Predominantly vegetarian, 100% Halal"],
       image: images.diningRoomGreen,
+      view: {
+        label: "Outside",
+        title: "Outside, on 37th Avenue",
+        description:
+          "The front of Angel at 75-18 37th Avenue in Jackson Heights, Queens: the gold script sign, the green awning and windows strung with lights.",
+        highlights: ["75-18 37th Avenue, Jackson Heights", "Since October 2019"],
+      },
     },
     {
       name: "Angel, the new dining room",
@@ -40,6 +47,14 @@ export const restaurant: RestaurantProfile = {
         "A sleek, formal, dinner-only dining room with a full bar and a curated chef's tasting menu. The expansion Chef Vikas Khanna called a “pride of India.”",
       highlights: ["Chef's tasting menu", "Full bar and cocktails", "Reservations via Resy"],
       image: images.angelDiningRoom,
+      view: {
+        label: "Inside",
+        title: "Inside, the dining room",
+        description:
+          "A sleek, formal, dinner-only room under warm pendant lights, with the gold Angel sign, a long banquette, a full bar and a curated chef's tasting menu. Chef Vikas Khanna called it a “pride of India.”",
+        highlights: ["Chef's tasting menu", "Full bar and cocktails", "Reservations via Resy"],
+        image: images.angelBanquette,
+      },
     },
   ],
   heroImage: images.angelDiningRoom,
@@ -47,14 +62,14 @@ export const restaurant: RestaurantProfile = {
   barImage: images.bar,
   thenNow: {
     before: {
-      image: images.kitchenLine,
-      label: "2019",
-      caption: "Six burners, one tandoor, one fridge and a two-person team.",
+      image: images.storefrontEvening,
+      label: "Outside",
+      caption: "Angel on 37th Avenue, Jackson Heights, lit up for the evening.",
     },
     after: {
-      image: images.angelDiningRoom,
-      label: "Today",
-      caption: "A Michelin Bib Gourmand, twenty-plus staff and a new upscale dining room.",
+      image: images.angelFullRoom,
+      label: "Inside",
+      caption: "A full dining room, with guests at every table and the team at work.",
     },
   },
 };

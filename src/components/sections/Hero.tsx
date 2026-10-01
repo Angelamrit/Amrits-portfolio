@@ -16,8 +16,12 @@ const credentials = [
 
 export async function Hero() {
   const venue = await getVenue();
+  const { width, height } = chef.heroImage;
+  // The upright layout sizes its band from the photograph's own proportions, so a new
+  // hero photograph never needs these numbers edited by hand.
+  const frame = { "--hero-aspect": `${width} / ${height}`, "--hero-h": `${((height / width) * 100).toFixed(3)}vw` } as CSSProperties;
   return (
-    <section id="hero" className="relative flex min-h-[100svh] items-end overflow-hidden surface-brown-deep tone-dark grain" aria-label="Introduction">
+    <section id="hero" className="relative flex min-h-[100svh] items-end overflow-hidden surface-brown-deep tone-dark grain" aria-label="Introduction" style={frame}>
       {/* The hero is the first thing anyone sees, so nothing in it waits for JavaScript:
           the photograph is visible from the first frame (it is the page's largest paint),
           and the text rises in with a CSS animation that starts the moment the page paints.
@@ -48,7 +52,7 @@ export async function Hero() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-brown-deep/40 via-transparent to-brown-deep/60" />
       </div>
-      <div className="hero-photo absolute inset-0 portrait:top-[4.75rem] portrait:bottom-auto portrait:aspect-[1453/1082] portrait:w-full">
+      <div className="hero-photo absolute inset-0 portrait:top-[4.75rem] portrait:bottom-auto portrait:aspect-(--hero-aspect) portrait:w-full">
         <ImageFrame
           image={chef.heroImage}
           ratio="fill"
@@ -64,7 +68,7 @@ export async function Hero() {
       <div aria-hidden className="absolute inset-x-0 bottom-0 z-[1] h-1/2 bg-gradient-to-t from-brown-deep/90 to-transparent" />
       <Embers />
 
-      <Container className="relative z-[2] w-full pb-10 pt-32 md:pb-14 lg:pt-40 portrait:pt-[calc(4.75rem+74.5vw*0.8)]">
+      <Container className="relative z-[2] w-full pb-10 pt-32 md:pb-14 lg:pt-40 portrait:pt-[calc(4.75rem+var(--hero-h)*0.8)]">
         <div className="grid gap-10 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-8">
             <div className="hero-in" style={{ "--hero-delay": "0.05s" } as CSSProperties}>

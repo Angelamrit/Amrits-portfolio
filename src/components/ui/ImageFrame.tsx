@@ -2,11 +2,12 @@ import Image from "next/image";
 import type { ImageAsset } from "@/types/content";
 import { cn } from "@/lib/cn";
 
-type Ratio = "9/16" | "3/4" | "4/5" | "1/1" | "4/3" | "3/2" | "16/9" | "21/9" | "fill";
+type Ratio = "natural" | "3/4" | "4/5" | "1/1" | "4/3" | "3/2" | "16/9" | "21/9" | "fill";
 type Focal = "center" | "top" | "bottom" | "left" | "right";
 
+/** `natural` takes the photograph's own proportions, so the whole of it shows whatever its shape. */
 const ratios: Record<Ratio, string> = {
-  "9/16": "aspect-[9/16]",
+  natural: "",
   "3/4": "aspect-[3/4]",
   "4/5": "aspect-[4/5]",
   "1/1": "aspect-square",
@@ -36,8 +37,14 @@ type Props = {
   sheen?: boolean;
   /** Continuous, very slow Ken Burns drift. Not for use together with `hover`. */
   drift?: boolean;
-  /** Which part of the photo survives a tight crop. */
+  /** Which part of the photo survives a tight crop. The image's own `position` wins over this. */
   focal?: Focal;
+  /**
+   * Two more photographs that take turns with `image` in the same frame, each
+   * held for 3s with a soft crossfade, looping. Pure CSS (see crossfade-2/-3 in
+   * globals.css); under reduced motion only `image` is shown.
+   */
+  cycle?: readonly [ImageAsset, ImageAsset];
   /** Gold gradient border + glow, rounded corners. */
   glow?: boolean;
   rounded?: boolean;
@@ -58,6 +65,7 @@ export function ImageFrame({
   sheen = false,
   drift = false,
   focal = "center",
+  cycle,
   glow = false,
   rounded = true,
   priority = false,
@@ -74,12 +82,13 @@ export function ImageFrame({
   const animate = reveal !== "none" && !priority;
   const isFill = ratio === "fill";
 
-  const img = (
+  const photo = (asset: ImageAsset, layer?: string) => (
     <Image
-      src={image.src}
-      alt={image.alt}
+      key={asset.src}
+      src={asset.src}
+      alt={asset.alt}
       fill
-      priority={priority}
+      priority={priority && !layer}
       sizes={sizes}
       quality={quality}
       className={cn(
@@ -88,8 +97,20 @@ export function ImageFrame({
         drift && "animate-kenburns",
         hover && "transition-transform duration-[1400ms] ease-luxe group-hover:scale-[1.05]",
         imgClassName,
+        layer,
       )}
+      style={asset.position ? { objectPosition: asset.position } : undefined}
     />
+  );
+
+  const img = cycle ? (
+    <>
+      {photo(image)}
+      {photo(cycle[0], "opacity-0 animate-crossfade-2 motion-reduce:animate-none")}
+      {photo(cycle[1], "opacity-0 animate-crossfade-3 motion-reduce:animate-none")}
+    </>
+  ) : (
+    photo(image)
   );
 
   const frame = (
@@ -102,6 +123,7 @@ export function ImageFrame({
         ratios[ratio],
         vignette && "vignette",
       )}
+      style={ratio === "natural" ? { aspectRatio: `${image.width} / ${image.height}` } : undefined}
     >
       <div className="img-reveal-scale absolute inset-0">{img}</div>
 

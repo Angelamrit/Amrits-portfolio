@@ -5,6 +5,7 @@ import { useRef, useState, type DragEvent } from "react";
 import { CircleAlert, Images, LoaderCircle, Upload } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { MAX_UPLOAD_BYTES, UPLOAD_TYPES } from "@/lib/content/upload-limits";
+import { prepareUpload } from "@/lib/content/prepare-upload";
 import { ImagePicker, type ImageChoice } from "./ImagePicker";
 import { Panel } from "./Panel";
 
@@ -57,8 +58,9 @@ export function PhotoField({
     const data = new FormData();
     data.set("place", "dish");
     data.set("alt", description.length >= 3 ? description : "Photograph of the restaurant");
-    data.set("file", file);
     try {
+      // Shrunk in the browser first: the live site refuses uploads over 4.5MB.
+      data.set("file", await prepareUpload(file));
       const response = await fetch("/api/admin/upload", { method: "POST", body: data });
       const body = (await response.json().catch(() => null)) as { ok?: boolean; id?: string; src?: string; message?: string } | null;
       if (!response.ok || !body?.ok || !body.id || !body.src) {

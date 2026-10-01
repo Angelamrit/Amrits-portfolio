@@ -17,6 +17,9 @@ export const metadata: Metadata = buildMetadata({ seo: seo.gallery, path: "/gall
 
 export default async function GalleryPage() {
   const gallery = await getGallery();
+  // A category with no pictures would open onto an empty page, so its tab is left out
+  // until something is uploaded into it.
+  const categories = galleryCategories.filter((c) => c.value === "all" || gallery.some((item) => item.category === c.value));
 
   return (
     <>
@@ -28,12 +31,12 @@ export default async function GalleryPage() {
             Dishes, tables, <Em>and the hands behind them.</Em>
           </>
         }
-        lead="Signature dishes, the dining rooms, celebrations and the quiet work of the kitchen before service."
+        lead="Signature dishes, the dining rooms and the quiet work of the kitchen before service."
       />
       <Section tone="base" padding="none" className="pb-section" orbs="subtle">
         <Container size="wide">
-          <Suspense fallback={<GalleryGridView items={gallery} categories={galleryCategories} fromUrl={null} />}>
-            <GalleryGrid items={gallery} categories={galleryCategories} />
+          <Suspense fallback={<GalleryGridView items={gallery} categories={categories} fromUrl={null} />}>
+            <GalleryGrid items={gallery} categories={categories} />
           </Suspense>
         </Container>
       </Section>

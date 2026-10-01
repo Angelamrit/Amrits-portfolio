@@ -16,7 +16,7 @@ import { SCOPE_REPLY } from "./gate.ts";
 /**
  * Strips the repeated provenance preamble from a fact body.
  *
- * Twenty-one entries open with "The confirmed M. Ali brief states that…" /
+ * Most client-brief entries open with "The confirmed M. Ali brief states that…" /
  * "…describes…" / "…identifies…". Under a heading that already names the source
  * this is pure repetition, and it cost roughly 300 tokens on every request.
  *

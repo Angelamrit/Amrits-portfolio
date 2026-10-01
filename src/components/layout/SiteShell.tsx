@@ -8,7 +8,7 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { SkipLink } from "./SkipLink";
 import { NavigationSkeleton } from "./NavigationSkeleton";
-import { ChatWidget } from "@/components/chat/ChatWidget";
+import { ChatLauncher } from "@/components/chat/ChatLauncher";
 
 /**
  * Everything that wraps a page of the public site: the oak backdrop, the
@@ -41,10 +41,27 @@ import { ChatWidget } from "@/components/chat/ChatWidget";
  */
 const FIRST_SCREEN_REVEAL = `(function(){var h=window.innerHeight;document.querySelectorAll("[data-reveal],[data-reveal-group],[data-img-reveal]").forEach(function(e){var s=e.closest(".section-lazy");if(s&&s.getBoundingClientRect().top>h)return;var r=e.getBoundingClientRect();if(r.top<h*0.92&&r.bottom>0)e.setAttribute("data-shown","")})})();`;
 
+/*
+ * Marks a lazy section `data-skipped` while the browser is skipping it.
+ *
+ * `content-visibility: auto` stops an off-screen section being drawn, but not
+ * the animations inside it, and because nothing in it is drawn they cannot be
+ * handed to the compositor either. The footer's embers and map pulses and the
+ * gallery strips were being restyled on every frame while nobody could see
+ * them. The flag lets CSS pause them (see `.section-lazy[data-skipped]`).
+ *
+ * The browser reports the change itself, so this costs nothing per frame. It
+ * runs before anything is drawn, because the first report comes with the first
+ * frame; a browser that never reports simply leaves everything running.
+ */
+const PAUSE_OFFSCREEN = `document.addEventListener("contentvisibilityautostatechange",function(e){e.target.toggleAttribute("data-skipped",e.skipped)},true);`;
+
 export async function SiteShell({ children }: { children: React.ReactNode }) {
   const venue = await getVenue();
   return (
     <VenueProvider value={venue}>
+      {/* First in the shell, ahead of anything that can be drawn: see PAUSE_OFFSCREEN. */}
+      <script dangerouslySetInnerHTML={{ __html: PAUSE_OFFSCREEN }} />
       <JsonLd data={siteGraph(venue)} />
       <Backdrop />
       <SkipLink />
@@ -57,7 +74,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       <Footer />
       {/* The assistant belongs to the public site, so it mounts here rather than
           in the root layout — which is what keeps it off /admin. */}
-      <ChatWidget />
+      <ChatLauncher />
       <PageEffects />
       <NavigationSkeleton />
     </VenueProvider>

@@ -135,6 +135,7 @@ export function GalleryGridView({ items, categories, fromUrl }: { items: Gallery
                     fill
                     sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                     className="object-cover transition-transform duration-[1400ms] ease-luxe group-hover:scale-[1.05]"
+                    style={item.image.position ? { objectPosition: item.image.position } : undefined}
                   />
                   <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brown-deep/80 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                   {item.caption && (

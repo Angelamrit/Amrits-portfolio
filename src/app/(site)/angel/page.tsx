@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { chef } from "@/data/chef";
+import { images } from "@/data/images";
 import { getSignatureDishes } from "@/lib/content/dishes";
 import { getMenus } from "@/lib/content/menus";
 import { getVenue } from "@/lib/content/venue";
@@ -40,9 +41,9 @@ export default async function AngelPage() {
           </>
         }
         lead={restaurant.tagline}
-        image={restaurant.heroImage}
+        image={images.angelInterior}
+        imageRatio="natural"
         cinematicImage
-        imageFocal="left"
       >
         <div className="flex flex-wrap gap-4">
           {venue.resyUrl && <Button href={venue.resyUrl}>Reserve via Resy</Button>}
@@ -101,31 +102,42 @@ export default async function AngelPage() {
             </Reveal>
             <Reveal delay={0.1}>
               <Heading as="h2" size="lg" className="mt-8">
-                The original room, <Em>and the new one.</Em>
+                From the street, <Em>to your table.</Em>
               </Heading>
             </Reveal>
           </div>
-          <Reveal delay={0.15} className="mt-14">
-            <p className="eyebrow mb-4 text-[0.6rem] text-gold-light/80">Drag to compare · from six burners to a Bib Gourmand</p>
-            <CompareSlider before={restaurant.thenNow.before} after={restaurant.thenNow.after} ratio="aspect-[16/9] md:aspect-[21/9]" sizes="(min-width: 1024px) 80vw, 100vw" />
+          {/* 4:3, the dusk storefront's own shape, as on the home page, so the whole of it shows;
+              capped at 48rem so the slider fits on a laptop screen instead of filling it. The
+              handle starts at 72% so the whole sign is in view. */}
+          <Reveal delay={0.15} className="mx-auto mt-14 max-w-3xl">
+            <p className="eyebrow mb-4 text-[0.6rem] text-gold-light/80">Drag to compare · outside and inside Angel</p>
+            <CompareSlider
+              before={restaurant.thenNow.before}
+              after={restaurant.thenNow.after}
+              ratio="aspect-[4/3]"
+              initial={72}
+              sizes="(min-width: 1024px) 48rem, 100vw"
+            />
           </Reveal>
           <RevealGroup className="mt-8 grid gap-6 lg:grid-cols-2">
             {restaurant.locations.map((loc, i) => (
               <RevealItem key={loc.name}>
                 <SpotlightCard as="article" id={loc.kind} className="group relative h-full scroll-mt-28 overflow-hidden p-3" tilt={2}>
                   <div className="relative overflow-hidden rounded-[calc(var(--radius-frame)-0.25rem)]">
-                    <ImageFrame image={loc.image} ratio="16/9" hover sheen reveal="curtain" rounded={false} sizes="(min-width: 1024px) 50vw, 100vw" />
+                    <ImageFrame image={loc.view.image ?? loc.image} ratio="16/9" hover sheen reveal="curtain" rounded={false} sizes="(min-width: 1024px) 50vw, 100vw" />
                     <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-t from-surface-2 via-transparent to-transparent" />
-                    <Badge tone="solid" className="absolute left-4 top-4 z-[2]">
-                      {loc.kind === "original" ? "Since October 2019" : "New upscale location"}
+                    {/* On a phone the card is small enough for this badge to cover the storefront's
+                        sign, which sits at the top of its photo, so there it moves to the foot. */}
+                    <Badge tone="solid" className="absolute left-4 top-4 z-[2] max-sm:top-auto max-sm:bottom-4">
+                      {loc.view.label}
                     </Badge>
                   </div>
                   <div className="p-5 md:p-7">
                     <p className="eyebrow text-gold-light/90">{String(i + 1).padStart(2, "0")}</p>
-                    <h3 className="mt-3 font-display text-display-sm font-light text-gold-gradient">{loc.name}</h3>
-                    <p className="mt-4 text-sm leading-relaxed text-fg/65">{loc.description}</p>
+                    <h3 className="mt-3 font-display text-display-sm font-light text-gold-gradient">{loc.view.title}</h3>
+                    <p className="mt-4 text-sm leading-relaxed text-fg/65">{loc.view.description}</p>
                     <ul className="mt-6 space-y-2 text-sm text-fg/75">
-                      {loc.highlights.map((h) => (
+                      {loc.view.highlights.map((h) => (
                         <li key={h} className="flex items-start gap-3">
                           <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-gold shadow-[0_0_8px_rgba(201,169,98,0.9)]" />
                           {h}
@@ -229,8 +241,8 @@ export default async function AngelPage() {
                 </Heading>
                 <p className="mt-6 max-w-sm text-sm leading-relaxed text-fg/55">Only genuine, publicly documented recognition appears here.</p>
               </Reveal>
-              <div className="mt-10 hidden lg:block">
-                <ImageFrame image={restaurant.barImage} ratio="4/5" glow drift sheen reveal="curtain" sizes="30vw" className="max-w-sm" />
+              <div className="mt-10">
+                <ImageFrame image={restaurant.barImage} ratio="4/5" glow drift sheen reveal="curtain" sizes="(min-width: 1024px) 30vw, 24rem" className="mx-auto max-w-sm lg:mx-0" />
               </div>
             </div>
             <div className="lg:col-span-7 lg:col-start-6">
