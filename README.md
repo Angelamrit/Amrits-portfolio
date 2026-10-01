@@ -141,7 +141,7 @@ The dashboard says which store is in use, and warns on its own if the directory 
 | `ADMIN_PASSWORD` | Accepted instead of the hash. Simpler; less safe. |
 | `ADMIN_SESSION_SECRET` | Optional. Signs the session cookie. Derived from the password when unset, which means changing the password signs everyone out. |
 | `DATA_DIR` | Optional. Where the dashboard writes. Defaults to `.data`. Must survive a restart — see [The dashboard](#the-dashboard). |
-| `GEMINI_API_KEY` | Optional. Google Gemini key for the "Ask Angel" assistant. Server-side only — never prefix with `NEXT_PUBLIC_`. Without it the assistant still opens and answers, but hands visitors the restaurant's phone and email instead of calling Gemini. |
+| `OPENAI_API_KEY` | Optional. OpenAI key for the "Ask Angel" assistant. Server-side only — never prefix with `NEXT_PUBLIC_`. Without it the assistant still opens and answers, but hands visitors the restaurant's phone and email instead of calling the model. |
 
 A literal `$` in any `.env` value is read as a variable reference and has to be escaped as `\$`. The generated password hash deliberately contains none.
 
@@ -187,7 +187,7 @@ No test framework and no new dependencies: Node runs the TypeScript sources dire
 
 The suite covers the parts where being wrong is expensive rather than merely visible — the sanitiser's defence against forged lines in the enquiry email, both tiers of rate limit (including that one address cannot be used to mail-bomb a third party), the bot traps, that a production server never reports an undelivered enquiry as sent, and, for the dashboard, that an edited session cookie is refused, that an expired one is refused even though it is genuinely signed, that changing the password invalidates open sessions, that a malformed or absurdly expensive password hash never verifies, and that an upload's type comes from its bytes rather than its name. `.github/workflows/ci.yml` runs lint, typecheck, tests and a build on every push and pull request.
 
-Without `GEMINI_API_KEY`, the assistant still opens and answers, but replies with the restaurant's phone and email instead of calling Gemini.
+Without `OPENAI_API_KEY`, the assistant still opens and answers, but replies with the restaurant's phone and email instead of calling the model.
 
 ## Feature assets to supply
 

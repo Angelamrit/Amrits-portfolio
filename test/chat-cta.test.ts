@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { ctaForReply, detectIntent } from "../src/lib/chat/intent.ts";
 import { SCOPE_REPLY } from "../src/lib/chat/gate.ts";
 
@@ -49,4 +50,25 @@ test("only the exact refusal sentence withdraws the button", () => {
     ctaForReply({ intent: "resy" }, "Ask me about Chef Amrit or Angel Indian Restaurant — and yes, you can book."),
     { intent: "resy" },
   );
+});
+
+test("the handoff button fits the bubble it is rendered in", () => {
+  // The chat bubble is 85% of a panel that is 320px wide on a small phone, so
+  // the button has roughly 220px of usable width. At the design system's 0.22em
+  // tracking "Plan Your Celebration" measures 263px, which wrapped it onto two
+  // lines and left the trailing arrow stranded beside the block — it read as a
+  // misaligned icon rather than an affordance.
+  //
+  // Measured: 263px at 0.22em, 230px at 0.12em. Dropping the arrow and tightening
+  // the tracking is what brings the label back onto one line.
+  const source = readFileSync(new URL("../src/components/chat/ChatMessage.tsx", import.meta.url), "utf8");
+  const cta = source.slice(source.indexOf("function ChatCta"), source.indexOf("export function ChatMessage"));
+
+  assert.match(cta, /tracking-\[0\.12em\]/, "the in-chat CTA needs tighter tracking than a page button");
+  const buttons = [...cta.matchAll(/<Button[^>]*>/g)].map((m) => m[0]);
+  assert.equal(buttons.length, 2, "both handoffs are Buttons");
+  for (const b of buttons) {
+    assert.match(b, /icon=\{false\}/, `the arrow does not fit this width: ${b}`);
+    assert.match(b, /className=\{ctaClass\}/, "both handoffs must look the same");
+  }
 });

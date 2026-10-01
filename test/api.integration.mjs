@@ -4,7 +4,7 @@
  *   npm run dev            # in one shell
  *   node tests/api.integration.mjs
  *
- * Verifies the parts of the contract that do not need a Gemini key: the
+ * Verifies the parts of the contract that do not need an OpenAI key: the
  * deterministic gate (nothing reaches the model), request validation, rate
  * limiting, the unconfigured-key fallback, and that no response leaks internals.
  */
@@ -113,9 +113,9 @@ console.log("\n== Prompt injection is handled in two layers ==");
 // Only meaningful against a server started without a key. In live mode the
 // assistant answers for real, so these assertions are skipped rather than failed.
 if (process.env.CHAT_TEST_LIVE === "1") {
-  console.log("\n== Unconfigured GEMINI_API_KEY degrades gracefully ==\n  SKIP  (running in live mode)");
+  console.log("\n== Unconfigured OPENAI_API_KEY degrades gracefully ==\n  SKIP  (running in live mode)");
 } else {
-console.log("\n== Unconfigured GEMINI_API_KEY degrades gracefully ==");
+console.log("\n== Unconfigured OPENAI_API_KEY degrades gracefully ==");
 {
   const { response, text } = await post({ message: "What are the opening hours?" });
   const mode = response.headers.get("x-chat-mode");
@@ -123,7 +123,7 @@ console.log("\n== Unconfigured GEMINI_API_KEY degrades gracefully ==");
   check("flagged as unconfigured", mode === "unconfigured", `mode "${mode}"`);
   check("offers the real phone number", text.includes("347-848-0098"), text.slice(0, 120));
   check("offers the real email", text.includes("info@angelindianrestaurant.com"));
-  check("does not leak the key name", !/GEMINI_API_KEY/i.test(text));
+  check("does not leak the key name", !/OPENAI_API_KEY/i.test(text));
 }
 }
 
@@ -217,7 +217,7 @@ console.log("\n== No response leaks internals ==");
   let clean = true;
   for (const message of probes) {
     const { text } = await post({ message });
-    if (/GEMINI_API_KEY|systemInstruction|KNOWLEDGE BASE \(v|answer_policy|node_modules|at Object\./i.test(text)) {
+    if (/OPENAI_API_KEY|instructions:|KNOWLEDGE BASE \(v|answer_policy|node_modules|at Object\./i.test(text)) {
       clean = false;
       console.log(`        leak on "${message}": ${text.slice(0, 160)}`);
     }
@@ -240,7 +240,7 @@ console.log("\n== Rate limiting ==");
   check("burst traffic is rate limited with Retry-After", sawLimit);
 }
 
-// Behavioural checks need a live GEMINI_API_KEY and spend free-tier quota, so
+// Behavioural checks need a live OPENAI_API_KEY and spend real tokens, so
 // they are opt-in:  CHAT_TEST_LIVE=1 node tests/api.integration.mjs
 if (process.env.CHAT_TEST_LIVE === "1") {
   console.log("\n== Live model behaviour (opt-in) ==");

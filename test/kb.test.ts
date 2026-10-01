@@ -422,26 +422,33 @@ test("the prompt places date questions inside the existing workflows", () => {
   assert.match(instruction, /never say (?:a date is free|the date is available)/i, "dates must never be reported as free");
 });
 
-test("the chat route asks for enough thinking to quote a price correctly", () => {
-  // Behavioural regression, measured against the live model. At
-  // ThinkingLevel.MINIMAL the assistant answered "How much is the Goat Dum
-  // Biryani?" ($25.99) with $25.00 on eleven of twelve asks, and once with
-  // $20.99 — the Vegetable Dum Biryani, three lines above it in the same
-  // category. At LOW it answered $25.99 twelve times out of twelve.
+test("the chat route asks for enough reasoning to quote a price correctly", () => {
+  // Behavioural regression carried across the provider migration, because the
+  // failure it guards is a property of the prompt, not of any one vendor.
   //
-  // The cause is retrieval, not arithmetic: the same question against a
-  // three-line prompt is answered correctly at MINIMAL, so the model can read
-  // the figure but cannot find it reliably in ~7,500 tokens of near-identical
-  // menu rows. Temperature was ruled out — 0.2 and 0 behaved identically.
+  // The hard case is "How much is the Goat Dum Biryani?" ($25.99). Three
+  // dishes end in "Dum Biryani" at $20.99, $22.99 and $25.99, and the whole
+  // knowledge base — roughly 7,500 tokens — is in context on every request.
+  // The previous provider's small model, with its reasoning budget at the
+  // minimum, answered $25.00 on eleven of twelve asks and once $20.99, which
+  // belongs to the Vegetable one. Raising the budget fixed it 12/12.
   //
-  // Asserted at source because the value is a constant in the request config,
-  // and dropping back to MINIMAL to save free-tier budget would silently
-  // reintroduce wrong prices.
+  // So the reasoning budget is not a cost dial to be turned down quietly. It
+  // is asserted at source, alongside the model, because both were chosen by
+  // measuring this exact case and a silent downgrade would bring wrong prices
+  // back with no test failing.
+  const client = readFileSync(new URL("../src/lib/chat/client.ts", import.meta.url), "utf8");
   const route = readFileSync(new URL("../src/app/api/chat/route.ts", import.meta.url), "utf8");
-  assert.match(
-    route,
-    /thinkingConfig:\s*\{\s*thinkingLevel:\s*ThinkingLevel\.LOW\s*\}/,
-    "the chat route must request LOW thinking; MINIMAL returns wrong menu prices",
+
+  assert.match(client, /REASONING_EFFORT = "low"/, "the reasoning budget must stay at low");
+  assert.doesNotMatch(
+    client,
+    /REASONING_EFFORT = "(?:none|minimal)"/,
+    "minimising the reasoning budget is what produced wrong menu prices before",
   );
-  assert.doesNotMatch(route, /ThinkingLevel\.MINIMAL/, "MINIMAL is not accurate enough for menu prices");
+  assert.match(client, /CHAT_MODEL = "gpt-5\.4-mini"/, "the model was chosen by measuring the price case");
+  assert.match(route, /reasoning: \{ effort: REASONING_EFFORT \}/, "the route must actually send it");
+
+  // Reasoning models reject `temperature` with a 400, so it must not come back.
+  assert.doesNotMatch(route, /temperature:/, "temperature is not a valid parameter for this model");
 });

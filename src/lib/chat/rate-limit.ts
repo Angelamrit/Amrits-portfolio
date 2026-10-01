@@ -3,9 +3,9 @@ import "server-only";
 /**
  * Per-client fixed-window rate limiter.
  *
- * The chat endpoint is public and unauthenticated, and the Gemini free tier is
- * capped per day, so one scripted loop could take the assistant offline for
- * every visitor.
+ * The chat endpoint is public and unauthenticated, and model calls are
+ * billed per request, so one scripted loop could run up a bill and exhaust the
+ * budget for every other visitor.
  *
  * How much protection this actually gives — stated plainly, because it is easy
  * to overestimate:

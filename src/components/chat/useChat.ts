@@ -24,7 +24,7 @@ export type ChatTurn = {
 /**
  * Gate reasons the browser can decide on its own. Scope decisions (vague_wh,
  * off_topic) depend on menu and topic vocabulary that only exists server-side,
- * so they are deferred — the server still answers them without calling Gemini.
+ * so they are deferred — the server still answers them without calling the model.
  *
  * `injection` is decided here too: it matches the shape of the request rather
  * than anything in the knowledge base, so the browser reaches the same verdict.
