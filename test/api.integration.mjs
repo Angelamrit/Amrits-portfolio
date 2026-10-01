@@ -122,7 +122,7 @@ console.log("\n== Unconfigured OPENAI_API_KEY degrades gracefully ==");
   check("returns 200, not an error page", response.status === 200, `status ${response.status}`);
   check("flagged as unconfigured", mode === "unconfigured", `mode "${mode}"`);
   check("offers the real phone number", text.includes("347-848-0098"), text.slice(0, 120));
-  check("offers the real email", text.includes("info@angelindianrestaurant.com"));
+  check("offers the real email", text.includes("angelrestaurant278@gmail.com"));
   check("does not leak the key name", !/OPENAI_API_KEY/i.test(text));
 }
 }

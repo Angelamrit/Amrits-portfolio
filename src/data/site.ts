@@ -53,6 +53,9 @@ export const site: SiteConfig = {
   social: {
     // TODO: add verified handles.
   },
+  // Shown on the Contact page, and the address the chatbot gives out. Contact
+  // form messages go to INQUIRY_TO_EMAIL, set to the same address.
+  contactEmail: "angelrestaurant278@gmail.com",
   cta: { label: "Reserve a Table", href: "/contact" },
   thankYou: {
     // No clip has been recorded yet, so the thank-you page and the auto-reply show

@@ -83,8 +83,8 @@ export async function sendInquiryEmail(data: InquiryInput): Promise<{ delivered:
 }
 
 /**
- * Personal auto-reply to the guest: Chef Amrit's thank-you message, a link to
- * his video, and a copy of what they wrote. Dry-runs to the console when unconfigured.
+ * Personal auto-reply to the guest: Chef Amrit's thank-you message, his video
+ * once one is recorded, and a copy of what they wrote. Dry-runs to the console when unconfigured.
  */
 export async function sendAutoReplyEmail(data: InquiryInput): Promise<{ delivered: boolean }> {
   const apiKey = env.RESEND_API_KEY;
