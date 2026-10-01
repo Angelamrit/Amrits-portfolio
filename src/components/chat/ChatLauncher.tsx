@@ -36,12 +36,20 @@ export function ChatLauncher() {
       });
   }, []);
 
+  // Fetched in the background only once the visit has settled: a while after
+  // the page has loaded, and then only when the browser is genuinely idle. It
+  // used to be requested a few seconds after load whether the browser was busy
+  // or not, which on a phone landed its 150ms of script in the middle of the
+  // visitor's first scroll. Reaching for the button (hover, focus, tap) still
+  // fetches it at once.
   useEffect(() => {
     let idle: number | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const schedule = () => {
-      if ("requestIdleCallback" in window) idle = window.requestIdleCallback(load, { timeout: 6000 });
-      else timer = setTimeout(load, 3000);
+      timer = setTimeout(() => {
+        if ("requestIdleCallback" in window) idle = window.requestIdleCallback(load, { timeout: 30_000 });
+        else load();
+      }, 10_000);
     };
     if (document.readyState === "complete") schedule();
     else window.addEventListener("load", schedule, { once: true });

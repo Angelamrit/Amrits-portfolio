@@ -1,4 +1,5 @@
 import type { ImageAsset } from "@/types/content";
+import { withPlaceholders } from "@/lib/images/placeholders";
 
 /**
  * IMAGE REGISTRY
@@ -51,7 +52,7 @@ const banquette: ImageAsset = {
   height: 1024,
 };
 
-export const images = {
+const registry = {
   // ---- Chef ----
   /**
    * The home page hero (CB05C53F…): Chef Amrit at the range. Supplied by the chef. Not a
@@ -284,10 +285,14 @@ export const images = {
     height: 1536,
   },
   diningRoomGreen: storefront,
-  /** Real photograph of Angel's bar (CC29AD12…), supplied by the chef. Not a placeholder. */
+  /**
+   * Real photograph of Angel's bar (12E9DD63…, replacing CC29AD12…), supplied by the chef. Not a
+   * placeholder. On the Angel page beside "In the guide, and among peers." and the gallery's
+   * "The bar" tile.
+   */
   bar: {
-    src: "/images/restaurant/bar.jpg",
-    alt: "The bar at Angel: Edison bulbs hanging from a wooden slat ceiling, shelves of bottles, framed press features on the wall and a slatted wood counter",
+    src: "/images/restaurant/bar-bright.jpg",
+    alt: "The bar at Angel: Edison bulbs hanging from a wooden slat ceiling, lit shelves of bottles, a photograph of the chef and framed press features on the wall, and a slatted wood counter",
     width: 1024,
     height: 1536,
   },
@@ -300,11 +305,29 @@ export const images = {
     height: 1600,
   },
   // ---- Behind the scenes & plating ----
-  /** The storefront again, on the gallery's "The line" tile and a draft journal post's cover. */
+  /** The storefront again, on the Angel page's story and a draft journal post's cover. */
   kitchenLine: storefront,
+  /**
+   * Angel's front on 37th Avenue by day (8D6CFA21…), supplied by the chef. Not a placeholder.
+   * On the gallery's storefront tile. 3:4, the gallery's "tall" tile shape, so it shows whole.
+   */
+  storefrontDay: {
+    src: "/images/restaurant/storefront-day.jpg",
+    alt: "Angel Indian Restaurant by day at 75-18 37th Avenue: the Angel sign under two black lamps, a green awning with the street number and 347-848-0098, a lit OPEN sign and the glass door, under a brick building",
+    width: 1086,
+    height: 1448,
+  },
   prepOverhead: placeholder("prepOverhead.jpg", "Overhead of vegetables being prepped", 1600, 1067),
   platedDish: placeholder("platedDish.jpg", "Composed plate close-up", 1400, 1400),
   soupBowl: placeholder("soupBowl.jpg", "Soup bowl with herbs", 1400, 1400),
 } satisfies Record<string, ImageAsset>;
+
+/**
+ * The registry above with each photograph's blurred placeholder attached, so
+ * a picture never arrives as a pop into an empty frame. The placeholders are
+ * built by `node scripts/image-placeholders.mjs`; run it after adding or
+ * replacing a file under /public/images.
+ */
+export const images = withPlaceholders(registry);
 
 export type ImageKey = keyof typeof images;

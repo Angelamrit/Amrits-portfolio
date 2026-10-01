@@ -31,6 +31,15 @@ export async function register() {
   } catch (error) {
     console.error("[backup] could not start the daily backups:", error);
   }
+
+  // Encode every photograph size the pages offer while nobody is waiting for
+  // it, instead of on the first visitor's request (see src/lib/images/warm.ts).
+  // Not during `next build`, which also runs this hook but has no server to ask.
+  if (process.env.NEXT_PHASE !== "phase-production-build") {
+    import("@/lib/images/warm")
+      .then(({ warmImages }) => warmImages())
+      .catch((error) => console.error("[images] warm-up failed:", error));
+  }
 }
 
 /**

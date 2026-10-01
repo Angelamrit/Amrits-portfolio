@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowUpRight, FileText } from "lucide-react";
 import type { DietaryTag, ImageAsset } from "@/types/content";
 import { cn } from "@/lib/cn";
+import { blurProps } from "@/lib/images/blur";
 import { Badge, DietaryBadges } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useVenue } from "@/components/layout/VenueContext";
@@ -208,33 +209,46 @@ export function MenuSwitcherView({ menus, fromUrl }: { menus: ResolvedMenu[]; fr
           <div className="lg:col-span-5">
             <div className="lg:sticky lg:top-32">
               {/* The large photograph is the laptop layout only; below lg each course opens its own. */}
+              {/* The dish photographs are landscape (4:3), the same files the home
+                  page's showcase uses. This frame used to be a tall 4:5, which cut
+                  away about 40% of every photo and drew what was left 1.7× larger
+                  than the file the browser had been told to fetch, so the dishes
+                  came out cropped and soft. Now the frame is the photographs' own
+                  shape, the whole dish shows at its real sharpness, and the course
+                  copy sits beneath it instead of under a heavy dark gradient. */}
               <div className="glass-strong border-gradient relative hidden overflow-hidden rounded-[2rem] p-3 shadow-glow-lg lg:block">
                 <span aria-hidden className="orb orb-gold -right-[20%] -top-[25%] size-[70%] opacity-50" />
-                <div className="tone-dark relative aspect-[4/5] overflow-hidden rounded-[1.25rem] bg-sand">
+                <div className="tone-dark relative aspect-[4/3] overflow-hidden rounded-[1.25rem] bg-sand">
                   <CrossFade id={`${menu.slug}-${image.src}`} className="absolute inset-0">
-                    <Image src={image.src} alt={image.alt} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
+                    <Image
+                      src={image.src}
+                      alt={image.alt}
+                      fill
+                      sizes="(min-width: 1280px) 34rem, (min-width: 1024px) 42vw, 100vw"
+                      {...blurProps(image)}
+                      className="object-cover"
+                      style={image.position ? { objectPosition: image.position } : undefined}
+                    />
                   </CrossFade>
-                  <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-brown-deep/95 via-brown-deep/25 to-transparent" />
+                  <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-brown-deep/55 via-transparent to-transparent" />
                   <Badge tone="solid" className="absolute left-4 top-4 z-[2]">
                     {menu.courseLabel}
                   </Badge>
-                  <span aria-hidden className="pointer-events-none absolute right-4 top-0 hidden select-none font-display text-[7rem] leading-none text-outline-gold sm:block md:text-[9rem]">
+                  <span aria-hidden className="pointer-events-none absolute right-4 top-0 select-none font-display text-[7rem] leading-none text-outline-gold">
                     {nn(course)}
                   </span>
-                  <CrossFade id={`copy-${menu.slug}-${course}`} variant="rise" duration={200} className="absolute inset-0">
-                    <div className="absolute inset-x-0 bottom-0 p-6 md:p-7">
-                      <p className="eyebrow text-[0.58rem] text-gold-light">
-                        Course {nn(course)} · {current.title}
-                      </p>
-                      <p className={cn("mt-2 font-display text-display-sm font-light", current.status === "draft" ? "italic text-fg/80" : "text-gold-gradient")}>{current.name}</p>
-                      {current.description && <p className="mt-2 max-w-sm text-sm leading-relaxed text-fg/75">{current.description}</p>}
-                      {current.tags.length > 0 && (
-                        <div className="mt-3">
-                          <DietaryBadges tags={current.tags} />
-                        </div>
-                      )}
+                </div>
+                <div key={`copy-${menu.slug}-${course}`} className="enter relative px-4 pb-4 pt-5">
+                  <p className="eyebrow text-[0.58rem] text-gold-light">
+                    Course {nn(course)} · {current.title}
+                  </p>
+                  <p className={cn("mt-2 font-display text-display-sm font-light", current.status === "draft" ? "italic text-fg/80" : "text-gold-gradient")}>{current.name}</p>
+                  {current.description && <p className="mt-2 text-sm leading-relaxed text-fg/75">{current.description}</p>}
+                  {current.tags.length > 0 && (
+                    <div className="mt-3">
+                      <DietaryBadges tags={current.tags} />
                     </div>
-                  </CrossFade>
+                  )}
                 </div>
               </div>
 
@@ -377,7 +391,15 @@ export function MenuSwitcherView({ menus, fromUrl }: { menus: ResolvedMenu[]; fr
                               <div className="pb-5">
                                 <div className="border-gradient tone-dark overflow-hidden rounded-[1.5rem] bg-brown-deep/60 p-2 shadow-glow-lg">
                                   <div className="relative aspect-[4/3] overflow-hidden rounded-[1.1rem] bg-sand">
-                                    <Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 640px) 80vw, 100vw" className="object-cover" />
+                                    <Image
+                                      src={photo.src}
+                                      alt={photo.alt}
+                                      fill
+                                      sizes="(min-width: 640px) 90vw, 100vw"
+                                      {...blurProps(photo)}
+                                      className="object-cover"
+                                      style={photo.position ? { objectPosition: photo.position } : undefined}
+                                    />
                                     <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-brown-deep/70 via-transparent to-transparent" />
                                     <span aria-hidden className="pointer-events-none absolute right-4 top-1 select-none font-display text-[5rem] leading-none text-outline-gold sm:text-[7rem]">
                                       {nn(i)}

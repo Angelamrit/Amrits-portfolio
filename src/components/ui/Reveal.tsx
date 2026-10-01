@@ -58,9 +58,14 @@ export function RevealGroup({
   );
 }
 
+/**
+ * `suppressHydrationWarning`: the inline script numbers the items of a group
+ * (`--reveal-i`, for the stagger) before React hydrates, and that is the one
+ * difference between the server's markup and the DOM React then meets.
+ */
 export function RevealItem({ children, className, y = 28 }: { children: ReactNode; className?: string; y?: number }) {
   return (
-    <div data-reveal-item="" className={className} style={{ "--reveal-y": `${y}px` } as CSSProperties}>
+    <div data-reveal-item="" className={className} style={{ "--reveal-y": `${y}px` } as CSSProperties} suppressHydrationWarning>
       {children}
     </div>
   );
