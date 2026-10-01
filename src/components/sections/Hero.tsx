@@ -39,8 +39,10 @@ export async function Hero() {
           the real one. The copy asks for exactly the file the sharp photograph does
           (same sizes, same quality), so the browser reuses that download and it
           costs nothing; and it is a still image, so the blur is drawn once rather
-          than on every frame. */}
-      <div aria-hidden className="absolute inset-0 hidden overflow-hidden portrait:block">
+          than on every frame. On a landscape screen it is invisible rather than
+          removed: it is never drawn either way, but kept at full width it still
+          matches its `sizes`, which is what keeps the two requests one. */}
+      <div aria-hidden className="invisible absolute inset-0 overflow-hidden portrait:visible">
         <Image
           src={chef.heroImage.src}
           alt=""

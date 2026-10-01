@@ -122,17 +122,24 @@ Counting is first-party and built into this site: one small `POST /api/track` pe
 
 ### Where the data lives
 
-Everything the dashboard writes — visit logs, content patches, uploaded photographs — goes through the `Store` interface in `src/lib/store/types.ts`. The default adapter writes plain files under `.data/` (or `DATA_DIR`), which needs no account, no dependency and no configuration.
+Everything the dashboard writes — visit logs, content patches, uploaded photographs — goes through the `Store` interface in `src/lib/store/types.ts`. Nothing else in the application reads or writes storage directly. There are two adapters, and `src/lib/store/index.ts` picks one:
 
-**It does need a filesystem that survives a restart.** That is true of a VPS, Docker with a volume, or Render/Railway with a disk. It is *not* true of Vercel, Netlify or any other serverless platform, where the filesystem is read-only apart from `/tmp` and `/tmp` is discarded between requests — the dashboard would appear to work and then lose everything. Moving there means adding one file next to `fs-store.ts` that implements the same interface against a database, and changing the single line in `src/lib/store/index.ts` that picks the adapter. Nothing else in the application reads or writes storage directly.
+| Where | Adapter | Data |
+|---|---|---|
+| **Vercel** (the live site) | `cloud-store.ts` | Content and visitor numbers in **Upstash Redis**, uploaded photographs in **Vercel Blob**. Saves use a compare-and-set, so two instances saving at once cannot overwrite each other. |
+| **Anywhere else** (a laptop, a VPS) | `fs-store.ts` | Plain files under `.data/` (or `DATA_DIR`). Needs a folder that survives a restart. |
 
-The dashboard says which store is in use, and warns on its own if the directory looks temporary.
+Off Vercel the file store is used *even when the cloud keys are in `.env.local`*, so a dev server never edits the live site's data by accident. `DASHBOARD_STORE=cloud` or `=files` overrides the choice.
+
+On Vercel without the cloud keys, the site serves normally but every dashboard screen says saving is off, rather than letting a save fail. The Visitors screen shows which store is in use.
+
+To copy a computer's `.data` to the live site once — dishes, gallery, uploaded photographs and visitor numbers — put the three cloud values in `.env.local` and run `npm run data:migrate -- --dry-run`, then `npm run data:migrate`. It is safe to run twice, shrinks any photograph too large for Vercel, and refuses to overwrite content edited on the live dashboard unless given `--force`.
 
 ## Environment variables
 
 | Variable | Purpose |
 |---|---|
-| `NEXT_PUBLIC_SITE_URL` | Canonical URL for metadata, sitemap and Open Graph |
+| `NEXT_PUBLIC_SITE_URL` | Canonical URL for metadata, sitemap, Open Graph and email links. On Vercel it can be left unset: the project's production address is used (its `.vercel.app` address, or the custom domain once connected). |
 | `NEXT_PUBLIC_SHOW_PLACEHOLDERS` | `true` shows draft articles / placeholder content. Keep `false` in production. |
 | `RESEND_API_KEY` | Resend API key for enquiry emails |
 | `INQUIRY_TO_EMAIL` | Where enquiries are sent (comma-separated allowed) |
@@ -140,7 +147,10 @@ The dashboard says which store is in use, and warns on its own if the directory 
 | `ADMIN_PASSWORD_HASH` | Sign-in for `/admin`. Generate with `npm run admin:password`. Without it (or `ADMIN_PASSWORD`) the dashboard cannot be opened at all. |
 | `ADMIN_PASSWORD` | Accepted instead of the hash. Simpler; less safe. |
 | `ADMIN_SESSION_SECRET` | Optional. Signs the session cookie. Derived from the password when unset, which means changing the password signs everyone out. |
-| `DATA_DIR` | Optional. Where the dashboard writes. Defaults to `.data`. Must survive a restart — see [The dashboard](#the-dashboard). |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Upstash Redis, for the dashboard on Vercel. Added by Vercel when the database is connected in the project's Storage tab. `UPSTASH_REDIS_REST_URL` / `_TOKEN` also work. |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob, for uploaded photographs on Vercel. Added by Vercel when the Blob store is connected. |
+| `DASHBOARD_STORE` | Optional. `cloud` or `files`; see [Where the data lives](#where-the-data-lives). |
+| `DATA_DIR` | Optional, off Vercel only. Where the file store writes. Defaults to `.data`. Must survive a restart. |
 | `OPENAI_API_KEY` | Optional. OpenAI key for the "Ask Angel" assistant. Server-side only — never prefix with `NEXT_PUBLIC_`. Without it the assistant still opens and answers, but hands visitors the restaurant's phone and email instead of calling the model. |
 
 A literal `$` in any `.env` value is read as a variable reference and has to be escaped as `\$`. The generated password hash deliberately contains none.
@@ -172,9 +182,9 @@ Photography is nearly all of this site's weight, so this is the caching change t
 - **The enquiry form** is the only input the site accepts, and is treated accordingly. Every submission meets, in order: a five-second cooldown per connection, so one client cannot hammer the endpoint; a ceiling on attempts; a honeypot field; a signed, single-use challenge with an invisible proof of work that the browser fetches and solves while the guest types (`src/lib/inquiry/challenge.ts`, `src/lib/inquiry/proof.ts`), which a script that posts straight at the endpoint cannot produce and which cannot be replayed; sanitising and server-side validation with Zod; and the send limits per connection, per address and per day. No CAPTCHA and no third-party service: the challenge is an HMAC signed by the server itself. Only the form's eight fields are ever read from a request, so a padded body costs nothing; a caught bot is answered with a decoy "success" after about the time a real send takes, so timing gives nothing away; every call to the mail API is held to eight seconds; the guest's auto-reply goes out after the response, so nobody waits for a second email; the in-memory counters and the ledger of spent tokens are capped at every insert; and both Server Actions catch everything, so the form can degrade to an honest sentence but never to the error boundary. `src/lib/inquiry/submit.ts` explains each decision at the point it is made.
 - **Secrets** live only in the environment, never in `src/data`. `.env*` is gitignored; `.env.example` documents what is needed.
 - **The dashboard** is closed by default: with no credential configured there is nothing behind `/admin`. The password is stored as a scrypt hash, compared in constant time, and sign-in is rate limited per address and globally so a distributed run at it is capped too. Every failure — wrong password, no password configured, too many attempts — returns the same sentence, so nothing is learned by probing. `proxy.ts` turns anonymous requests away before a dashboard route renders, and every Server Action behind it checks the session again next to the data it is about to change, because a Server Action is a public endpoint whether or not a page links to it.
-- **Uploads** go to `POST /api/admin/upload`, one file per request, rather than through a Server Action: actions cap a body at 1MB, and raising that limit is site-wide, so it would also apply to the public contact form. The route checks the session and the same-origin headers before it reads anything, refuses a body over 12MB from its declared length, and is rate limited. Files are accepted only as JPEG, PNG or WebP, and the type is read from the file's own header rather than taken from the browser's word for it. The stored filename is generated on the server; nothing from the upload's own name is used. They are served from a route with `nosniff` and their real type.
+- **Uploads** go to `POST /api/admin/upload`, one file per request, rather than through a Server Action: actions cap a body at 1MB, and raising that limit is site-wide, so it would also apply to the public contact form. The browser shrinks each photograph first (longest side 2400px, which also drops the GPS position a phone records), because Vercel refuses any request over 4.5MB; the chef can pick a photograph of up to 40MB. The route checks the session and the same-origin headers before it reads anything, refuses a body over 12MB from its declared length, and is rate limited. Files are accepted only as JPEG, PNG or WebP, and the type is read from the file's own header rather than taken from the browser's word for it. The stored filename is generated on the server; nothing from the upload's own name is used. They are served from a route with `nosniff` and their real type.
 
-One limitation to know about: the rate limiter counts in the server's own memory (`src/lib/rate-limit.ts`), and so does the ledger of spent challenge tokens. On a single long-lived Node process that is exactly right. On a serverless platform, or across several instances, each worker keeps its own counts and the effective limit is multiplied by the number of live workers. If the site is deployed that way, swap the body of `rateLimit` for a shared store — Upstash Redis or Vercel KV — which is all the signature was designed to allow. Volumetric denial of service is a job for the host's edge (Vercel and Cloudflare both do it by default); what the application can do, and does, is make sure one connection can never make it do more than a lookup every five seconds.
+One limitation to know about: the rate limiter counts in the server's own memory (`src/lib/rate-limit.ts`), and so does the ledger of spent challenge tokens. On Vercel each running instance keeps its own counts, so the effective limit is multiplied by the number of live instances — a handful for a site of this size, which is an accepted trade-off. If that ever matters, the Upstash Redis the dashboard already uses can back `rateLimit` instead, which is all its signature was designed to allow. Volumetric denial of service is a job for the host's edge (Vercel and Cloudflare both do it by default); what the application can do, and does, is make sure one connection can never make it do more than a lookup every five seconds.
 
 ## Tests
 
@@ -193,13 +203,28 @@ Without `OPENAI_API_KEY`, the assistant still opens and answers, but replies wit
 
 | Asset | Where | Notes |
 |---|---|---|
-| Thank-you video | `public/video/chef-thank-you.mp4` | 20–30 s clip of Chef Amrit. Shown on the enquiry success screen and `/thank-you`, and linked from the auto-reply email. Until it exists the poster image is shown. |
+| Thank-you video | `public/video/chef-thank-you.mp4` | 20–30 s clip of Chef Amrit, for `/thank-you` and the auto-reply email. Until it exists both show his photograph and note; once the file is in place, set `site.thankYou.videoUrl` in `src/data/site.ts`. |
 | Then / now photos | `src/data/restaurant.ts` → `thenNow` | The before/after slider (2019 kitchen vs new dining room). |
+
+## Deploying to Vercel
+
+1. **Import the repository** in Vercel. The defaults are right: framework Next.js, build `next build`, no output setting. Use the Pro plan; Hobby is for non-commercial sites.
+2. **Connect the dashboard's storage.** In the project's **Storage** tab, create an **Upstash for Redis** database and a **Blob** store (choose *Private*), and connect both to the project. Put the Redis database in **US East**, next to Vercel's default function region (Washington, D.C.), so every dashboard read is a short hop. Vercel adds `KV_REST_API_URL`, `KV_REST_API_TOKEN` and `BLOB_READ_WRITE_TOKEN` itself.
+3. **Add the environment variables** (Settings → Environment Variables, for Production):
+   - `OPENAI_API_KEY`
+   - `RESEND_API_KEY`, `INQUIRY_TO_EMAIL`, and `INQUIRY_FROM_EMAIL` on a domain verified in Resend
+   - `ADMIN_PASSWORD_HASH` (from `npm run admin:password`) and `ADMIN_SESSION_SECRET` (`node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`)
+   - `NEXT_PUBLIC_SITE_URL`, only once a custom domain is connected
+
+   Leave `DATA_DIR`, `TRUSTED_IP_HEADER` and `DASHBOARD_STORE` unset.
+4. **Deploy**, then copy the dashboard's existing data across with `npm run data:migrate` (see [Where the data lives](#where-the-data-lives)).
+5. **Check the live site**: sign in to `/admin` and save a small edit; upload and delete a photograph; send a test enquiry; ask the assistant a question. The function logs name any missing setting.
+
+Vercel applies a change to an environment variable only to deployments made after it, so redeploy after adding or changing one.
 
 ## Before launch
 
 - Confirm the two draft courses on the tasting menu and the dessert on the event menu with Chef.
 - Confirm the Resy listing URL in `site.ts` and add social handles.
-- Replace placeholder photography.
 - Set the environment variables on the host and send a test enquiry. Check the startup logs: an unconfigured mailer announces itself there.
 - Add real guest testimonials (with permission) and un-hide the Testimonials nav item.

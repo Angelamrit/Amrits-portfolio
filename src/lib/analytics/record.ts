@@ -28,9 +28,15 @@ function analyticsSalt(): Promise<string> {
     const existing = await store.readDoc<{ salt: string }>("analytics-salt");
     if (existing?.salt) return existing.salt;
 
-    const salt = randomBytes(32).toString("base64");
-    await store.writeDoc("analytics-salt", { salt, createdAt: Date.now() });
-    return salt;
+    // Created with a compare-and-set, not a plain write: on Vercel several
+    // instances can start at once, and each writing its own salt would have
+    // them hash the same visitor differently and count them twice. Whichever
+    // gets there first wins, and the others adopt its salt.
+    const candidate = { salt: randomBytes(32).toString("base64"), createdAt: Date.now() };
+    const stored = await store.updateDoc<{ salt: string; createdAt: number }>("analytics-salt", (current) =>
+      current?.salt ? current : candidate,
+    );
+    return stored.salt;
   })().catch((error) => {
     // A store that cannot be read must not stop the site from serving. A
     // process-lifetime salt still anonymises; it just means restarts split

@@ -46,6 +46,11 @@ export function Section({
       // `section-lazy` (globals.css) lets the browser skip styling, layout and
       // painting for sections that are off screen until they are about to scroll in.
       className={cn("section-lazy relative overflow-clip", tones[tone], paddings[padding], grain && "grain", className)}
+      // The inline script in SiteShell marks a skipped section `data-skipped`,
+      // and on a fast load it does so before React hydrates. The attribute is
+      // the browser's, not React's, so React is told to leave it alone. This
+      // covers this element's own attributes only, nothing inside it.
+      suppressHydrationWarning
       {...rest}
     >
       {divider && <span aria-hidden className="hairline-center absolute inset-x-0 top-0 z-[2]" />}
