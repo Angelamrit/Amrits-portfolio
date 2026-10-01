@@ -16,7 +16,10 @@ import { CHALLENGE_MIN_AGE_MS, solveProof } from "@/lib/inquiry/proof";
 // The topics come from their own module and the field names as a type only, so
 // this form does not pull the Zod schema into the browser.
 import { topicLabels, topicOptions, type Topic } from "@/lib/inquiry/topics";
+<<<<<<< Updated upstream
 import { cleanPhoneInput, PHONE_MAX_LENGTH } from "@/lib/inquiry/phone";
+=======
+>>>>>>> Stashed changes
 import type { InquiryField } from "@/lib/validation/inquiry";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";

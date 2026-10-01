@@ -1919,6 +1919,7 @@ li:last-child > .menu-link::after {
   since nothing in the section is drawn they cannot run on the compositor, so each one
   cost a style recalculation every frame. Paused rather than removed, so they carry on
   from where they were when the section scrolls back into view.
+<<<<<<< Updated upstream
 
   Only the things that animate are named here. The rule used to be
   `.section-lazy[data-skipped] *`, and a universal descendant selector means that
@@ -1932,6 +1933,12 @@ li:last-child > .menu-link::after {
 .section-lazy[data-skipped] .nmap-pulse,
 .section-lazy[data-skipped] .live-dot::before,
 .section-lazy[data-skipped] .live-dot::after {
+=======
+*/
+.section-lazy[data-skipped] *,
+.section-lazy[data-skipped] *::before,
+.section-lazy[data-skipped] *::after {
+>>>>>>> Stashed changes
   animation-play-state: paused !important;
 }
 

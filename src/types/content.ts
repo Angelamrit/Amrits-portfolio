@@ -12,6 +12,7 @@ export type ImageAsset = {
    * in it; without one the crop is centred.
    */
   position?: string;
+<<<<<<< Updated upstream
   /**
    * A tiny blurred copy of the photograph as a data URL, drawn in its frame
    * until the real file arrives (next/image's `placeholder="blur"`). Attached
@@ -19,6 +20,8 @@ export type ImageAsset = {
    * chef's; absent, the frame's background shows instead.
    */
   blurDataURL?: string;
+=======
+>>>>>>> Stashed changes
 };
 
 export type Address = {

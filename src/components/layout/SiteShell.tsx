@@ -76,6 +76,21 @@ const REVEAL = `(function(){var S="[data-reveal]:not([data-shown]),[data-reveal-
  */
 const PAUSE_OFFSCREEN = `document.addEventListener("contentvisibilityautostatechange",function(e){e.target.toggleAttribute("data-skipped",e.skipped)},true);`;
 
+/*
+ * Marks a lazy section `data-skipped` while the browser is skipping it.
+ *
+ * `content-visibility: auto` stops an off-screen section being drawn, but not
+ * the animations inside it, and because nothing in it is drawn they cannot be
+ * handed to the compositor either. The footer's embers and map pulses and the
+ * gallery strips were being restyled on every frame while nobody could see
+ * them. The flag lets CSS pause them (see `.section-lazy[data-skipped]`).
+ *
+ * The browser reports the change itself, so this costs nothing per frame. It
+ * runs before anything is drawn, because the first report comes with the first
+ * frame; a browser that never reports simply leaves everything running.
+ */
+const PAUSE_OFFSCREEN = `document.addEventListener("contentvisibilityautostatechange",function(e){e.target.toggleAttribute("data-skipped",e.skipped)},true);`;
+
 export async function SiteShell({ children }: { children: React.ReactNode }) {
   const venue = await getVenue();
   return (
