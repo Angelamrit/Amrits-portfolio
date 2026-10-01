@@ -52,7 +52,13 @@ export function Footer() {
   ].filter((s): s is { label: string; href: string; Icon: typeof InstagramIcon } => Boolean(s));
 
   return (
-    <footer aria-labelledby="footer-heading" className="section-lazy tone-dark grain relative overflow-hidden bg-gradient-to-b from-brown to-brown-deep">
+    // suppressHydrationWarning: the off-screen pause script may mark this
+    // `data-skipped` before React hydrates (see Section.tsx).
+    <footer
+      aria-labelledby="footer-heading"
+      className="section-lazy tone-dark grain relative overflow-hidden bg-gradient-to-b from-brown to-brown-deep"
+      suppressHydrationWarning
+    >
       <span aria-hidden className="hairline-center absolute inset-x-0 top-0 z-[3]" />
 
       {/* The dining room, its tables set, shown clearly, dissolving into the brown

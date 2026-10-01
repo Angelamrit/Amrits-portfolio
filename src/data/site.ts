@@ -6,6 +6,12 @@ const DEFAULT_URL = "https://chefamritpalsingh.com";
 /**
  * The site's public address, used for canonical links, the sitemap and emails.
  *
+ * NEXT_PUBLIC_SITE_URL when it is set. Otherwise, on Vercel, the project's own
+ * production address, which Vercel provides itself: before a custom domain is
+ * connected that is the project's .vercel.app address, and after, the domain.
+ * Without this, a deploy that forgot the variable would point every canonical
+ * link, share preview and email link at a domain that does not serve the site.
+ *
  * Every page builds `new URL(...)` from this at build time, so a bad value
  * fails the whole build. A hosting dashboard makes that easy: a variable
  * added with an empty value is "set" to `""`, which `??` does not catch. So a
@@ -26,7 +32,11 @@ function resolveSiteUrl(raw: string | undefined): string {
 export const site: SiteConfig = {
   name: "Chef Amrit Pal Singh",
   shortName: "Amrit Pal Singh",
-  url: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
+  url: resolveSiteUrl(
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+      process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL ||
+      process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  ),
   description:
     "Chef Amrit Pal Singh, owner and head chef of Michelin Bib Gourmand–awarded Angel Indian Restaurant in Jackson Heights, Queens. A seven-course tasting menu and regional Indian cooking, served every night at Angel.",
   locale: "en_US",

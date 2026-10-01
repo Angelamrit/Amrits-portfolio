@@ -30,8 +30,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { idleState, type EditorState } from "@/lib/content/state";
-import { MAX_FILES_PER_BATCH, MAX_UPLOAD_BYTES, UPLOAD_TYPES } from "@/lib/content/upload-limits";
-import { prepareUpload } from "@/lib/content/prepare-upload";
+import { MAX_FILES_PER_BATCH, MAX_ORIGINAL_BYTES, UPLOAD_TYPES } from "@/lib/content/upload-limits";
+import { readyForUpload } from "@/lib/content/prepare-upload";
 import type { GalleryCategory, GalleryItem } from "@/types/content";
 import {
   removeUpload,
@@ -74,7 +74,7 @@ const SPANS = [
   { value: "tall", label: "Tall" },
 ];
 
-const MAX_MB = MAX_UPLOAD_BYTES / 1024 / 1024;
+const MAX_MB = MAX_ORIGINAL_BYTES / 1024 / 1024;
 
 function latestOf(...states: EditorState[]): EditorState | null {
   return states.filter((state) => state.at).sort((a, b) => (b.at ?? 0) - (a.at ?? 0))[0] ?? null;
@@ -475,7 +475,7 @@ function Uploader({ categories }: { categories: Category[] }) {
     for (const file of files) {
       if (!(UPLOAD_TYPES as readonly string[]).includes(file.type)) {
         refused.push(`${file.name} is not a JPEG, PNG or WebP photograph.`);
-      } else if (file.size > MAX_UPLOAD_BYTES) {
+      } else if (file.size > MAX_ORIGINAL_BYTES) {
         refused.push(`${file.name} is larger than ${MAX_MB}MB.`);
       } else if (accepted.length >= room) {
         refused.push(`Only ${MAX_FILES_PER_BATCH} at a time — upload these first, then add the rest.`);
@@ -517,23 +517,28 @@ function Uploader({ categories }: { categories: Category[] }) {
     for (const [index, entry] of batch.entries()) {
       setQueue((current) => current.map((item) => (item.key === entry.key ? { ...item, status: "uploading", message: undefined } : item)));
 
-      const data = new FormData();
-      data.set("category", category);
-      data.set("alt", description);
-      // Shrunk in the browser first: the live site refuses uploads over 4.5MB.
-      data.set("file", await prepareUpload(entry.file));
-
       let problem: string | undefined;
       let signedOut = false;
       try {
+        // Shrunk in the browser first: the live site refuses uploads over 4.5MB.
+        const ready = await readyForUpload(entry.file);
+        if (!ready.ok) throw new Error(ready.reason);
+
+        const data = new FormData();
+        data.set("category", category);
+        data.set("alt", description);
+        data.set("file", ready.file);
         const response = await fetch("/api/admin/upload", { method: "POST", body: data });
         const body = (await response.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
         if (!response.ok || !body?.ok) {
           problem = body?.message ?? "The photograph could not be uploaded.";
           signedOut = response.status === 401;
         }
-      } catch {
-        problem = "The connection dropped before the photograph arrived. Check the internet and try again.";
+      } catch (error) {
+        problem =
+          error instanceof TypeError || !(error instanceof Error)
+            ? "The connection dropped before the photograph arrived. Check the internet and try again."
+            : error.message;
       }
 
       if (problem) {
@@ -575,7 +580,7 @@ function Uploader({ categories }: { categories: Category[] }) {
   return (
     <Panel
       title="Add photographs"
-      hint={`JPEG, PNG or WebP, up to ${MAX_MB}MB each. They appear on the website as soon as they finish uploading.`}
+      hint={`JPEG, PNG or WebP, up to ${MAX_MB}MB each; large photographs are resized automatically. They appear on the website as soon as they finish uploading.`}
     >
       <div className="flex flex-col gap-4">
         <div className="grid gap-4 md:grid-cols-2">

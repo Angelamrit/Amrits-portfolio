@@ -16,6 +16,8 @@
  * is also sent untouched, and the server's own checks decide.
  */
 
+import { MAX_SEND_BYTES } from "./upload-limits";
+
 /** The longest side kept. The largest photograph the site itself ships is 2400px wide. */
 export const MAX_EDGE = 2400;
 
@@ -79,4 +81,20 @@ export async function prepareUpload(file: File): Promise<File> {
   } finally {
     bitmap.close();
   }
+}
+
+/**
+ * Shrinks the photograph, then makes sure the result can actually be sent.
+ * Almost every photograph ends up far below the limit; this covers the rare
+ * one that cannot be shrunk in this browser or stays large, with a reason the
+ * chef can act on instead of an upload that fails without one.
+ */
+export async function readyForUpload(file: File): Promise<{ ok: true; file: File } | { ok: false; reason: string }> {
+  const prepared = await prepareUpload(file);
+  if (prepared.size <= MAX_SEND_BYTES) return { ok: true, file: prepared };
+  const mb = (bytes: number) => (bytes / 1024 / 1024).toFixed(1);
+  return {
+    ok: false,
+    reason: `${file.name} is still ${mb(prepared.size)}MB after resizing, and photographs can be up to ${mb(MAX_SEND_BYTES)}MB. Try saving a smaller copy, or a JPEG instead of a PNG.`,
+  };
 }

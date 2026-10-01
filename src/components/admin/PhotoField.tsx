@@ -4,12 +4,12 @@ import Image from "next/image";
 import { useRef, useState, type DragEvent } from "react";
 import { CircleAlert, Images, LoaderCircle, Upload } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { MAX_UPLOAD_BYTES, UPLOAD_TYPES } from "@/lib/content/upload-limits";
-import { prepareUpload } from "@/lib/content/prepare-upload";
+import { MAX_ORIGINAL_BYTES, UPLOAD_TYPES } from "@/lib/content/upload-limits";
+import { readyForUpload } from "@/lib/content/prepare-upload";
 import { ImagePicker, type ImageChoice } from "./ImagePicker";
 import { Panel } from "./Panel";
 
-const MAX_MB = MAX_UPLOAD_BYTES / 1024 / 1024;
+const MAX_MB = MAX_ORIGINAL_BYTES / 1024 / 1024;
 
 /**
  * A photograph on something the chef edits — a dish, a menu's cover — and
@@ -51,7 +51,7 @@ export function PhotoField({
     if (!file || uploading) return;
     setError(null);
     if (!(UPLOAD_TYPES as readonly string[]).includes(file.type)) return setError("That is not a JPEG, PNG or WebP photograph.");
-    if (file.size > MAX_UPLOAD_BYTES) return setError(`That photograph is larger than ${MAX_MB}MB.`);
+    if (file.size > MAX_ORIGINAL_BYTES) return setError(`That photograph is larger than ${MAX_MB}MB.`);
 
     const description = altText.trim().length >= 3 ? altText.trim() : "Photograph";
     setUploading(true);
@@ -60,7 +60,9 @@ export function PhotoField({
     data.set("alt", description.length >= 3 ? description : "Photograph of the restaurant");
     try {
       // Shrunk in the browser first: the live site refuses uploads over 4.5MB.
-      data.set("file", await prepareUpload(file));
+      const ready = await readyForUpload(file);
+      if (!ready.ok) return setError(ready.reason);
+      data.set("file", ready.file);
       const response = await fetch("/api/admin/upload", { method: "POST", body: data });
       const body = (await response.json().catch(() => null)) as { ok?: boolean; id?: string; src?: string; message?: string } | null;
       if (!response.ok || !body?.ok || !body.id || !body.src) {
@@ -152,7 +154,7 @@ export function PhotoField({
             <Images aria-hidden className="size-3.5" strokeWidth={1.8} />
             {picking ? "Close the photos" : "Choose from your photos"}
           </button>
-          <p className="text-[0.72rem] leading-relaxed text-fg/40">JPEG, PNG or WebP, up to {MAX_MB}MB. A landscape photo looks best.</p>
+          <p className="text-[0.72rem] leading-relaxed text-fg/40">JPEG, PNG or WebP, up to {MAX_MB}MB; large photos are resized automatically. A landscape photo looks best.</p>
           {error && (
             <p role="alert" className="flex items-start gap-2 text-[0.78rem] text-[#e59a93]">
               <CircleAlert aria-hidden className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.8} />
