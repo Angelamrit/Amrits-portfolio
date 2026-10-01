@@ -14,7 +14,7 @@ export const articles: Article[] = [
     excerpt: "Why the plate at Angel stays quiet, and what a chaat taught me about restraint.",
     date: "2026-09-01",
     readingTime: 4,
-    cover: images.platedFine,
+    cover: images.foodCopperPanCurry,
     status: "draft",
     isPlaceholder: true,
     blocks: [
@@ -93,7 +93,7 @@ export const articles: Article[] = [
     isPlaceholder: true,
     blocks: [
       { type: "p", text: "The tandoor is lit first, because it takes the longest to come up to heat. Then the paneer is pressed, the chutneys are blended, and the coriander is chopped." },
-      { type: "p", text: "Today more than twenty people work at Angel. In 2019 there were two of us. The rhythm of a service has not changed much; there are just more hands to keep it." },
+      { type: "p", text: "Today a whole team works at Angel. In 2019 there were two of us. The rhythm of a service has not changed much; there are just more hands to keep it." },
       { type: "quote", text: "The dining room is named after my daughter. I cook every plate as if she were at the table." },
     ],
   },

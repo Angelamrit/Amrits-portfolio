@@ -3,15 +3,13 @@
  *
  * Everything above this line — the analytics roll-ups, the menu editor, the
  * photo uploads — talks to this interface and nothing else. That is deliberate.
- * Hosting for this site is not settled yet, and the two plausible answers need
- * completely different storage: a Node server with a disk can keep all of this
- * in plain files, while a serverless platform has a read-only filesystem that
- * is wiped between requests and would silently lose every visit and every edit.
+ * The two places this site runs need completely different storage: a laptop
+ * or a Node server with a disk keeps all of this in plain files
+ * (`fs-store.ts`), while Vercel has a read-only filesystem and keeps it in
+ * Upstash Redis and Vercel Blob (`cloud-store.ts`). `index.ts` picks one.
  *
- * So the rule is: no module outside `src/lib/store` may import `node:fs`.
- * Moving this site onto Vercel later means writing one more file next to
- * `fs-store.ts` and changing the single line in `index.ts` that picks the
- * adapter. Nothing else in the application has to know.
+ * So the rule is: no module outside `src/lib/store` may import `node:fs`, or
+ * talk to Redis or Blob. Nothing else in the application has to know.
  *
  * Three kinds of data, because they have genuinely different access patterns:
  *
@@ -51,6 +49,12 @@ export interface Store {
    * a warning rather than pretending the data is safe.
    */
   readonly durable: boolean;
+
+  /**
+   * A sentence for the chef when saving will not work or will not last — shown
+   * on every dashboard screen. Undefined when all is well.
+   */
+  readonly warning?: string;
 
   /** `null` when the document has never been written. Never throws on absence. */
   readDoc<T>(name: string): Promise<T | null>;

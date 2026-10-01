@@ -8,13 +8,13 @@ export const chef: ChefProfile = {
   positioning: "Indian roots. Bold flavours. Simple but good.",
   location: "Jackson Heights, Queens — New York City",
   shortBio:
-    "Born in Pathankot, India, and shaped by his mother's kitchen, Chef Amrit Pal Singh trained formally in Australia before earning his place in the acclaimed New York kitchens of Rahi and Adda. In October 2019 he opened Angel with a six-burner stove, one tandoor and a single fridge. Today the restaurant holds a Michelin Bib Gourmand, employs more than twenty people, and has been called a “pride of India.”",
+    "Born in Pathankot, India, and shaped by his mother's kitchen, Chef Amrit Pal Singh trained formally in Australia before earning his place in the acclaimed New York kitchens of Rahi and Adda. In October 2019 he opened Angel with a six-burner stove, one tandoor and a single fridge. Today the restaurant holds a Michelin Bib Gourmand, has a team of its own, and has been called a “pride of India.”",
   longBio: [
     "Amrit Pal Singh grew up in Pathankot, a small city in the foothills of northern India. His mother, a housewife, cooked for the family every day; his father served as an officer in the Indian Army. It was at her stove that he learned the rule he still cooks by: simple but good. No excess, no shortcuts, just enough spice to let each ingredient taste like itself.",
     "He left India for Australia to study the food industry formally, then made his way to New York City. There he honed his craft in two of the city's most celebrated Indian kitchens, Rahi and Adda, learning how tradition and precision could share the same plate.",
     "In October 2019 he opened Angel Indian Restaurant in Jackson Heights, Queens, with almost nothing: a six-burner stove, one tandoor and a fridge. It was a two-person operation. Amrit cooked, took the orders and cleaned the floors himself. The neighbourhood answered immediately, and Angel paid its own rent in the very first month.",
     "Named after his daughter, Angel is predominantly vegetarian and 100% Halal, and its menu moves from comforting street food to complex regional delicacies. The restaurant earned a Michelin Bib Gourmand in 2021, and when the new dining room opened in July 2025 the Michelin-starred chef Vikas Khanna called it “the pride of India” and Amrit “possibly one of the finest Indian chefs in the U.S.”",
-    "Today Chef Amrit leads a team of more than twenty. His new upscale location is a formal, dinner-only dining room with a full bar and a curated chef's tasting menu.",
+    "Today Chef Amrit leads a team of his own. His new upscale location is a formal, dinner-only dining room with a full bar and a curated chef's tasting menu.",
   ],
   portrait: images.chefPortrait,
   heroImage: images.hero,
@@ -42,7 +42,7 @@ export const chef: ChefProfile = {
     {
       year: "Today",
       title: "Michelin Bib Gourmand",
-      body: "More than twenty employees, a place in the Michelin Guide, a Bib Gourmand and a new upscale dining room with a chef's tasting menu.",
+      body: "A team of his own, a place in the Michelin Guide, a Bib Gourmand and a new upscale dining room with a chef's tasting menu.",
     },
   ],
   training: [
@@ -83,7 +83,7 @@ export const chef: ChefProfile = {
   },
   stats: [
     { value: "2019", label: "Angel opened" },
-    { value: "20+", label: "Team members" },
+    { value: "Growing", label: "Team" },
     { value: "Bib Gourmand", label: "Michelin Guide" },
   ],
   restaurants: [

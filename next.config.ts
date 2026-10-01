@@ -93,6 +93,12 @@ const nextConfig: NextConfig = {
     // WebP only: AVIF encoding is several times slower per image on first request.
     formats: ["image/webp"],
     qualities: [65, 72, 75, 78, 85],
+    // The default list runs on to 2048 and 3840. No photograph here is wider than
+    // 2400px, so those widths can never be sharper than 1920, yet every <img> on
+    // the site listed them in its srcset (the home page's photo strip alone
+    // carried 44KB of srcset), and a large screen asking for 3840 made the
+    // optimizer do its most expensive resize for nothing.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     // Match the upstream max-age above rather than the 4-hour default. The
     // optimizer's cache has no invalidation hook, so this stays deliberately
     // short-lived rather than set to a year.

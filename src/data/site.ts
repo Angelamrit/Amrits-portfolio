@@ -54,9 +54,11 @@ export const site: SiteConfig = {
   },
   cta: { label: "Reserve a Table", href: "/contact" },
   thankYou: {
-    // TODO: record a 20–30 second clip of Chef Amrit and drop it at public/video/chef-thank-you.mp4
-    videoUrl: "/video/chef-thank-you.mp4",
-    poster: images.chefPlating,
+    // No clip has been recorded yet, so the thank-you page and the auto-reply show
+    // the photo and the note alone. To add one, put a 20–30 second clip at
+    // public/video/chef-thank-you.mp4 and set this to "/video/chef-thank-you.mp4".
+    videoUrl: null,
+    poster: images.chefInterview,
     headline: "A message from Chef Amrit",
     message:
       "Thank you for writing to me. I read every message myself, and I will be in touch within two working days. I hope to welcome you to Angel soon.",

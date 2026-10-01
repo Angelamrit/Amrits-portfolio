@@ -31,6 +31,7 @@ import {
 import { cn } from "@/lib/cn";
 import { idleState, type EditorState } from "@/lib/content/state";
 import { MAX_FILES_PER_BATCH, MAX_UPLOAD_BYTES, UPLOAD_TYPES } from "@/lib/content/upload-limits";
+import { prepareUpload } from "@/lib/content/prepare-upload";
 import type { GalleryCategory, GalleryItem } from "@/types/content";
 import {
   removeUpload,
@@ -519,7 +520,8 @@ function Uploader({ categories }: { categories: Category[] }) {
       const data = new FormData();
       data.set("category", category);
       data.set("alt", description);
-      data.set("file", entry.file);
+      // Shrunk in the browser first: the live site refuses uploads over 4.5MB.
+      data.set("file", await prepareUpload(entry.file));
 
       let problem: string | undefined;
       let signedOut = false;

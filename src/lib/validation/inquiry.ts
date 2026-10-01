@@ -1,19 +1,9 @@
 import { z } from "zod";
+import { topicOptions } from "@/lib/inquiry/topics";
 
-/**
- * What a guest can write to the chef about. Chef Amrit cooks only at Angel —
- * there is no private dining or event booking — so these are messages, not
- * booking requests. Table reservations go through the restaurant.
- */
-export const topicOptions = ["angel", "press", "collaboration", "other"] as const;
-export type Topic = (typeof topicOptions)[number];
-
-export const topicLabels: Record<Topic, string> = {
-  angel: "Dining at Angel",
-  press: "Press & media",
-  collaboration: "Collaboration",
-  other: "Something else",
-};
+// The topics live in a Zod-free module the contact form can import; see
+// `lib/inquiry/topics.ts`. Re-exported so the server side keeps one import site.
+export { topicLabels, topicOptions, type Topic } from "@/lib/inquiry/topics";
 
 const optionalText = (max: number) =>
   z

@@ -34,6 +34,7 @@ function Strip({ items, reverse = false }: { items: GalleryItem[]; reverse?: boo
               fill
               sizes="(min-width: 768px) 28rem, 20rem"
               className="object-cover transition-transform duration-[1400ms] ease-luxe group-hover:scale-[1.06]"
+              style={g.image.position ? { objectPosition: g.image.position } : undefined}
             />
             <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-brown-deep/80 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             {g.caption && (
