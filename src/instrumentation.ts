@@ -18,6 +18,19 @@ export async function register() {
 
   const { reportRuntimeEnv } = await import("@/lib/env");
   reportRuntimeEnv();
+
+  // On a server that keeps the dashboard's data in files (a VPS, not Vercel):
+  // warn if that data sits where a deploy could delete it, and start the
+  // daily backups. A failure here must never stop the site from starting.
+  try {
+    const { store } = await import("@/lib/store");
+    if (store.kind === "Plain files" && !process.env.VERCEL) {
+      const { reportDataSafety } = await import("@/lib/store/backup");
+      await reportDataSafety();
+    }
+  } catch (error) {
+    console.error("[backup] could not start the daily backups:", error);
+  }
 }
 
 /**

@@ -8,6 +8,7 @@ import {
   SESSION_TTL_SECONDS,
   adminConfigured,
 } from "./config";
+import { credentials, sessionIsCurrent } from "./credential";
 import { issueSession, readSession, type SessionClaims } from "./session";
 
 /**
@@ -20,16 +21,24 @@ import { issueSession, readSession, type SessionClaims } from "./session";
  * Actions are POST endpoints that exist whether or not a page linked to them.
  * So every action calls `requireAdmin` again, right next to the data it is
  * about to change. Two checks, and only the inner one is load-bearing.
+ *
+ * The inner check also asks one question the proxy cannot: was this cookie
+ * issued under the password that is in force *now*? Answering it takes a
+ * small read from the store, which is fine here — every dashboard page reads
+ * the store anyway — and is what signs every other device out the moment the
+ * password is changed. See `credential.ts`.
  */
 
 /**
  * Deduplicated per request: an admin page, its layout and its actions can all
- * ask without repeating the HMAC verification.
+ * ask without repeating the HMAC verification or the credential lookup.
  */
 export const currentSession = cache(async (): Promise<SessionClaims | null> => {
   if (!adminConfigured()) return null;
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  return readSession(token);
+  const claims = await readSession(token);
+  if (!claims) return null;
+  return sessionIsCurrent(claims, await credentials.active()) ? claims : null;
 });
 
 /** For pages and layouts: sends a signed-out visitor to the login screen. */
@@ -61,9 +70,16 @@ function cookieOptions(maxAge: number) {
   };
 }
 
-/** Only callable from a Server Action or Route Handler — cookies cannot be set while a page streams. */
-export async function startSession(): Promise<boolean> {
-  const token = await issueSession();
+/**
+ * Only callable from a Server Action or Route Handler — cookies cannot be set
+ * while a page streams. The session is issued under the credential in force,
+ * or under the one named, which a password change passes in because the one
+ * it just wrote is the one that is now in force.
+ */
+export async function startSession(credentialId?: string): Promise<boolean> {
+  const id = credentialId ?? (await credentials.active())?.id;
+  if (!id) return false;
+  const token = await issueSession(id);
   if (!token) return false;
   (await cookies()).set(SESSION_COOKIE, token, cookieOptions(SESSION_TTL_SECONDS));
   return true;
@@ -88,5 +104,5 @@ export async function refreshSessionIfStale(): Promise<void> {
   const secondsLeft = session.exp - Math.floor(Date.now() / 1000);
   if (secondsLeft > SESSION_REFRESH_AFTER_SECONDS) return;
 
-  await startSession();
+  await startSession(session.cred);
 }

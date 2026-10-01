@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { topicOptions } from "@/lib/inquiry/topics";
+import { isValidPhone, PHONE_ERROR } from "@/lib/inquiry/phone";
 
 // The topics live in a Zod-free module the contact form can import; see
 // `lib/inquiry/topics.ts`. Re-exported so the server side keeps one import site.
@@ -19,7 +20,9 @@ export const inquirySchema = z.object({
   // an unbounded one lets a flood of long addresses inflate that map. 254 is
   // the longest address SMTP actually permits.
   email: z.email("Please enter a valid email address.").max(254),
-  phone: optionalText(40),
+  // Optional, but when given it must be a number: digits and the usual
+  // separators only, no letters. See `lib/inquiry/phone.ts`.
+  phone: optionalText(40).refine((v) => v === undefined || isValidPhone(v), PHONE_ERROR),
   topic: z.enum(topicOptions, { error: "Please choose what your message is about." }),
   message: z.string().trim().min(20, "Tell us a little more (at least 20 characters).").max(2000),
   // Anti-spam: the honeypot, and the signed challenge with its proof of work.

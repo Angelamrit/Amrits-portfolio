@@ -14,7 +14,10 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "admin:password": "node scripts/admin-password.mjs",
-    "data:migrate": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./test/alias-hook.mjs --env-file-if-exists=.env.local scripts/migrate-data.ts"
+    "data:migrate": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./test/alias-hook.mjs --env-file-if-exists=.env.local scripts/migrate-data.ts",
+    "data:backup": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./test/alias-hook.mjs --env-file-if-exists=.env.production --env-file-if-exists=.env.local scripts/data-backup.ts",
+    "data:restore": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./test/alias-hook.mjs --env-file-if-exists=.env.production --env-file-if-exists=.env.local scripts/data-restore.ts",
+    "email:test": "node --conditions=react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./test/alias-hook.mjs --env-file-if-exists=.env.local scripts/send-test-email.ts"
   },
   "dependencies": {
     "@upstash/redis": "1.39.0",

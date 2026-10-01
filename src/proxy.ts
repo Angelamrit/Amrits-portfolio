@@ -49,9 +49,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  if (session && isLogin) {
-    return NextResponse.redirect(new URL("/admin", request.url));
-  }
+  // A signed-in visitor opening the login screen is sent on to the dashboard
+  // by the login page itself, not here. This layer sees only the signature,
+  // and a cookie from before a password change is signed and still refused by
+  // every page behind it: bouncing it to /admin from here would have the
+  // dashboard bounce it straight back, for ever. The page can ask the fuller
+  // question (see `currentSession`) and decide.
 
   return NextResponse.next();
 }

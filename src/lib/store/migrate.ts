@@ -20,8 +20,13 @@ import type { Store } from "./types";
  *            running this never erases a visit.
  */
 
-/** Obsolete since the bookings screens were removed, and full of guests' details: it stays on this computer. */
-const SKIP_DOCS = new Set(["bookings"]);
+/**
+ * Never copied. `bookings` is obsolete since the bookings screens were removed,
+ * and full of guests' details. `admin-credential` is the password set on this
+ * computer's dashboard: copying it would silently change the live site's
+ * password to whatever was last typed on a laptop (see `admin/credential.ts`).
+ */
+const SKIP_DOCS = new Set(["bookings", "admin-credential"]);
 
 /** The live site's own salt wins: replacing it mid-day would count every visitor twice. */
 const KEEP_LIVE_DOCS = new Set(["analytics-salt"]);

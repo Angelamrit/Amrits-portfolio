@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { adminConfigured } from "@/lib/admin/config";
 import { endSession, startSession } from "@/lib/admin/auth";
-import { verifyPassword } from "@/lib/admin/password";
+import { credentials as adminCredentials } from "@/lib/admin/credential";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 /**
@@ -69,12 +69,16 @@ export async function signIn(_previous: LoginState, formData: FormData): Promise
     return { error: REFUSED };
   }
 
-  if (!(await verifyPassword(parsed.data.password))) {
+  // Whichever password is in force: the server's, or one set on the dashboard
+  // since. `null` here means storage could not be read, and that is a refusal
+  // too — the log has the reason.
+  const active = await adminCredentials.active();
+  if (!active || !(await active.verify(parsed.data.password))) {
     console.warn(`[admin] failed sign-in from ${ip}`);
     return { error: REFUSED };
   }
 
-  if (!(await startSession())) return { error: REFUSED };
+  if (!(await startSession(active.id))) return { error: REFUSED };
 
   console.info(`[admin] signed in from ${ip}`);
 

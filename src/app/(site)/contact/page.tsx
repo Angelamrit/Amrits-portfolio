@@ -34,8 +34,11 @@ export default async function ContactPage() {
           </>
         }
         lead="Chef Amrit cooks every night at Angel in Jackson Heights. He reads every message personally."
-        image={images.angelDiningRoom}
+        image={images.contactHero}
         cinematicImage
+        // A tall photograph: the frame takes its own shape so all of it shows,
+        // and without the slow zoom that would crop the lamps and the chairs.
+        imageRatio="natural"
       >
         <StatRow stats={chef.stats} glass className="max-w-xl" />
       </PageHero>

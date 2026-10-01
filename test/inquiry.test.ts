@@ -211,6 +211,22 @@ test("an incomplete enquiry comes back with per-field errors", async () => {
   assert.ok(state.fieldErrors.message, "the short message should be flagged");
 });
 
+test("a phone number with letters in it is refused", async () => {
+  for (const [i, phone] of ["call me maybe", "555-CHEF-123", "+1 555 0100 ext", "12345"].entries()) {
+    const state = await handleInquiry(await validInput({ phone, email: `caller${i}@example.com` }), ctx(`5.5.6.${i}`));
+    assert.equal(state.status, "error", `"${phone}" should be refused`);
+    if (state.status !== "error") continue;
+    assert.ok(state.fieldErrors.phone, `"${phone}" should be flagged on the phone field`);
+  }
+});
+
+test("phone numbers written the usual ways are accepted, and the field stays optional", async () => {
+  for (const [i, phone] of ["+1 (718) 555-0123", "718.555.0123", "07700 900123", ""].entries()) {
+    const state = await handleInquiry(await validInput({ phone, email: `guest${i}@example.com` }), ctx(`5.5.7.${i}`));
+    assert.equal(state.status, "success", `"${phone}" should be accepted`);
+  }
+});
+
 test("the anti-spam fields are never echoed back to the browser", async () => {
   const state = await handleInquiry(await validInput({ message: "short" }), ctx("6.6.6.6"));
 

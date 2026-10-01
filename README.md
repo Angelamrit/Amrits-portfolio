@@ -86,6 +86,12 @@ Judge the dashboard's speed on a production build (`npm run build && npm start`)
 
 A plain `ADMIN_PASSWORD` is accepted instead if you would rather not run the script; the hash is safer, because anything that can read the environment then learns nothing it can sign in with. Sessions are a signed, http-only cookie lasting 12 hours. Changing the password signs every open session out.
 
+### Changing the password
+
+The variable above is the password the site starts with. The chef changes it himself under **Account → Change password** in the dashboard: current password, new one twice, at least 10 characters. From then on the new password is the only one that opens the dashboard — the one in the environment no longer does — and every other signed-in phone or computer is signed out at once, while the device that made the change stays in. The new password is kept as a scrypt hash in the dashboard's storage (`admin-credential`, next to the menus), so on Vercel it needs the Redis store connected; without that the screen says saving is off. It is never copied by `npm run data:migrate`.
+
+If the password is forgotten, generate a new `ADMIN_PASSWORD_HASH` with `npm run admin:password`, set it on the server and redeploy. A new value there always wins over the one set in the dashboard, which is then discarded; nothing else is touched. `src/lib/admin/credential.ts` explains how the two are weighed.
+
 ### What it does
 
 | Screen | What it is for |
@@ -133,6 +139,40 @@ Off Vercel the file store is used *even when the cloud keys are in `.env.local`*
 
 On Vercel without the cloud keys, the site serves normally but every dashboard screen says saving is off, rather than letting a save fail. The Visitors screen shows which store is in use.
 
+### Keeping the data safe (VPS)
+
+On a server that keeps the data in files, five layers stand between the chef's work and losing it:
+
+| Risk | What protects against it |
+|---|---|
+| Power cut or crash in the middle of a save | Every save is written to a temporary file, flushed to the disk, then swapped in. A reader sees the old version or the new one, never half of either. |
+| A bad edit, or a wrong one saved by mistake | The last 30 versions of every content document are kept in `history/<name>/`, one file per save. Copy one back over `content/<name>.json` to undo. |
+| A photograph deleted by mistake | It goes to `trash/uploads/` for 30 days instead of being deleted, even one uploaded the same day. Move both its files back into `uploads/` to restore it. |
+| The data folder deleted, overwritten or corrupted | A full backup every day, made by the server itself, kept for 30 days (`DATA_BACKUP_KEEP`). Photos are hard-linked, so thirty days cost little more than one. The Visitors screen shows when the last one was made. |
+| A deploy that replaces the app folder | The data must live outside it: set `DATA_DIR`. The server prints a warning at startup in production when it is unset or inside the app folder. |
+
+What the server cannot do by itself is survive **its own disk** failing, because the backups are on the same disk unless `DATA_BACKUP_DIR` points at another one. Turn on the hosting provider's automatic snapshots, or copy the backup folder off the server regularly, and that last gap is closed too. The startup log says when backups and data share a disk.
+
+Setting it up on the VPS, once:
+
+```bash
+sudo mkdir -p /var/lib/chef-site && sudo chown $USER /var/lib/chef-site
+# in the app's .env.production (or the process manager's environment):
+DATA_DIR=/var/lib/chef-site/data
+# backups default to /var/lib/chef-site/data-backups; DATA_BACKUP_DIR overrides
+```
+
+Run one copy of the app (PM2 in fork mode, not cluster mode): the backup schedule, the save queues and the rate limits each live in the one process.
+
+```bash
+npm run data:backup                  # a backup right now, e.g. before moving servers
+npm run data:restore                 # list the backups
+npm run data:restore -- 2026-10-01   # put one back (stop the site first)
+npm run build                        # then rebuild, so the public pages show it, and start again
+```
+
+A restore backs up the current data first, as `before-restore-<time>`, so it can itself be undone.
+
 To copy a computer's `.data` to the live site once — dishes, gallery, uploaded photographs and visitor numbers — put the three cloud values in `.env.local` and run `npm run data:migrate -- --dry-run`, then `npm run data:migrate`. It is safe to run twice, shrinks any photograph too large for Vercel, and refuses to overwrite content edited on the live dashboard unless given `--force`.
 
 ## Environment variables
@@ -144,13 +184,16 @@ To copy a computer's `.data` to the live site once — dishes, gallery, uploaded
 | `RESEND_API_KEY` | Resend API key for enquiry emails |
 | `INQUIRY_TO_EMAIL` | Where enquiries are sent (comma-separated allowed) |
 | `INQUIRY_FROM_EMAIL` | Verified sender, e.g. `Chef Amrit Pal Singh <inquiries@yourdomain.com>` |
-| `ADMIN_PASSWORD_HASH` | Sign-in for `/admin`. Generate with `npm run admin:password`. Without it (or `ADMIN_PASSWORD`) the dashboard cannot be opened at all. |
+| `ADMIN_PASSWORD_HASH` | The first sign-in for `/admin`. Generate with `npm run admin:password`. Without it (or `ADMIN_PASSWORD`) the dashboard cannot be opened at all. Once the chef changes the password in the dashboard, this one stops working; setting a new value here and redeploying resets it (see [Changing the password](#changing-the-password)). |
 | `ADMIN_PASSWORD` | Accepted instead of the hash. Simpler; less safe. |
-| `ADMIN_SESSION_SECRET` | Optional. Signs the session cookie. Derived from the password when unset, which means changing the password signs everyone out. |
+| `ADMIN_SESSION_SECRET` | Optional. Signs the session cookie. Derived from the password when unset. Changing the password signs everyone out either way. |
 | `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Upstash Redis, for the dashboard on Vercel. Added by Vercel when the database is connected in the project's Storage tab. `UPSTASH_REDIS_REST_URL` / `_TOKEN` also work. |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob, for uploaded photographs on Vercel. Added by Vercel when the Blob store is connected. |
 | `DASHBOARD_STORE` | Optional. `cloud` or `files`; see [Where the data lives](#where-the-data-lives). |
-| `DATA_DIR` | Optional, off Vercel only. Where the file store writes. Defaults to `.data`. Must survive a restart. |
+| `DATA_DIR` | Off Vercel. Where the file store writes. Defaults to `.data` inside the app, which a deploy can delete, so **set it on a VPS** to a folder outside the app (e.g. `/var/lib/chef-site/data`). See [Keeping the data safe](#keeping-the-data-safe-vps). |
+| `DATA_BACKUP_DIR` | Optional. Where the daily backups go. Defaults to a folder beside `DATA_DIR` named `<DATA_DIR>-backups`. Point it at a second disk if the server has one. |
+| `DATA_BACKUP_KEEP` | Optional. How many daily backups to keep. Default 30. |
+| `DATA_BACKUPS` | Optional. `off` stops the daily backups; `on` runs them on a development server too. They run in production by default. |
 | `OPENAI_API_KEY` | Optional. OpenAI key for the "Ask Angel" assistant. Server-side only — never prefix with `NEXT_PUBLIC_`. Without it the assistant still opens and answers, but hands visitors the restaurant's phone and email instead of calling the model. |
 
 A literal `$` in any `.env` value is read as a variable reference and has to be escaped as `\$`. The generated password hash deliberately contains none.
@@ -161,6 +204,7 @@ What that means in practice:
 
 - **In development**, with no `RESEND_API_KEY` / `INQUIRY_TO_EMAIL`, enquiries are logged to the console as `[inquiry:dry-run]` and the visitor sees the success state. This is what lets the form be worked on without credentials.
 - **In production**, the same gap prints a banner at server startup (from `src/instrumentation.ts`) and the form stops claiming success: the guest is told it could not be sent and asked to telephone instead. An enquiry is never silently lost.
+- **To check the credentials**, `npm run email:test` sends one clearly labelled test enquiry, and the guest auto-reply, through the real mailer to `INQUIRY_TO_EMAIL`, and prints Resend's own reason when either is refused. Until a domain is verified in Resend the sender is Resend's shared `onboarding@resend.dev`, which delivers only to the address the Resend account was created with: enquiries still arrive there, but the auto-reply cannot reach guests until `INQUIRY_FROM_EMAIL` is on a verified domain.
 
 ## Caching
 
@@ -212,7 +256,7 @@ Without `OPENAI_API_KEY`, the assistant still opens and answers, but replies wit
 2. **Connect the dashboard's storage.** In the project's **Storage** tab, create an **Upstash for Redis** database and a **Blob** store (choose *Private*), and connect both to the project. Put the Redis database in **US East**, next to Vercel's default function region (Washington, D.C.), so every dashboard read is a short hop. Vercel adds `KV_REST_API_URL`, `KV_REST_API_TOKEN` and `BLOB_READ_WRITE_TOKEN` itself.
 3. **Add the environment variables** (Settings → Environment Variables, for Production):
    - `OPENAI_API_KEY`
-   - `RESEND_API_KEY`, `INQUIRY_TO_EMAIL`, and `INQUIRY_FROM_EMAIL` on a domain verified in Resend
+   - `RESEND_API_KEY`, `INQUIRY_TO_EMAIL`, and `INQUIRY_FROM_EMAIL` on a domain verified in Resend (check them first with `npm run email:test`)
    - `ADMIN_PASSWORD_HASH` (from `npm run admin:password`) and `ADMIN_SESSION_SECRET` (`node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`)
    - `NEXT_PUBLIC_SITE_URL`, only once a custom domain is connected
 

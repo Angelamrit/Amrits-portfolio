@@ -126,21 +126,101 @@ export const images = {
     position: "50% 8%",
   },
   /**
-   * The gallery's "Open flame" tile: the same photograph of the chef as the
-   * home hero, kept as its own file so the two can diverge later. Supplied by
-   * the chef, so not a stock placeholder despite sitting in that folder.
+   * The gallery's "Open flame" tile: the chef in a black cap at the range,
+   * flame rising from the pan. A different photograph from the home hero.
+   * Supplied by the chef. (Its old file in /images/placeholders was deleted by
+   * mistake in d13009d; this web copy was restored from that file's history.)
    */
   chefFlame: {
-    src: "/images/placeholders/chefFlame.jpg",
+    src: "/images/chef/chef-flame.jpg",
     alt: "Chef Amrit Pal Singh at the range, flame rising from the pan in his hand",
     width: 1453,
     height: 1082,
   },
   // ---- Dishes ----
+  /**
+   * Chole Bhatura at Angel (chole_bhature), supplied by the chef. Not a placeholder. It is the
+   * same 4:3 shape as the signature-dish frame, so it fills that frame without being cropped.
+   */
+  choleBhatura: {
+    src: "/images/food/chole-bhatura.jpg",
+    alt: "Chole bhatura at Angel: a copper bowl of spiced chickpeas topped with red onion and coriander, beside two golden puffed bhature on a steel platter",
+    width: 1448,
+    height: 1086,
+  },
   dahiBatataPuri: placeholder("dahiBatataPuri.jpg", "Chaat plates on a blue table", 1400, 1400),
   kalePakora: placeholder("kalePakora.jpg", "Golden fried snacks with green chilli", 1400, 1400),
   lassuniGobi: placeholder("lassuniGobi.jpg", "Dark bowl of spiced vegetables with lime", 1400, 1400),
-  vegetableDumBiryani: placeholder("vegetableDumBiryani.jpg", "Aromatic rice with tomato and herbs", 1400, 1400),
+  /**
+   * Vegetable Dum Biryani (veg_biryani), supplied by the chef. Not a placeholder.
+   * The original is 16:9 and the dish frames are 4:3, and no crop of it kept
+   * the whole bowl: the rim was cut and the bowl sat on the frame's edge. So
+   * this copy is 4:3 already: the photograph's own dark background continues
+   * above, below and to the left, feathered in, with the bowl centred. Made
+   * from real_pictures/veg_biryani.WEBP; nothing of the dish is altered.
+   */
+  vegetableDumBiryani: {
+    src: "/images/food/veg-biryani-4x3.webp",
+    alt: "A dark bowl of vegetable dum biryani: saffron-gold basmati with carrots, crisp fried onions and fresh coriander on top",
+    width: 1200,
+    height: 900,
+  },
+  /**
+   * Chicken Dum Biryani (chicken_dum), supplied by the chef. Not a placeholder. A 3:2 photograph
+   * shown in 4:3 frames: the bowl is centred, so the default centred crop trims only the table at
+   * either side and keeps the whole rim in view.
+   */
+  chickenDumBiryani: {
+    src: "/images/food/chicken-dum-biryani.jpg",
+    alt: "A dark bowl of chicken dum biryani: saffron basmati with pieces of chicken, crisp fried onions and fresh coriander, on a marble table",
+    width: 1536,
+    height: 1024,
+  },
+  /**
+   * Amritsari Aloo Kulcha (amristarti_aloo), supplied by the chef. Not a placeholder. The
+   * original is a tall portrait and the dish frames are 4:3, so this copy is cut to exactly 4:3
+   * at full width, filling the frame edge to edge. The cut is placed to keep both bowls whole and
+   * the kulcha with both pats of butter; it loses only the spoon and empty plate at the top and
+   * the kulcha's bottom crust.
+   */
+  /**
+   * Amritsari Paneer Kulcha (paneer), supplied by the chef. Not a placeholder. The original is
+   * 3:2, a little wider than the 4:3 dish frames, so this copy is cut to exactly 4:3 by trimming
+   * only plain table on the right: the plate, the kulcha, both bowls and the chillies show whole.
+   */
+  amritsariPaneerKulcha: {
+    src: "/images/food/amritsari-paneer-kulcha.jpg",
+    alt: "Amritsari paneer kulcha on a white plate, topped with cubes of paneer and rings of onion, with a bowl of chickpea curry, a bowl of pickled onion and green chillies on a wooden table",
+    width: 1365,
+    height: 1024,
+  },
+  amritsariAlooKulcha: {
+    src: "/images/food/amritsari-aloo-kulcha-full.jpg",
+    alt: "Amritsari aloo kulcha on a white plate, flecked with herbs and topped with two pats of butter, beside a bowl of chickpea curry and a bowl of onion and tomato in tangy water",
+    width: 1199,
+    height: 899,
+  },
+  /**
+   * Mix Veg Kulcha (mix_veg), supplied by the chef. Not a placeholder. The original is a little
+   * taller than 4:3, so this copy is cut to exactly 4:3 at full width, taking only bare table from
+   * the top and bottom: the whole foil plate, the kulcha with its butter and both bowls stay in.
+   */
+  mixVegKulcha: {
+    src: "/images/food/mix-veg-kulcha.jpg",
+    alt: "Mix veg kulcha cut into wedges on a foil-lined plate, flecked with herbs and topped with a pat of butter, beside a bowl of chickpea curry and a bowl of chopped onion and tomato, on a wooden table",
+    width: 1408,
+    height: 1056,
+  },
+  /**
+   * Goat Dum Biryani (goat_dum), supplied by the chef. Not a placeholder. Already 4:3, the dish
+   * frames' own shape, so nothing is cropped: the whole pot, its bread lid and the raita show.
+   */
+  goatDumBiryani: {
+    src: "/images/food/goat-dum-biryani.jpg",
+    alt: "Goat dum biryani in a pot sealed with baked bread, the crust lifted to show saffron rice, goat and fried onions, with a bowl of raita, on a red wood table",
+    width: 1448,
+    height: 1086,
+  },
   housemadePaneer: placeholder("housemadePaneer.jpg", "Charred paneer tikka on a sizzling plate", 1400, 1400),
   paneerCurry: placeholder("paneerCurry.jpg", "Paneer curry with rice on a grey plate", 1400, 1400),
   karahi: placeholder("karahi.jpg", "Creamy curry in a copper karahi", 1400, 1400),
@@ -162,6 +242,16 @@ export const images = {
     alt: "Angel's new dining room: the gold script sign, a long banquette and pendant lights running down the room",
     width: 932,
     height: 563,
+  },
+  /**
+   * The Contact page's opening photograph (FE4D6BFF…), supplied by the chef. Not a placeholder.
+   * Its own entry so it can change without touching the Angel page or the gallery.
+   */
+  contactHero: {
+    src: "/images/restaurant/dining-room-display-case.jpg",
+    alt: "Angel's dining room in warm light: a glass display case of gold figurines, round pendant lamps, and black-backed chairs along a tan leather banquette",
+    width: 1024,
+    height: 1536,
   },
   /** The footer's photograph of Angel's dining room. */
   angelDiningTables: banquette,

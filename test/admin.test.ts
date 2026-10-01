@@ -17,20 +17,31 @@ import { describe, it } from "node:test";
 process.env.ADMIN_PASSWORD_HASH = "scrypt:16384:8:1:c2FsdHNhbHRzYWx0c2E:aGFzaGhhc2hoYXNoaGFzaA";
 
 const { issueSession, readSession } = await import("@/lib/admin/session");
-const { hashPassword, verifyPassword } = await import("@/lib/admin/password");
+const { hashPassword, verifyEnvPassword } = await import("@/lib/admin/password");
 const { readImage } = await import("@/lib/content/image-size");
 const { applyPatch } = await import("@/lib/content/overrides");
 
 describe("admin sessions", () => {
   it("issues a token this server will accept back", async () => {
-    const token = await issueSession();
+    const token = await issueSession("env");
     assert.ok(token, "a token should be issued when a credential is configured");
     const claims = await readSession(token);
     assert.equal(claims?.sub, "admin");
   });
 
+  it("names the credential it was issued under, so a password change can tell old cookies from new", async () => {
+    const claims = await readSession(await issueSession("dashboard-abc123"));
+    assert.equal(claims?.cred, "dashboard-abc123");
+    // A cookie that does not say is not a cookie this server issued.
+    const [payload, signature] = (await issueSession("env"))!.split(".");
+    const anonymous = JSON.parse(Buffer.from(payload, "base64url").toString());
+    delete anonymous.cred;
+    const stripped = Buffer.from(JSON.stringify(anonymous)).toString("base64url");
+    assert.equal(await readSession(`${stripped}.${signature}`), null);
+  });
+
   it("rejects a token whose claims have been edited", async () => {
-    const token = (await issueSession())!;
+    const token = (await issueSession("env"))!;
     const [payload, signature] = token.split(".");
 
     const claims = JSON.parse(Buffer.from(payload, "base64url").toString());
@@ -41,7 +52,7 @@ describe("admin sessions", () => {
   });
 
   it("rejects a token whose signature has been edited", async () => {
-    const token = (await issueSession())!;
+    const token = (await issueSession("env"))!;
     const [payload, signature] = token.split(".");
     // The first character, not the last. A 32-byte signature is 43 base64url
     // characters and the last one carries only two real bits, so an edit
@@ -54,7 +65,7 @@ describe("admin sessions", () => {
 
   it("rejects an expired token even though it is genuinely signed", async () => {
     const thirteenHoursAgo = Date.now() - 13 * 60 * 60 * 1000;
-    const token = (await issueSession(thirteenHoursAgo))!;
+    const token = (await issueSession("env", thirteenHoursAgo))!;
     assert.equal(await readSession(token), null);
   });
 
@@ -64,8 +75,8 @@ describe("admin sessions", () => {
     }
   });
 
-  it("stops accepting old tokens once the password changes", async () => {
-    const token = (await issueSession())!;
+  it("stops accepting old tokens once the password on the server changes", async () => {
+    const token = (await issueSession("env"))!;
     const previous = process.env.ADMIN_PASSWORD_HASH;
     try {
       // The signing key is derived from the credential, so changing it is the
@@ -83,7 +94,7 @@ describe("admin sessions", () => {
     try {
       delete process.env.ADMIN_PASSWORD_HASH;
       delete process.env.ADMIN_PASSWORD;
-      assert.equal(await issueSession(), undefined);
+      assert.equal(await issueSession("env"), undefined);
     } finally {
       process.env.ADMIN_PASSWORD_HASH = hash;
       if (plain !== undefined) process.env.ADMIN_PASSWORD = plain;
@@ -96,9 +107,9 @@ describe("admin passwords", () => {
     const previous = process.env.ADMIN_PASSWORD_HASH;
     try {
       process.env.ADMIN_PASSWORD_HASH = await hashPassword("a correct horse battery staple");
-      assert.equal(await verifyPassword("a correct horse battery staple"), true);
-      assert.equal(await verifyPassword("a correct horse battery stapl"), false);
-      assert.equal(await verifyPassword(""), false);
+      assert.equal(await verifyEnvPassword("a correct horse battery staple"), true);
+      assert.equal(await verifyEnvPassword("a correct horse battery stapl"), false);
+      assert.equal(await verifyEnvPassword(""), false);
     } finally {
       process.env.ADMIN_PASSWORD_HASH = previous;
     }
@@ -120,7 +131,7 @@ describe("admin passwords", () => {
     const previous = process.env.ADMIN_PASSWORD_HASH;
     try {
       process.env.ADMIN_PASSWORD_HASH = "scrypt:1073741824:1024:64:c2FsdA:aGFzaA";
-      assert.equal(await verifyPassword("anything"), false);
+      assert.equal(await verifyEnvPassword("anything"), false);
     } finally {
       process.env.ADMIN_PASSWORD_HASH = previous;
     }
@@ -131,7 +142,7 @@ describe("admin passwords", () => {
     try {
       for (const bad of ["scrypt:not:a:hash", "bcrypt:1:2:3:4:5", "", "scrypt"]) {
         process.env.ADMIN_PASSWORD_HASH = bad;
-        assert.equal(await verifyPassword("anything"), false, `"${bad}" must not verify`);
+        assert.equal(await verifyEnvPassword("anything"), false, `"${bad}" must not verify`);
       }
     } finally {
       process.env.ADMIN_PASSWORD_HASH = previous;
