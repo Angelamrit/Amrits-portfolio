@@ -1,7 +1,7 @@
 "use client";
 
-import { useId, type ReactNode } from "react";
-import { Check } from "lucide-react";
+import { memo, useId, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
+import { Check, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 /**
@@ -13,10 +13,33 @@ import { cn } from "@/lib/cn";
  * an hour at a time: denser, quieter, and every one of them says what it is
  * for underneath, because the person using them is a chef rather than the
  * developer who named the fields.
+ *
+ * Every control is memoised. An editor holds its whole form in one state
+ * object, so each keystroke re-renders the editor — and without the memo,
+ * every field, switch and tag on the page with it. On the menu editor, with
+ * seven courses, that cost the better part of half a second per letter on a
+ * phone. The memo only pays off if the handlers passed in are stable, which is
+ * what `useFieldSetters` below is for.
  */
 
+/**
+ * One stable setter per field of a draft — `set.name`, `set.intro` — made
+ * once, from the draft's own keys, and the same functions on every render
+ * after. That is what lets a memoised control whose value has not changed be
+ * skipped. The drafts are always fully populated, so every field has a key.
+ */
+export function useFieldSetters<T extends object>(initial: T, setDraft: Dispatch<SetStateAction<T>>) {
+  const [setters] = useState(
+    () =>
+      Object.fromEntries(
+        Object.keys(initial).map((key) => [key, (value: unknown) => setDraft((current) => ({ ...current, [key]: value }))]),
+      ) as { [K in keyof T]-?: (value: T[K]) => void },
+  );
+  return setters;
+}
+
 const control =
-  "w-full rounded-xl border border-fg/12 bg-fg/[0.04] px-3.5 py-2.5 font-sans text-[0.9rem] text-fg placeholder:text-fg/25 transition-all duration-300 hover:border-fg/20 focus:border-gold/70 focus:bg-fg/[0.07] focus:shadow-[0_0_0_3px_rgba(226,189,108,0.14)] focus:outline-none [color-scheme:dark]";
+  "w-full rounded-xl border border-fg/12 bg-fg/[0.04] px-3.5 py-2.5 font-sans text-[0.9rem] text-fg placeholder:text-fg/25 transition-all duration-300 hover:border-fg/20 focus:border-gold/70 focus:bg-fg/[0.07] focus:shadow-[0_0_0_3px_rgba(226,189,108,0.14)] focus:outline-none aria-[invalid=true]:border-[#e59a93]/70 [color-scheme:dark]";
 
 function Shell({
   label,
@@ -50,7 +73,7 @@ function Shell({
   );
 }
 
-export function TextField({
+export const TextField = memo(function TextField({
   label,
   hint,
   error,
@@ -84,9 +107,74 @@ export function TextField({
       />
     </Shell>
   );
-}
+});
 
-export function TextArea({
+/**
+ * A whole number within a range, with steppers.
+ *
+ * The box holds its own text while it is being typed in, so it can be empty
+ * for a moment: the old field clamped every keystroke, which turned clearing
+ * "1" and typing "5" into "15". A number is only reported once there is one,
+ * and leaving the box puts back whatever is actually stored.
+ */
+export const NumberField = memo(function NumberField({
+  label,
+  hint,
+  value,
+  onChange,
+  min,
+  max,
+  className,
+}: {
+  label: string;
+  hint?: string;
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+  className?: string;
+}) {
+  const id = useId();
+  const [text, setText] = useState(String(value));
+  const [shown, setShown] = useState(value);
+  // A save, a reset or a stepper changes the value from outside the box.
+  if (value !== shown) {
+    setShown(value);
+    setText(String(value));
+  }
+
+  const clamp = (next: number) => Math.min(max, Math.max(min, next));
+  const stepper =
+    "grid size-[2.625rem] shrink-0 place-items-center rounded-xl border border-fg/12 bg-fg/[0.04] text-fg/60 transition-colors duration-300 hover:border-gold/50 hover:text-gold-light disabled:pointer-events-none disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold";
+
+  return (
+    <Shell label={label} hint={hint} htmlFor={id} className={className}>
+      <div className="flex items-center gap-2">
+        <button type="button" aria-label={`Lower ${label.toLowerCase()}`} onClick={() => onChange(clamp(value - 1))} disabled={value <= min} className={stepper}>
+          <Minus aria-hidden className="size-3.5" strokeWidth={2} />
+        </button>
+        <input
+          id={id}
+          type="text"
+          inputMode="numeric"
+          value={text}
+          onChange={(event) => {
+            const digits = event.target.value.replace(/[^0-9]/g, "").slice(0, String(max).length);
+            setText(digits);
+            if (digits) onChange(clamp(Number(digits)));
+          }}
+          onBlur={() => setText(String(value))}
+          className={cn(control, "w-20 text-center tnum")}
+        />
+        <button type="button" aria-label={`Raise ${label.toLowerCase()}`} onClick={() => onChange(clamp(value + 1))} disabled={value >= max} className={stepper}>
+          <Plus aria-hidden className="size-3.5" strokeWidth={2} />
+        </button>
+      </div>
+    </Shell>
+  );
+});
+
+export const TextArea = memo(function TextArea({
   label,
   hint,
   error,
@@ -124,9 +212,9 @@ export function TextArea({
       )}
     </Shell>
   );
-}
+});
 
-export function SelectField({
+export const SelectField = memo(function SelectField({
   label,
   hint,
   value,
@@ -161,10 +249,10 @@ export function SelectField({
       </select>
     </Shell>
   );
-}
+});
 
 /** A switch, because "featured" and "confirmed" read better as on/off than as a checkbox in a list. */
-export function Toggle({
+export const Toggle = memo(function Toggle({
   label,
   hint,
   checked,
@@ -203,7 +291,7 @@ export function Toggle({
       </span>
     </button>
   );
-}
+});
 
 export const DIETARY_TAGS = [
   { value: "vegetarian", label: "Vegetarian" },
@@ -217,7 +305,7 @@ export const DIETARY_TAGS = [
 export type DietaryValue = (typeof DIETARY_TAGS)[number]["value"];
 
 /** Dietary tags as toggleable pills — the whole set is visible, so nothing has to be remembered. */
-export function TagPicker({
+export const TagPicker = memo(function TagPicker({
   label,
   hint,
   selected,
@@ -263,4 +351,4 @@ export function TagPicker({
       {hint && <p className="text-[0.72rem] text-fg/35">{hint}</p>}
     </div>
   );
-}
+});

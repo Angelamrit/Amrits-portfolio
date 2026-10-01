@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Check, Search } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -18,8 +18,16 @@ export type ImageChoice = { key: string; src: string; alt: string; label: string
  *
  * Uploading new photography is the gallery's job, and anything added there
  * appears in this list.
+ *
+ * Memoised, and so is every tile in it, because this is by far the heaviest
+ * thing on the dish editor: nearly fifty `next/image` elements, each of which
+ * works out its own source set on every render. Without the memo, every letter
+ * typed into the dish's name or description rebuilt all of them — close to
+ * half a second per keystroke on a phone. Now typing elsewhere skips the
+ * picker entirely, and choosing a picture redraws only the two tiles whose
+ * selection changed. It relies on the parent passing a stable `onChange`.
  */
-export function ImagePicker({
+export const ImagePicker = memo(function ImagePicker({
   label,
   hint,
   choices,
@@ -72,46 +80,62 @@ export function ImagePicker({
         </p>
       ) : (
         <ul className="grid max-h-[22rem] grid-cols-3 gap-2.5 overflow-y-auto pr-1 sm:grid-cols-4 lg:grid-cols-6">
-          {shown.map((choice) => {
-            const selected = choice.key === value;
-            return (
-              <li key={choice.key}>
-                <button
-                  type="button"
-                  onClick={() => onChange(choice.key)}
-                  aria-pressed={selected}
-                  title={choice.alt}
-                  className={cn(
-                    "group relative block w-full overflow-hidden rounded-xl border transition-all duration-400 ease-luxe focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
-                    selected ? "border-gold shadow-glow" : "border-fg/10 hover:border-gold/45",
-                  )}
-                >
-                  <span className="relative block aspect-square bg-sand">
-                    <Image
-                      src={choice.src}
-                      alt=""
-                      fill
-                      sizes="140px"
-                      className={cn(
-                        "object-cover transition-transform duration-[900ms] ease-luxe group-hover:scale-105",
-                        !selected && "opacity-75 group-hover:opacity-100",
-                      )}
-                    />
-                    {selected && (
-                      <span className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-gold text-charcoal">
-                        <Check aria-hidden className="size-3" strokeWidth={3} />
-                      </span>
-                    )}
-                  </span>
-                  <span className="block truncate px-2 py-1.5 text-left text-[0.65rem] text-fg/50">
-                    {choice.label}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
+          {shown.map((choice) => (
+            <Tile key={choice.key} choice={choice} selected={choice.key === value} onChange={onChange} />
+          ))}
         </ul>
       )}
     </div>
   );
-}
+});
+
+type TileProps = { choice: ImageChoice; selected: boolean; onChange: (key: string) => void };
+
+/**
+ * Compared by content, not identity. After a save the server sends the page
+ * again and every choice arrives as a new object; without this the whole
+ * grid of tiles was rebuilt at the moment of saving.
+ */
+const sameTile = (a: TileProps, b: TileProps) =>
+  a.selected === b.selected &&
+  a.onChange === b.onChange &&
+  a.choice.key === b.choice.key &&
+  a.choice.src === b.choice.src &&
+  a.choice.alt === b.choice.alt &&
+  a.choice.label === b.choice.label;
+
+const Tile = memo(function Tile({ choice, selected, onChange }: TileProps) {
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onChange(choice.key)}
+        aria-pressed={selected}
+        title={choice.alt}
+        className={cn(
+          "group relative block w-full overflow-hidden rounded-xl border transition-all duration-400 ease-luxe focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
+          selected ? "border-gold shadow-glow" : "border-fg/10 hover:border-gold/45",
+        )}
+      >
+        <span className="relative block aspect-square bg-sand">
+          <Image
+            src={choice.src}
+            alt=""
+            fill
+            sizes="140px"
+            className={cn(
+              "object-cover transition-transform duration-[900ms] ease-luxe group-hover:scale-105",
+              !selected && "opacity-75 group-hover:opacity-100",
+            )}
+          />
+          {selected && (
+            <span className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-gold text-charcoal">
+              <Check aria-hidden className="size-3" strokeWidth={3} />
+            </span>
+          )}
+        </span>
+        <span className="block truncate px-2 py-1.5 text-left text-[0.65rem] text-fg/50">{choice.label}</span>
+      </button>
+    </li>
+  );
+}, sameTile);

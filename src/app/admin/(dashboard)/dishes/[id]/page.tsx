@@ -1,23 +1,21 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink } from "lucide-react";
-import { dishes as baseDishes } from "@/data/dishes";
-import { editedDishIds, getDishById, imageChoices, imageKeyFor } from "@/lib/content/dishes";
+import { getDishForAdmin, getImageChoices } from "@/lib/content/dishes";
+import { menuCoursesUsing } from "@/lib/content/dish-usage";
+import { getMenus } from "@/lib/content/menus";
+import { BackLink } from "@/components/admin/BackLink";
 import { DishEditor, type DishDraft } from "@/components/admin/DishEditor";
 import { PageHeading } from "@/components/admin/PageHeading";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const dish = await getDishById(id);
+  const dish = await getDishForAdmin(id);
   return { title: dish ? `Edit ${dish.name}` : "Dish" };
 }
 
 export default async function EditDishPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!baseDishes.some((dish) => dish.id === id)) notFound();
-
-  const [dish, edited] = await Promise.all([getDishById(id), editedDishIds()]);
+  const [dish, images, menus] = await Promise.all([getDishForAdmin(id), getImageChoices(), getMenus()]);
   if (!dish) notFound();
 
   const draft: DishDraft = {
@@ -26,39 +24,33 @@ export default async function EditDishPage({ params }: { params: Promise<{ id: s
     description: dish.description,
     tags: dish.tags as DishDraft["tags"],
     signature: dish.signature,
-    order: dish.order,
-    imageKey: imageKeyFor(dish) ?? "",
+    visible: !dish.hidden,
+    imageKey: dish.imageKey,
   };
 
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <Link
-          href="/admin/dishes"
-          className="inline-flex items-center gap-2 text-[0.7rem] uppercase tracking-[0.18em] text-fg/45 transition-colors duration-300 hover:text-gold"
-        >
-          <ArrowLeft aria-hidden className="size-3.5" strokeWidth={1.8} />
-          All dishes
-        </Link>
+        <BackLink href="/admin/dishes">All dishes</BackLink>
       </div>
 
       <PageHeading
-        eyebrow="Editing a dish"
+        eyebrow={dish.added ? "A dish you added" : "Editing a dish"}
         title={dish.name}
-        description="Changes go live on the site as soon as they are saved."
-      >
-        <Link
-          href="/menus"
-          target="_blank"
-          rel="noreferrer"
-          className="glass inline-flex shrink-0 items-center gap-2 rounded-pill px-4 py-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-fg/70 transition-colors duration-300 hover:text-gold-light"
-        >
-          <ExternalLink aria-hidden className="size-3.5" strokeWidth={1.8} />
-          See it on the site
-        </Link>
-      </PageHeading>
+        description="Change the photograph, the words or where it appears. Guests see your changes as soon as you press Save."
+      />
 
-      <DishEditor id={dish.id} initial={draft} images={imageChoices} isEdited={edited.has(dish.id)} />
+      <DishEditor
+        // Re-mounted after a reset or a save that renames it, so every field starts from what was stored.
+        key={dish.id}
+        mode="edit"
+        id={dish.id}
+        initial={draft}
+        images={images}
+        canReset={dish.edited}
+        canDelete={dish.added}
+        inMenus={menuCoursesUsing(dish.id, menus)}
+      />
     </div>
   );
 }

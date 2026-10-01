@@ -9,11 +9,11 @@ import { PanelEmpty } from "./Panel";
  * hue, not a heat map — height is a far more precise channel than shade, and
  * a rainbow across hours would imply a category difference that is not there.
  *
- * The hours are UTC, and the panel says so rather than quietly converting:
- * the chef is in New York, his guests are not all in one place, and a chart
- * that silently picks one timezone is a chart that is wrong for everyone else.
+ * The hours are the restaurant's own — New York time — and the panel says so.
+ * They were UTC once, which put the evening rush at "23:00" and made the chart
+ * something to convert rather than read.
  */
-export function HourStrip({ hours }: { hours: number[] }) {
+export function HourStrip({ hours, zoneLabel }: { hours: number[]; zoneLabel: string }) {
   const peak = Math.max(...hours);
   if (peak === 0) return <PanelEmpty>Nothing recorded yet</PanelEmpty>;
 
@@ -21,7 +21,7 @@ export function HourStrip({ hours }: { hours: number[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex h-40 items-end gap-[3px]" role="img" aria-label={`Views by hour. Busiest at ${String(busiest).padStart(2, "0")}:00 UTC with ${exact(peak)} views.`}>
+      <div className="flex h-40 items-end gap-[3px]" role="img" aria-label={`Views by hour. Busiest at ${String(busiest).padStart(2, "0")}:00 ${zoneLabel} with ${exact(peak)} views.`}>
         {hours.map((count, hour) => (
           <div key={hour} className="group/hour relative flex h-full flex-1 items-end">
             <span
@@ -61,6 +61,9 @@ export function HourStrip({ hours }: { hours: number[] }) {
         <span>18:00</span>
         <span>23:00</span>
       </div>
+      <p className="text-[0.74rem] text-fg/55">
+        Busiest around <span className="font-semibold text-gold-light">{String(busiest).padStart(2, "0")}:00</span>, {zoneLabel}.
+      </p>
     </div>
   );
 }

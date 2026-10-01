@@ -18,7 +18,22 @@ import { PanelEmpty } from "./Panel";
  * to get a hydration mismatch on a timestamp.
  */
 
-export type Visit = { at: number; path: string; referrer: string; device: "mobile" | "tablet" | "desktop"; country?: string };
+export type Visit = {
+  at: number;
+  path: string;
+  /** The page's name on the site, when the server knows it. */
+  page?: string;
+  referrer: string;
+  device: "mobile" | "tablet" | "desktop";
+  country?: string;
+};
+
+/** "internal" is the log's word for a click from another page of this site. */
+function source(referrer: string): string {
+  if (referrer === "internal") return "from another page";
+  if (referrer === "direct") return "typed in or bookmarked";
+  return `from ${referrer}`;
+}
 
 const icons = { mobile: Smartphone, tablet: Tablet, desktop: Monitor } as const;
 
@@ -44,12 +59,14 @@ export function LiveFeed({ visits, now }: { visits: Visit[]; now: number }) {
             className="flex items-center gap-3 border-b border-fg/6 py-2.5 last:border-b-0"
           >
             <Icon aria-hidden className="size-3.5 shrink-0 text-fg/30" strokeWidth={1.6} />
-            <span className="min-w-0 flex-1 truncate font-sans text-[0.82rem] text-fg/85">{visit.path}</span>
+            <span className="min-w-0 flex-1 truncate font-sans text-[0.82rem] text-fg/85" title={visit.path}>
+              {visit.page ?? visit.path}
+            </span>
             {visit.country && (
               <span className="hidden shrink-0 text-[0.7rem] text-fg/40 sm:inline">{countryName(visit.country)}</span>
             )}
-            <span className="hidden shrink-0 truncate text-[0.7rem] text-fg/35 md:inline md:max-w-[9rem]">
-              {visit.referrer === "direct" ? "direct" : visit.referrer}
+            <span className="hidden shrink-0 truncate text-[0.7rem] text-fg/35 md:inline md:max-w-[10rem]">
+              {source(visit.referrer)}
             </span>
             <time
               dateTime={new Date(visit.at).toISOString()}

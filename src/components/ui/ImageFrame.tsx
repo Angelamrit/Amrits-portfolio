@@ -2,10 +2,11 @@ import Image from "next/image";
 import type { ImageAsset } from "@/types/content";
 import { cn } from "@/lib/cn";
 
-type Ratio = "3/4" | "4/5" | "1/1" | "4/3" | "3/2" | "16/9" | "21/9" | "fill";
+type Ratio = "9/16" | "3/4" | "4/5" | "1/1" | "4/3" | "3/2" | "16/9" | "21/9" | "fill";
 type Focal = "center" | "top" | "bottom" | "left" | "right";
 
 const ratios: Record<Ratio, string> = {
+  "9/16": "aspect-[9/16]",
   "3/4": "aspect-[3/4]",
   "4/5": "aspect-[4/5]",
   "1/1": "aspect-square",

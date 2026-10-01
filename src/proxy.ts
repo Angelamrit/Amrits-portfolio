@@ -32,6 +32,15 @@ export async function proxy(request: NextRequest) {
 
   const session = await readSession(request.cookies.get(SESSION_COOKIE)?.value);
 
+  // A save posted from a dashboard page after the session ran out. Redirecting
+  // it here would break the request and throw away the form; the action checks
+  // the session itself and answers with a message the form can show. This
+  // opens nothing: an action id can be posted to any path on the site, most of
+  // which this proxy never sees, so it was never the check that protected them.
+  if (!session && request.method === "POST" && request.headers.has("next-action")) {
+    return NextResponse.next();
+  }
+
   if (!session && !isLogin) {
     const login = new URL("/admin/login", request.url);
     // Round-trip where they were heading, so signing in lands on the page they

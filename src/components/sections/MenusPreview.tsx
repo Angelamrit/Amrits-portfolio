@@ -13,9 +13,16 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { Section } from "@/components/ui/Section";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
 
-/** Chapter 04: every menu, presented like a printed menu card with its courses listed. */
+/**
+ * Chapter 04: the menus the chef has chosen for the home page ("Show on the
+ * home page" in the dashboard), presented like a printed menu card with its
+ * courses listed. With none chosen the chapter keeps its heading and its way
+ * through to the menus page, so the chapter navigation never points at
+ * nothing.
+ */
 export async function MenusPreview() {
-  const [menus, dishes, venue] = await Promise.all([getMenus(), getDishes(), getVenue()]);
+  const [allMenus, dishes, venue] = await Promise.all([getMenus(), getDishes(), getVenue()]);
+  const menus = allMenus.filter((menu) => menu.featured);
   const dishById = (id: string) => dishes.find((dish) => dish.id === id);
 
   return (
@@ -45,6 +52,14 @@ export async function MenusPreview() {
             </Reveal>
           )}
         </div>
+
+        {menus.length === 0 && (
+          <Reveal delay={0.2} className="mt-12">
+            <Button href="/menus" variant="glass">
+              See the menus
+            </Button>
+          </Reveal>
+        )}
 
         <RevealGroup className={menus.length > 1 ? "mt-16 grid gap-6 lg:grid-cols-2" : "mx-auto mt-16 grid max-w-3xl gap-6"}>
           {menus.map((menu, mi) => (

@@ -641,8 +641,17 @@
   halo — a thick gold aura is what made the first gold button read as loud.
 */
 @utility btn-primary {
+  position: relative;
+  overflow: hidden;
+  /*
+    isolation: isolate creates a local stacking context so ::before and ::after
+    at z-index: -1 stay contained within the button rather than escaping behind
+    the page. This keeps the gradient fills below all text / icon children
+    regardless of whether those children are wrapped in positioned spans.
+  */
+  isolation: isolate;
   color: var(--btn-label);
-  background-image: var(--btn-fill);
+  background: transparent;
   border: 1px solid var(--btn-ring);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.35),
@@ -650,21 +659,29 @@
     0 1px 0 rgba(0, 0, 0, 0.22),
     0 14px 34px -14px var(--btn-glow);
 
-  /*
-    Hover fades in a brighter cut of the same metal, over-sized so its specular
-    band can travel across the face — the light moving over the surface, rather
-    than a white wash laid on top of it. It lives on the pseudo-element so it
-    can time itself (gradients do not interpolate, and the button's own
-    transition belongs to the lift).
-  */
+  /* Base fill — always visible, sits below all button content. */
   &::before {
     content: "";
     position: absolute;
     inset: 0;
-    z-index: 0;
+    z-index: -1;
+    background-image: var(--btn-fill);
+    border-radius: inherit;
+  }
+
+  /*
+    Hover fill — fades in a brighter cut of the same metal, over-sized so its
+    specular band can travel across the face. Sits below all button content.
+  */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
     background-image: var(--btn-fill-hover);
     background-size: 220% 100%;
     background-position: 8% center;
+    border-radius: inherit;
     opacity: 0;
     transition:
       opacity 0.45s var(--ease-luxe),
@@ -680,7 +697,7 @@
       0 0 24px -6px var(--btn-glow-hover),
       0 22px 46px -18px var(--btn-glow-hover);
   }
-  &:hover::before {
+  &:hover::after {
     opacity: 1;
     background-position: 92% center;
   }
@@ -691,6 +708,9 @@
 
 /* Outlined, with a tinted body so the shape is legible before you reach it. */
 @utility btn-outline {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   color: var(--fg);
   border: 1px solid color-mix(in oklab, var(--accent) 65%, transparent);
   background-color: color-mix(in oklab, var(--accent) 10%, transparent);
@@ -700,8 +720,9 @@
     content: "";
     position: absolute;
     inset: 0;
-    z-index: 0;
+    z-index: -1;
     background: var(--accent);
+    border-radius: inherit;
     transform: scaleX(0);
     transform-origin: left center;
     transition: transform 0.6s var(--ease-luxe);
@@ -727,14 +748,27 @@
   reusing the `glass` panel would have made both of them dark on oak.
 */
 @utility btn-glass {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   color: var(--btn-soft-label);
-  background: var(--btn-soft-bg);
+  background: transparent;
   border: 1px solid var(--btn-soft-ring);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   box-shadow:
     inset 0 1px 0 var(--btn-soft-inset),
     0 14px 34px -18px rgba(20, 10, 5, 0.55);
+
+  /* Base fill — behind all button content. */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--btn-soft-bg);
+    border-radius: inherit;
+  }
 
   /* The glint lives here rather than in the markup so it can pick up the tone. */
   &::before {
@@ -744,6 +778,7 @@
     bottom: -20%;
     left: 0;
     width: 33%;
+    z-index: -1;
     pointer-events: none;
     background: linear-gradient(90deg, transparent, var(--btn-soft-glint), transparent);
     transform: translateX(-200%) skewX(-18deg);
@@ -1177,6 +1212,41 @@
     radial-gradient(120% 80% at 12% -10%, rgba(226, 189, 108, 0.16), transparent 55%),
     radial-gradient(90% 70% at 100% 0%, rgba(120, 60, 25, 0.35), transparent 60%),
     linear-gradient(180deg, #1a100a 0%, #170e09 45%, #120b07 100%);
+}
+
+/*
+  The dashboard keeps still.
+
+  The owner's laptop draws with an Intel UHD 620, and on it the dashboard
+  shuddered while scrolling down to the Save bar. Traced on that chip: the two
+  glowing orbs behind the dashboard drift forever, so the screen was redrawn
+  sixty times a second whether or not anything changed — 380 frames in a
+  twelve-second edit, against 105 with the orbs still — and every frosted
+  panel was blurred again on each of those frames. Still, the page is only
+  redrawn when something on it actually changes.
+
+  Live blur is dropped here too. Behind a panel there is only the room's
+  smooth gradient, and blurring a smooth gradient changes nothing you can
+  see, so in-flow panels keep their translucent colour without the cost. The
+  bars pinned to the screen (sidebar, top bar, tab bar, Save bar, dialogs, the
+  sticky preview) do have page content scrolling behind them, so they become
+  near-solid instead — the same finish phones already get.
+
+  Unlayered on purpose, so it wins over the utilities without !important.
+*/
+.admin-room .orb {
+  animation: none;
+  will-change: auto;
+}
+.admin-room .glass,
+.admin-room .glass-strong,
+.admin-room [class*="backdrop-blur"] {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.admin-room .glass-strong,
+.admin-room :is(aside, header).glass {
+  background: linear-gradient(160deg, rgba(44, 27, 18, 0.97), rgba(31, 19, 13, 0.95));
 }
 
 /* The active item in the sidebar: a gold rail down its leading edge. */

@@ -46,7 +46,7 @@ export default function AboutPage() {
           </>
         }
         lead={chef.positioning}
-        image={chef.portrait}
+        image={images.chefAtTheBar}
       >
         <div className="flex flex-wrap gap-4">
           <Button href="/angel" variant="glass">
@@ -91,7 +91,7 @@ export default function AboutPage() {
         <Container>
           <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-5">
-              <ImageFrame image={images.chefPlating} ratio="4/5" glow sizes="(min-width: 1024px) 40vw, (min-width: 640px) 28rem, 100vw" className="mx-auto w-full max-w-sm sm:max-w-md lg:max-w-none" />
+              <ImageFrame image={images.chefBehindTheBar} ratio="4/5" glow sizes="(min-width: 1024px) 40vw, (min-width: 640px) 28rem, 100vw" className="mx-auto w-full max-w-sm sm:max-w-md lg:max-w-none" />
             </div>
             <div className="lg:col-span-6 lg:col-start-7">
               <Reveal>
@@ -132,8 +132,8 @@ export default function AboutPage() {
                   Pathankot to <Em>Jackson Heights.</Em>
                 </Heading>
               </Reveal>
-              <div className="mt-10 hidden lg:block">
-                <ImageFrame image={images.chefCooking} ratio="4/5" glow sizes="30vw" className="max-w-sm" />
+              <div className="mt-10">
+                <ImageFrame image={images.chefKitchenPrep} ratio="9/16" glow sizes="(min-width: 1024px) 30vw, 24rem" className="mx-auto max-w-sm lg:mx-0" />
               </div>
             </div>
             <div className="lg:col-span-7 lg:col-start-6">

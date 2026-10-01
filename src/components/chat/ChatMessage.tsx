@@ -3,7 +3,7 @@
 import { cn } from "@/lib/cn";
 import { parseMarkdown, type Span } from "@/lib/chat/markdown";
 import { Button } from "@/components/ui/Button";
-import { site } from "@/data/site";
+import { useVenue } from "@/components/layout/VenueContext";
 import type { IntentMatch } from "@/lib/chat/intent";
 import type { ChatTurn } from "./useChat";
 
@@ -76,10 +76,14 @@ function MarkdownBody({ text }: { text: string }) {
  * already reads and validates, so nothing is duplicated here.
  */
 function ChatCta({ cta }: { cta: IntentMatch }) {
+  // The live reservation link, as edited in the dashboard — not the one the
+  // code shipped with, which is what every other Reserve button stopped using.
+  const { resyUrl } = useVenue();
+
   if (cta.intent === "resy") {
-    if (!site.restaurant.resyUrl) return null;
+    if (!resyUrl) return null;
     return (
-      <Button href={site.restaurant.resyUrl} variant="primary" size="sm" className="mt-3 w-full">
+      <Button href={resyUrl} variant="primary" size="sm" className="mt-3 w-full">
         Reserve a Table
       </Button>
     );

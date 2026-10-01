@@ -19,7 +19,60 @@ const SESSION_GAP_MS = 30 * 60 * 1000;
 /** How recent a visit has to be to count as somebody on the site right now. */
 const LIVE_WINDOW_MS = 5 * 60 * 1000;
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+
+/**
+ * The restaurant's clock, which is the one the dashboard reads in.
+ *
+ * The log is stored in UTC and stays that way; this only decides how it is
+ * read. "Busiest at 23:00" meant seven in the evening in Jackson Heights, and
+ * a day's bar ran from eight at night to eight at night — true, and useless to
+ * a chef planning around his own service. So hours of the day and the edges
+ * of each day are New York's, daylight saving included.
+ */
+export const SITE_TIME_ZONE = "America/New_York";
+export const SITE_TIME_ZONE_LABEL = "New York time";
+
+const wallClock = new Intl.DateTimeFormat("en-US", {
+  timeZone: SITE_TIME_ZONE,
+  hourCycle: "h23",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+/**
+ * What to add to a UTC instant to read New York's wall clock off its UTC
+ * fields. Offsets only change on the hour, so one lookup per UTC hour serves
+ * every event in it — a year of visits costs a few thousand formatter calls,
+ * not one per visit.
+ */
+const offsets = new Map<number, number>();
+
+function zoneOffset(at: number): number {
+  const hour = Math.floor(at / HOUR_MS);
+  const cached = offsets.get(hour);
+  if (cached !== undefined) return cached;
+
+  const parts = Object.fromEntries(wallClock.formatToParts(hour * HOUR_MS).map((part) => [part.type, part.value]));
+  const offset = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute) - hour * HOUR_MS;
+  if (offsets.size > 20_000) offsets.clear();
+  offsets.set(hour, offset);
+  return offset;
+}
+
+/** The restaurant's calendar day for an instant, `YYYY-MM-DD`. */
+export function localDay(at: number): string {
+  return new Date(at + zoneOffset(at)).toISOString().slice(0, 10);
+}
+
+/** The restaurant's hour of the day for an instant, 0–23. */
+export function localHour(at: number): number {
+  return new Date(at + zoneOffset(at)).getUTCHours();
+}
 
 export const RANGES = [
   { key: "24h", label: "24 hours", days: 1 },
@@ -63,7 +116,7 @@ export type Overview = {
   referrers: Breakdown[];
   devices: { device: Device; views: number; share: number }[];
   countries: Breakdown[];
-  /** Views by hour of the day, UTC, summed across the range. */
+  /** Views by hour of the day, in the restaurant's time, summed across the range. */
   hourly: number[];
   liveVisitors: number;
   recent: { at: number; path: string; referrer: string; device: Device; country?: string }[];
@@ -165,45 +218,53 @@ function rank(events: StoredEvent[], keyOf: (event: StoredEvent) => string | und
  * a single bar is not a chart. The bucket edges are built from the range
  * rather than from the data, so quiet periods show as gaps at zero instead of
  * being skipped and making the line lie about the shape of the traffic.
+ *
+ * Both are in the restaurant's time. Hours line up with UTC hours (New York is
+ * a whole number of hours off), so only their labels change; days are keyed
+ * by New York's date, which is what makes a day's bar mean midnight to
+ * midnight where the chef is.
  */
 function buildSeries(events: StoredEvent[], fromMs: number, toMs: number, days: number): Point[] {
-  const hourly = days <= 1;
-  const step = hourly ? 60 * 60 * 1000 : DAY_MS;
-  const start = hourly ? Math.floor(fromMs / step) * step : Date.parse(`${utcDay(fromMs)}T00:00:00.000Z`);
+  const buckets = new Map<string, Point>();
 
-  const buckets: Point[] = [];
-  const index = new Map<number, Point>();
-  for (let at = start; at <= toMs; at += step) {
-    const date = new Date(at);
-    const point: Point = {
-      at,
-      label: hourly
-        ? `${String(date.getUTCHours()).padStart(2, "0")}:00`
-        : date.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }),
-      views: 0,
-      visitors: 0,
-    };
-    buckets.push(point);
-    index.set(at, point);
+  if (days <= 1) {
+    for (let at = Math.floor(fromMs / HOUR_MS) * HOUR_MS; at <= toMs; at += HOUR_MS) {
+      buckets.set(String(at), { at, label: `${String(localHour(at)).padStart(2, "0")}:00`, views: 0, visitors: 0 });
+    }
+  } else {
+    // Calendar arithmetic on the date itself, so a 23- or 25-hour day at a
+    // clock change is still exactly one bucket.
+    const last = localDay(toMs);
+    for (let day = localDay(fromMs); day <= last; day = new Date(Date.parse(`${day}T00:00:00Z`) + DAY_MS).toISOString().slice(0, 10)) {
+      const noon = Date.parse(`${day}T12:00:00Z`);
+      buckets.set(day, {
+        at: noon,
+        label: new Date(noon).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }),
+        views: 0,
+        visitors: 0,
+      });
+    }
   }
 
-  const seen = new Map<number, Set<string>>();
+  const keyOf = days <= 1 ? (at: number) => String(Math.floor(at / HOUR_MS) * HOUR_MS) : localDay;
+
+  const seen = new Map<string, Set<string>>();
   for (const event of events) {
-    const bucketAt = Math.floor((event.t - start) / step) * step + start;
-    const point = index.get(bucketAt);
+    const key = keyOf(event.t);
+    const point = buckets.get(key);
     if (!point) continue;
     point.views += 1;
-    const visitors = seen.get(bucketAt) ?? new Set<string>();
+    const visitors = seen.get(key) ?? new Set<string>();
     visitors.add(event.v);
-    seen.set(bucketAt, visitors);
+    seen.set(key, visitors);
   }
 
-  for (const [at, visitors] of seen) {
-    const point = index.get(at);
+  for (const [key, visitors] of seen) {
+    const point = buckets.get(key);
     if (point) point.visitors = visitors.size;
   }
 
-  return buckets;
+  return [...buckets.values()];
 }
 
 /**
@@ -270,7 +331,7 @@ async function computeOverview(range: (typeof RANGES)[number], now: number): Pro
     countries: rank(current, (event) => event.c, 6),
     hourly: current.reduce<number[]>(
       (hours, event) => {
-        hours[new Date(event.t).getUTCHours()] += 1;
+        hours[localHour(event.t)] += 1;
         return hours;
       },
       Array.from({ length: 24 }, () => 0),

@@ -1,6 +1,7 @@
 "use server";
 
-import { requireAdmin, refreshSessionIfStale } from "@/lib/admin/auth";
+import { refreshSessionIfStale } from "@/lib/admin/auth";
+import { refuseIfSignedOut } from "@/lib/admin/guard";
 import { resetVenue, saveVenuePatch, venuePatchSchema } from "@/lib/content/venue";
 import { revalidateSite } from "@/lib/content/revalidate";
 import type { EditorState } from "@/lib/content/state";
@@ -12,7 +13,8 @@ function failure(message: string): EditorState {
 }
 
 export async function saveVenue(_previous: EditorState, formData: FormData): Promise<EditorState> {
-  await requireAdmin();
+  const refused = await refuseIfSignedOut();
+  if (refused) return refused;
 
   const raw = formData.get("payload");
   if (typeof raw !== "string") return failure("The form did not send anything to save.");
@@ -41,7 +43,8 @@ export async function saveVenue(_previous: EditorState, formData: FormData): Pro
 }
 
 export async function resetVenueToOriginal(): Promise<EditorState> {
-  await requireAdmin();
+  const refused = await refuseIfSignedOut();
+  if (refused) return refused;
 
   try {
     await resetVenue();

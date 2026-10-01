@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Database, Eye, HardDriveDownload, ShieldCheck } from "lucide-react";
-import { getOverview, rangeFromKey } from "@/lib/analytics/aggregate";
+import { SITE_TIME_ZONE_LABEL, getOverview, rangeFromKey } from "@/lib/analytics/aggregate";
+import { pageName } from "@/lib/analytics/page-names";
 import { credentialKind } from "@/lib/admin/config";
 import { store } from "@/lib/store";
 import { BarList, ShareBars } from "@/components/admin/BarList";
@@ -43,6 +44,14 @@ export default async function VisitorsPage({
   const spark = data.series.slice(-12).map((point) => point.views);
 
   const hasVisits = totals.views > 0;
+  // Why a tile has no percentage: nothing recorded at all, a year-long range
+  // (which is not compared, see `computeOverview`), or no visits in the
+  // period before this one.
+  const noComparison = !hasVisits
+    ? "Nothing recorded yet"
+    : previous === null
+      ? "Not compared over a whole year"
+      : "Nothing in the period before to compare";
 
   return (
     <div className="flex flex-col gap-8">
@@ -63,7 +72,7 @@ export default async function VisitorsPage({
           value={compact(totals.visitors)}
           comparedTo={comparedTo}
           change={change(totals.visitors, previous?.visitors)}
-          hint={hasVisits ? "First period on record" : "Nothing recorded yet"}
+          hint={noComparison}
           spark={spark}
           className="sm:col-span-2"
         />
@@ -72,14 +81,14 @@ export default async function VisitorsPage({
           value={compact(totals.views)}
           comparedTo={comparedTo}
           change={change(totals.views, previous?.views)}
-          hint={hasVisits ? "First period on record" : "Nothing recorded yet"}
+          hint={noComparison}
         />
         <StatTile
           label="Visits"
           value={compact(totals.sessions)}
           comparedTo={comparedTo}
           change={change(totals.sessions, previous?.sessions)}
-          hint={hasVisits ? "First period on record" : "Nothing recorded yet"}
+          hint={noComparison}
         />
       </div>
 
@@ -126,6 +135,7 @@ export default async function VisitorsPage({
           <BarList
             rows={data.topPages.map((row) => ({
               label: row.label,
+              display: pageName(row.label),
               value: row.views,
               secondary: row.visitors,
             }))}
@@ -162,13 +172,13 @@ export default async function VisitorsPage({
       <div className="grid gap-4 xl:grid-cols-4">
         <Panel
           title="Hours of the day"
-          hint="Views by hour, UTC, across this period."
+          hint={`When people read the site, by hour, ${SITE_TIME_ZONE_LABEL}.`}
           className="xl:col-span-2"
           // The neighbouring panel is a list and sets the row height; without
           // this the strip would sit against the top of a mostly empty card.
           bodyClassName="flex flex-1 flex-col justify-center"
         >
-          <HourStrip hours={data.hourly} />
+          <HourStrip hours={data.hourly} zoneLabel={SITE_TIME_ZONE_LABEL} />
         </Panel>
 
         <Panel
@@ -177,7 +187,7 @@ export default async function VisitorsPage({
           className="xl:col-span-2"
           bodyClassName="pt-2"
         >
-          <LiveFeed visits={data.recent} now={now} />
+          <LiveFeed visits={data.recent.map((visit) => ({ ...visit, page: pageName(visit.path) }))} now={now} />
         </Panel>
       </div>
 
@@ -248,7 +258,7 @@ export default async function VisitorsPage({
       </Panel>
 
       <p className="pb-4 text-center text-[0.72rem] text-fg/45">
-        Totals exclude obvious bots. All times UTC.
+        Totals exclude obvious bots. Days and hours are {SITE_TIME_ZONE_LABEL}, the restaurant&rsquo;s own clock.
       </p>
     </div>
   );

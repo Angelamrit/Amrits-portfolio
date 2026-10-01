@@ -9,11 +9,9 @@ import { Button } from "@/components/ui/Button";
 import { CardHeader } from "@/components/ui/CardHeader";
 import { Container } from "@/components/ui/Container";
 import { Embers } from "@/components/ui/Embers";
-import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Em } from "@/components/ui/Heading";
 import { ImageFrame } from "@/components/ui/ImageFrame";
 import { NeighborhoodMap } from "@/components/ui/NeighborhoodMap";
-import { Orbs } from "@/components/ui/Orbs";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
 import { Wordmark } from "./Wordmark";
@@ -57,39 +55,27 @@ export function Footer() {
     <footer aria-labelledby="footer-heading" className="section-lazy tone-dark grain relative overflow-hidden bg-gradient-to-b from-brown to-brown-deep">
       <span aria-hidden className="hairline-center absolute inset-x-0 top-0 z-[3]" />
 
-      {/* The dining room at night, barely there, fading out before the cards begin. */}
-      <div aria-hidden className="mask-fade-b absolute inset-x-0 top-0 h-[72%]">
-        <ImageFrame image={images.angelDiningRoom} ratio="fill" reveal="fade" sizes="100vw" quality={65} imgClassName="opacity-[0.14] saturate-[0.8]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-brown/60 via-transparent to-brown-deep" />
+      {/* The dining room, its tables set, shown clearly, dissolving into the brown
+          before the cards begin. Deliberately no orbs or wash over it: soft
+          pools of light over a photo this dark read as fog. Only the top is
+          shaded, so the hairline and heading stay legible against the ceiling.
+          On phones and tablets the footer is over 2000px tall, so a layer at
+          72% would stretch a landscape photo into a narrow vertical smear; a
+          fixed height keeps a recognisable crop behind the heading. */}
+      <div aria-hidden className="mask-fade-b absolute inset-x-0 top-0 h-[38rem] lg:h-[72%]">
+        <ImageFrame image={images.angelDiningTables} ratio="fill" reveal="fade" sizes="100vw" quality={78} imgClassName="opacity-[0.62] contrast-[1.06]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-brown-deep/55 via-transparent via-30% to-brown-deep" />
       </div>
       <div aria-hidden className="panel-pattern absolute inset-0" />
-      <Orbs variant="mixed" />
       <Embers count={12} className="opacity-70" />
 
       <Container className="relative z-[2] pt-20 md:pt-28">
         {/* ---- The invitation ---- */}
-        <div>
-          <div>
-            <Reveal>
-              <Eyebrow>
-                {restaurant.name} · {restaurant.address.city}
-              </Eyebrow>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <h2 id="footer-heading" className="mt-8 font-display text-display-lg font-light leading-[0.98] text-fg">
-                Your table is <Em shimmer>waiting.</Em>
-              </h2>
-            </Reveal>
-            <Reveal delay={0.2}>
-              <div className="mt-10 flex flex-wrap gap-4">
-                <Button href={restaurant.resyUrl ?? site.cta.href}>{site.cta.label}</Button>
-                <Button href="/contact" variant="glass">
-                  Get in touch
-                </Button>
-              </div>
-            </Reveal>
-          </div>
-        </div>
+        <Reveal>
+          <h2 id="footer-heading" className="font-display text-display-lg font-light leading-[0.98] text-fg">
+            Your table is <Em shimmer>waiting.</Em>
+          </h2>
+        </Reveal>
 
         {/* ---- Visit · Explore · Recognition ---- */}
         <RevealGroup className="mt-16 grid gap-4 md:grid-cols-2 lg:mt-20 lg:grid-cols-12">

@@ -25,13 +25,21 @@ export async function FinalCta({
   body = "Chef Amrit cooks every night at Angel in Jackson Heights. Reserve a table and taste the cooking that earned its Bib Gourmand.",
 }: Props) {
   const venue = await getVenue();
+  const photo = images.tableCandles;
 
   return (
-    <section id="reserve" className="relative overflow-hidden surface-brown-deep tone-dark py-section">
-      <ImageFrame image={images.tableCandles} ratio="fill" reveal="fade" vignette sizes="100vw" quality={65} imgClassName="opacity-35" />
-      <div aria-hidden className="absolute inset-0 z-[1] bg-gradient-to-r from-brown-deep via-brown-deep/70 to-brown-deep/30" />
+    <section id="reserve" className="relative overflow-hidden surface-brown-deep tone-dark pb-section lg:pt-section">
+      {/* Wide screens: the photo fills the section behind the card. On a narrow one the section is
+          tall and filling it would crop the photo to a sliver, so there the whole photo runs edge to
+          edge across the top, in the same faded treatment, and the card rises over its lower edge.
+          That band takes the photo's own proportions, so the whole of it shows whatever its shape. */}
+      <ImageFrame image={photo} ratio="fill" reveal="fade" vignette sizes="100vw" quality={65} imgClassName="opacity-60" className="hidden lg:block" />
+      <div aria-hidden className="absolute inset-0 z-[1] hidden bg-gradient-to-r from-brown-deep/90 via-brown-deep/45 to-brown-deep/10 lg:block" />
+      <div className="relative mask-[linear-gradient(to_bottom,#000_60%,transparent)] lg:hidden" style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>
+        <ImageFrame image={photo} ratio="fill" reveal="fade" vignette sizes="100vw" quality={65} imgClassName="opacity-60" />
+      </div>
       <Orbs variant="gold" className="z-[1]" />
-      <Container className="relative z-[2]">
+      <Container className="relative z-[2] -mt-[12vw] lg:mt-0">
         <Reveal>
           <div className="glass-strong border-gradient relative max-w-4xl overflow-hidden rounded-[2rem] p-8 md:p-14">
             <span aria-hidden className="orb orb-gold -right-[15%] -top-[40%] size-[60%] opacity-50" />
