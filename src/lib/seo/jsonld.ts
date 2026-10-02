@@ -3,6 +3,7 @@ import { images } from "@/data/images";
 import { site } from "@/data/site";
 import type { VenueDetails } from "@/lib/content/venue";
 import type { DietaryTag, Menu } from "@/types/content";
+import { parseOpeningHours } from "./opening-hours";
 
 /**
  * Structured data (schema.org JSON-LD) for search engines.
@@ -11,8 +12,9 @@ import type { DietaryTag, Menu } from "@/types/content";
  * restaurant — with stable `@id`s, so per-page data (breadcrumbs, the menus,
  * the profile page) can point at the same entities instead of repeating them.
  * Everything here is taken from the site's own verified content; nothing is
- * added that the pages themselves do not say (no invented opening hours,
- * prices or ratings).
+ * added that the pages themselves do not say (no invented prices or ratings;
+ * the hours and telephone number are the restaurant's own details, editable
+ * in the dashboard).
  */
 
 const abs = (path: string) => new URL(path, site.url).toString();
@@ -23,8 +25,18 @@ export const ids = {
   restaurant: abs("/angel#restaurant"),
 };
 
-/** The restaurant's own presences, also linked from the footer. */
-const restaurantProfiles = ["https://www.angelindianrestaurant.com/", "https://www.instagram.com/angel_indian_restaurant"];
+/**
+ * Pages elsewhere that are unambiguously about this restaurant. They tell
+ * search engines that the Angel on Resy, Yelp and Instagram and the Angel on
+ * this site are one place, which is what earns this site a place beside
+ * them in that restaurant's search listing. The restaurant's own site is on
+ * its new domain; angelindianrestaurant.com no longer resolves.
+ */
+const restaurantProfiles = [
+  "https://angelindianrestaurantnyc.com/",
+  "https://www.instagram.com/angel_indian_restaurant",
+  "https://www.yelp.com/biz/angel-indian-restaurant-jackson-heights-2",
+];
 
 /** Map pin shown on the site's neighbourhood map. */
 const geo = { "@type": "GeoCoordinates", latitude: 40.7498, longitude: -73.8895 };
@@ -41,7 +53,8 @@ function postalAddress(venue: VenueDetails) {
 }
 
 export function siteGraph(venue: VenueDetails) {
-  const sameAs = [...new Set([...restaurantProfiles, venue.social.instagram, venue.social.facebook].filter(Boolean))];
+  const sameAs = [...new Set([...restaurantProfiles, venue.resyUrl, venue.social.instagram, venue.social.facebook].filter(Boolean))];
+  const openingHours = parseOpeningHours(venue.openingHours ?? []);
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -75,15 +88,18 @@ export function siteGraph(venue: VenueDetails) {
         "@id": ids.restaurant,
         name: venue.name,
         url: abs("/angel"),
-        image: [abs(images.angelDiningRoom.src)],
+        image: [abs(images.angelDiningRoom.src), abs(images.storefrontEvening.src)],
         description:
           "Michelin Bib Gourmand Indian restaurant in Jackson Heights, Queens: predominantly vegetarian, 100% Halal, with a full bar and a chef's tasting menu.",
         address: postalAddress(venue),
         geo,
         ...(venue.phone ? { telephone: venue.phone } : {}),
+        ...(openingHours.length ? { openingHoursSpecification: openingHours } : {}),
+        ...(venue.mapsUrl ? { hasMap: venue.mapsUrl } : {}),
         servesCuisine: ["Indian", "North Indian", "Vegetarian", "Halal"],
         hasMenu: abs("/menus"),
         acceptsReservations: venue.resyUrl ?? "True",
+        ...(venue.resyUrl ? { potentialAction: { "@type": "ReserveAction", target: venue.resyUrl } } : {}),
         founder: { "@id": ids.chef },
         foundingDate: "2019-10",
         award: "Michelin Bib Gourmand",
@@ -105,6 +121,24 @@ export function breadcrumbJsonLd(trail: { name: string; path: string }[]) {
 
 export function profilePageJsonLd(path: string) {
   return { "@context": "https://schema.org", "@type": "ProfilePage", url: abs(path), mainEntity: { "@id": ids.chef } };
+}
+
+/**
+ * Questions and answers shown on a page, as search engines read them. Google
+ * no longer shows these as expandable results for most sites, but it still
+ * reads them to understand what the page answers, so they must be the same
+ * questions and answers the visitor sees.
+ */
+export function faqJsonLd(items: { q: string; a: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  };
 }
 
 export function contactPageJsonLd(path: string) {

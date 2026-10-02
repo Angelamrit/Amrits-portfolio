@@ -54,13 +54,26 @@ export function HeaderClient({
   useEffect(() => {
     let last = window.scrollY;
     let ticking = false;
+    // The two flags change only a handful of times in a whole scroll, so the
+    // state is set only when one of them flips: a React update per frame, even
+    // one that ends in a bail-out, was measurable on a phone.
+    let wasScrolled: boolean | null = null;
+    let wasHidden: boolean | null = null;
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
       window.requestAnimationFrame(() => {
         const y = window.scrollY;
-        setScrolled(y > 40);
-        setHidden(y > 240 && y > last + 4);
+        const nowScrolled = y > 40;
+        const nowHidden = y > 240 && y > last + 4;
+        if (nowScrolled !== wasScrolled) {
+          wasScrolled = nowScrolled;
+          setScrolled(nowScrolled);
+        }
+        if (nowHidden !== wasHidden) {
+          wasHidden = nowHidden;
+          setHidden(nowHidden);
+        }
         last = y;
         ticking = false;
       });

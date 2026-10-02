@@ -58,6 +58,13 @@ type Upload = {
   span?: "wide" | "tall" | "square";
   uploadedAt: number;
   /**
+   * A 16-pixel-wide WebP of the photograph as a data URL, made at upload time
+   * and drawn blurred in its frame until the real file arrives. Absent on
+   * older uploads and when the server could not make one; the frame then
+   * simply shows its background while it loads.
+   */
+  blur?: string;
+  /**
    * `false` for a photograph uploaded for one dish from the dish editor. It is
    * kept in the same library — so it can be picked again for any dish — but
    * never appears on the public gallery wall, where a close-up meant for a
@@ -121,6 +128,7 @@ function uploadToItem(upload: Upload): GalleryItem {
     alt: upload.alt,
     width: upload.width,
     height: upload.height,
+    ...(upload.blur ? { blurDataURL: upload.blur } : {}),
   };
   return {
     id: upload.id,
@@ -295,6 +303,7 @@ export async function addUpload(
     alt,
     category,
     uploadedAt: Date.now(),
+    ...(await blurPlaceholder(bytes)),
     ...(inGallery ? {} : { inGallery: false }),
   };
 
@@ -308,6 +317,24 @@ export async function addUpload(
   }));
 
   return { ok: true, id, src: uploadSrc(key) };
+}
+
+/**
+ * The blurred stand-in for an upload (see `Upload.blur`), made the same way as
+ * the shipped photography's (scripts/image-placeholders.mjs). `sharp` is the
+ * image library Next.js itself uses, so it is always installed; if it fails on
+ * a file anyway, the upload goes ahead without a placeholder rather than
+ * failing over something cosmetic.
+ */
+async function blurPlaceholder(bytes: Uint8Array): Promise<{ blur?: string }> {
+  try {
+    const sharp = (await import("sharp")).default;
+    const tiny = await sharp(bytes).rotate().resize({ width: 16, withoutEnlargement: true }).webp({ quality: 50, alphaQuality: 50 }).toBuffer();
+    return { blur: `data:image/webp;base64,${tiny.toString("base64")}` };
+  } catch (error) {
+    console.warn("[gallery] could not make a placeholder for an upload:", error instanceof Error ? error.message : error);
+    return {};
+  }
 }
 
 /** Uploads are removed for real — they exist nowhere else, so there is nothing to fall back to. */

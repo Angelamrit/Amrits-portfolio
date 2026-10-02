@@ -23,6 +23,23 @@ export const gallery: GalleryItem[] = [
   { id: "g33", image: images.angelBanquette, category: "private-dining", caption: "Set for service", span: "wide" },
   { id: "g34", image: images.chefInterview, category: "the-chef", caption: "In conversation", span: "wide" },
   { id: "g01", image: images.thaliOverhead, category: "signature-dishes", caption: "A tasting of the house", featured: true, span: "tall" },
+<<<<<<< Updated upstream
+  { id: "g03", image: images.amritsariPaneerKulcha, category: "signature-dishes", caption: "Amritsari Paneer Kulcha", featured: true, span: "wide" },
+  { id: "g04", image: images.tableCandles, category: "private-dining", caption: "A table, ready", featured: true },
+  { id: "g06", image: images.mixVegKulcha, category: "signature-dishes", caption: "Mix Veg Kulcha", span: "wide" },
+  { id: "g07", image: images.choleBhatura, category: "signature-dishes", caption: "Chole Bhatura", span: "wide" },
+  // The rest of the signature dishes, in the photographs the dish list on the home page uses.
+  // All 4:3 like the "wide" tile, so they show whole (the chicken biryani is 3:2: a sliver of
+  // table goes at the sides).
+  { id: "g35", image: images.amritsariAlooKulcha, category: "signature-dishes", caption: "Amritsari Aloo Kulcha", span: "wide" },
+  { id: "g36", image: images.vegetableDumBiryani, category: "signature-dishes", caption: "Vegetable Dum Biryani", span: "wide" },
+  { id: "g37", image: images.chickenDumBiryani, category: "signature-dishes", caption: "Chicken Dum Biryani", span: "wide" },
+  { id: "g38", image: images.goatDumBiryani, category: "signature-dishes", caption: "Goat Dum Biryani", span: "wide" },
+  { id: "g09", image: images.chefFlame, category: "chef-in-action", caption: "Open flame", span: "wide" },
+  { id: "g14", image: images.storefrontDay, category: "private-dining", caption: "Angel on 37th Avenue", span: "tall" },
+  { id: "g16", image: images.angelDiningRoom, category: "private-dining", caption: "The new dining room", span: "wide" },
+  { id: "g17", image: images.bar, category: "private-dining", caption: "The bar", span: "tall" },
+=======
   { id: "g03", image: images.paneerCurry, category: "signature-dishes", caption: "Amritsari Paneer Kulcha", featured: true },
   { id: "g04", image: images.tableCandles, category: "private-dining", caption: "A table, ready", featured: true },
   { id: "g06", image: images.curryNaan, category: "signature-dishes", caption: "Mix Veg Kulcha" },
@@ -38,6 +55,7 @@ export const gallery: GalleryItem[] = [
   { id: "g24", image: images.naanDal, category: "signature-dishes", caption: "Naan and dal" },
   { id: "g25", image: images.dosa, category: "signature-dishes", caption: "Street food, refined" },
   { id: "g26", image: images.curryPan, category: "plating", caption: "Fresh coriander to finish" },
+>>>>>>> Stashed changes
 ];
 
 export const featuredGallery = gallery.filter((g) => g.featured);

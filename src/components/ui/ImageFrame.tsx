@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { ImageAsset } from "@/types/content";
 import { cn } from "@/lib/cn";
+import { blurProps } from "@/lib/images/blur";
 
 type Ratio = "natural" | "3/4" | "4/5" | "1/1" | "4/3" | "3/2" | "16/9" | "21/9" | "fill";
 type Focal = "center" | "top" | "bottom" | "left" | "right";
@@ -91,6 +92,7 @@ export function ImageFrame({
       priority={priority && !layer}
       sizes={sizes}
       quality={quality}
+      {...blurProps(asset)}
       className={cn(
         "object-cover",
         focals[focal],
@@ -125,7 +127,17 @@ export function ImageFrame({
       )}
       style={ratio === "natural" ? { aspectRatio: `${image.width} / ${image.height}` } : undefined}
     >
-      <div className="img-reveal-scale absolute inset-0">{img}</div>
+      {/* The wipe is two counter-moving transforms (see "Image reveals" in
+          globals.css): the clip layer slides down into place while the
+          photograph inside it slides up, so the picture holds still and is
+          uncovered from the top. Only the wiping reveals need the extra layer. */}
+      {animate && reveal !== "fade" ? (
+        <div className="img-reveal-clip absolute inset-0 overflow-hidden">
+          <div className="img-reveal-scale absolute inset-0">{img}</div>
+        </div>
+      ) : (
+        <div className="img-reveal-scale absolute inset-0">{img}</div>
+      )}
 
       {/* The reveal edge: a gold filament that travels down with the curtain. */}
       {reveal === "curtain" && animate && (

@@ -9,8 +9,10 @@ import { getVenue } from "@/lib/content/venue";
 import { restaurant } from "@/data/restaurant";
 import { seo } from "@/data/seo";
 import { buildMetadata } from "@/lib/seo/metadata";
-import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { restaurantFaq } from "@/data/faq";
+import { breadcrumbJsonLd, faqJsonLd } from "@/lib/seo/jsonld";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { Accordion } from "@/components/ui/Accordion";
 import { Badge, DietaryBadges } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { CompareSlider } from "@/components/ui/CompareSlider";
@@ -29,10 +31,11 @@ export const metadata: Metadata = buildMetadata({ seo: seo.angel, path: "/angel"
 
 export default async function AngelPage() {
   const [menus, signatureDishes, venue] = await Promise.all([getMenus(), getSignatureDishes(), getVenue()]);
+  const faq = restaurantFaq(venue);
 
   return (
     <>
-      <JsonLd data={breadcrumbJsonLd([{ name: "Angel Indian Restaurant", path: "/angel" }])} />
+      <JsonLd data={[breadcrumbJsonLd([{ name: "Angel Indian Restaurant", path: "/angel" }]), faqJsonLd(faq)]} />
       <PageHero
         eyebrow="The Restaurant"
         title={
@@ -329,6 +332,30 @@ export default async function AngelPage() {
         </Container>
       </Section>
 
+      {/* 06 Good to know: the questions guests search for before a first visit,
+          answered in the site's own words and handed to search engines as well. */}
+      <Section id="good-to-know" tone="raised" orbs="subtle" divider className="scroll-mt-20">
+        <Container>
+          <div className="grid gap-12 lg:grid-cols-12">
+            <div className="lg:col-span-4">
+              <Reveal>
+                <Eyebrow>06 · Good to Know</Eyebrow>
+                <Heading as="h2" size="md" className="mt-8">
+                  Before <Em>you visit.</Em>
+                </Heading>
+                <p className="mt-6 max-w-sm text-sm leading-relaxed text-fg/55">
+                  Where to find Angel, when it serves, and what is on the table: the questions guests ask most.
+                </p>
+              </Reveal>
+            </div>
+            <div className="lg:col-span-7 lg:col-start-6">
+              <Reveal delay={0.1}>
+                <Accordion items={faq} />
+              </Reveal>
+            </div>
+          </div>
+        </Container>
+      </Section>
     </>
   );
 }

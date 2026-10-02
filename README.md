@@ -219,6 +219,24 @@ Seven days rather than a year because these filenames carry no content hash: an 
 
 Photography is nearly all of this site's weight, so this is the caching change that matters. If a CDN is put in front of the origin later, it needs no extra configuration to benefit; it only needs to pass the `rsc` request header and keep `_rsc` in its cache key.
 
+## Speed on the VPS
+
+What the code does by itself:
+
+- **Photographs never pop into an empty frame.** Every picture carries a tiny blurred copy of itself (`src/data/placeholders.generated.json`, built by `node scripts/image-placeholders.mjs`; uploads get theirs at upload time), drawn in the frame until the real file arrives. Run the script again after adding or replacing a file under `public/images`.
+- **A frame opens onto its picture, not before it.** The reveal waits for the photograph to load (up to 0.9s), and the wipe itself is two transforms rather than a clip-path, so it runs on the GPU and never repaints the picture — the stutter on phones and in Safari came from exactly that repaint.
+- **Nothing visible waits for JavaScript.** The scroll reveals run from one inline script in `SiteShell.tsx` the moment the HTML is parsed; the React bundle only adds the cursor spotlight.
+- **The image optimizer is warmed at startup** (`src/lib/images/warm.ts`): a few seconds after `next start`, the server opens every page in the sitemap and requests every image size they offer, so the first visitor after a deploy never waits for a photograph to be encoded. Already-cached sizes cost nothing; a cold cache takes a minute or two of background work. `IMAGE_WARMUP=off` disables it.
+- **Scrolling does no per-event work.** The chapter rail and the header decide what to show through IntersectionObservers and a once-per-frame check, and off-screen sections (including the hero, once it has scrolled away) are skipped entirely, animations paused.
+
+What only the server can do — each of these was measured, and together they are worth more than everything above for a visitor in New York:
+
+1. **Keep `.next/cache/images` between deploys.** It holds every encoded photograph. A deploy that deletes `.next` (a fresh clone, `rm -rf .next`) throws it away; `next build` alone keeps it. If the deploy script replaces the folder, copy `.next/cache` across or point it at a persistent path.
+2. **HTTP/2 in nginx** — `listen 443 ssl; http2 on;` (nginx 1.25+) or `listen 443 ssl http2;`. Over HTTP/1.1 a browser opens at most six connections and every photograph waits its turn in that queue; from New York each turn costs a round trip to Mumbai (~250ms). HTTP/2 sends them all down one connection at once. This is the single biggest change available.
+3. **Compression for text** — `gzip on; gzip_types text/html text/css application/javascript application/json image/svg+xml;` (or Brotli if the module is installed). The home page is 450KB of HTML and 45KB compressed; the live server already compresses, but check it stays on after any nginx change.
+4. **Let nginx serve the static files itself** — `location /_next/static/ { alias <app>/.next/static/; expires 1y; add_header Cache-Control "public, immutable"; }` and the same for `/images/` with the seven-day value above, so Node is not in the path for files that never change.
+5. **A CDN in front** (Cloudflare's free plan is enough) caches the photographs and scripts in the visitor's own city, terminates TLS close to them and provides HTTP/2 and HTTP/3 on its own. With the server in Mumbai and the guests in Queens, this is what turns a 250ms round trip into a 20ms one. It is a new service, so it is a decision for the owner, not something the code can make.
+
 ## Security
 
 - **Headers** — CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` and the two Cross-Origin policies, set for every path in `next.config.ts`. The CSP keeps `'unsafe-inline'` for scripts; the comment above it explains why locking that down needs a per-request nonce, which would force every page to render dynamically.
@@ -265,6 +283,19 @@ Without `OPENAI_API_KEY`, the assistant still opens and answers, but replies wit
 5. **Check the live site**: sign in to `/admin` and save a small edit; upload and delete a photograph; send a test enquiry; ask the assistant a question. The function logs name any missing setting.
 
 Vercel applies a change to an environment variable only to deployments made after it, so redeploy after adding or changing one.
+
+## Being found on Google
+
+What the code already does: every public page has its own title, description and canonical address; `robots.txt` and `sitemap.xml` are generated; a share image is rendered for each page; and structured data (schema.org) describes the chef, the restaurant, its menus, hours, telephone number and the questions answered on the Angel page. The `www.` address redirects to the bare domain.
+
+What has to be done once, outside the code:
+
+1. **Google Search Console.** Add `chefamritpalsingh.com` as a Domain property (a DNS record at the registrar) or as a URL-prefix property. For the URL-prefix method, set `GOOGLE_SITE_VERIFICATION` on the server to the code Google gives and restart; the tag is then written into every page. Submit `https://chefamritpalsingh.com/sitemap.xml`, then open URL Inspection and press "Request indexing" for `/`, `/about`, `/angel`, `/menus`, `/press` and `/contact`. Google still shows the previous website that lived on this domain; this is what replaces it.
+2. **Bing Webmaster Tools.** Import the Search Console property (one click), or set `BING_SITE_VERIFICATION`.
+3. **Keep the details identical everywhere.** The hours and telephone number under Restaurant details in the dashboard must match Google Business Profile, Resy and Yelp. A mismatch reads as an unreliable listing. When they change, change all of them the same day.
+4. **Link to this site from the restaurant's.** `angelindianrestaurantnyc.com` does not link here yet. A "Meet the chef" link to `https://chefamritpalsingh.com/about` from its story page, and this address in the restaurant's Instagram bio, are the two links that matter most for a new domain.
+5. **nginx.** Serve HTTP/2 (`listen 443 ssl http2;`): the live site answers over HTTP/1.1, which Lighthouse measures as about a second of avoidable load time on a phone. Add the `www.` redirect at the nginx level too, so it happens before the request reaches Node.
+6. **Publish the journal.** The five drafts in `src/data/journal.ts` are the pages Google would rank for dish and recipe searches. Until one is published the journal is deliberately kept out of the index.
 
 ## Before launch
 

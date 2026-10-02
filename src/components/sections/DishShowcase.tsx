@@ -5,6 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { Dish } from "@/types/content";
 import { cn } from "@/lib/cn";
+import { blurProps } from "@/lib/images/blur";
 import { DietaryBadges } from "@/components/ui/Badge";
 import { CrossFade } from "@/components/ui/CrossFade";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
@@ -80,6 +81,7 @@ export function DishShowcase({ dishes }: { dishes: Dish[] }) {
                   alt={dish.image.alt}
                   fill
                   sizes="55vw"
+                  {...blurProps(dish.image)}
                   className="object-cover"
                   style={dish.image.position ? { objectPosition: dish.image.position } : undefined}
                 />
@@ -179,6 +181,7 @@ export function DishShowcase({ dishes }: { dishes: Dish[] }) {
                             alt={d.image.alt}
                             fill
                             sizes="(min-width: 640px) 90vw, 100vw"
+                            {...blurProps(d.image)}
                             className="object-cover"
                             style={d.image.position ? { objectPosition: d.image.position } : undefined}
                           />

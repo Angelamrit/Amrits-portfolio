@@ -12,6 +12,16 @@ export type ImageAsset = {
    * in it; without one the crop is centred.
    */
   position?: string;
+<<<<<<< Updated upstream
+  /**
+   * A tiny blurred copy of the photograph as a data URL, drawn in its frame
+   * until the real file arrives (next/image's `placeholder="blur"`). Attached
+   * by the registry for the site's own photography and at upload time for the
+   * chef's; absent, the frame's background shows instead.
+   */
+  blurDataURL?: string;
+=======
+>>>>>>> Stashed changes
 };
 
 export type Address = {
@@ -37,6 +47,8 @@ export type SiteConfig = {
     /** The restaurant's own full menu, with prices, on its own website. */
     menuUrl?: string;
     hours: string;
+    /** The same hours for search engines, one rule each, schema.org style: "Tu-Su 12:00-22:00". */
+    openingHours?: string[];
     notes: string[];
   };
   social: { instagram?: string; facebook?: string };

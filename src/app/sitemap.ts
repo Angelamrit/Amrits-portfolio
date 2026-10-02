@@ -28,7 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const pages: MetadataRoute.Sitemap = [
     { url: abs("/"), changeFrequency: "monthly", priority: 1, images: photos(images.hero, images.angelDiningRoom) },
-    { url: abs("/angel"), changeFrequency: "monthly", priority: 0.9, images: photos(images.angelDiningRoom) },
+    { url: abs("/angel"), changeFrequency: "monthly", priority: 0.9, images: photos(images.angelDiningRoom, images.storefrontEvening) },
     { url: abs("/menus"), changeFrequency: "monthly", priority: 0.9 },
     { url: abs("/about"), changeFrequency: "yearly", priority: 0.8, images: photos(images.hero) },
     { url: abs("/contact"), changeFrequency: "yearly", priority: 0.8 },

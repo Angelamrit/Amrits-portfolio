@@ -2,6 +2,7 @@ import Image from "next/image";
 import { getGallery } from "@/lib/content/gallery";
 import type { GalleryItem } from "@/types/content";
 import { cn } from "@/lib/cn";
+import { blurProps } from "@/lib/images/blur";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -28,11 +29,18 @@ function Strip({ items, reverse = false }: { items: GalleryItem[]; reverse?: boo
               g.span === "wide" ? "w-80 md:w-[28rem]" : g.span === "tall" ? "w-44 md:w-56" : "w-64 md:w-80",
             )}
           >
+            {/* `data-eager-near`: the inline script in SiteShell starts these
+                downloading a screen early, at low priority, so the strip arrives
+                whole instead of tile by tile as it moves. The strip is in motion,
+                so a slightly lighter encoding than a still frame passes unseen. */}
             <Image
               src={g.image.src}
               alt=""
               fill
               sizes="(min-width: 768px) 28rem, 20rem"
+              quality={72}
+              data-eager-near=""
+              {...blurProps(g.image)}
               className="object-cover transition-transform duration-[1400ms] ease-luxe group-hover:scale-[1.06]"
               style={g.image.position ? { objectPosition: g.image.position } : undefined}
             />

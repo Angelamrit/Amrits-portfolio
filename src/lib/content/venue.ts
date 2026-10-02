@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { site } from "@/data/site";
+import { OPENING_HOURS_RULE } from "@/lib/seo/opening-hours";
 import type { SiteConfig } from "@/types/content";
 import { applyPatch, readPatchDoc, writePatch } from "./overrides";
 
@@ -44,6 +45,10 @@ export const venuePatchSchema = z.object({
   country: z.string().trim().max(40).optional(),
   phone: z.string().trim().max(40).optional(),
   hours: z.string().trim().max(120).optional(),
+  openingHours: z
+    .array(z.string().trim().regex(OPENING_HOURS_RULE, 'Each line of the hours for search engines must look like "Tu-Su 12:00-22:00".'))
+    .max(14)
+    .optional(),
   notes: z.array(z.string().trim().min(1).max(80)).max(8).optional(),
   resyUrl: optionalUrl,
   menuUrl: optionalUrl,
@@ -71,6 +76,7 @@ export function flatten(venue: VenueDetails): Required<Omit<VenuePatch, "notes">
     country: venue.address.country,
     phone: venue.phone ?? "",
     hours: venue.hours,
+    openingHours: [...(venue.openingHours ?? [])],
     notes: [...venue.notes],
     resyUrl: venue.resyUrl ?? "",
     menuUrl: venue.menuUrl ?? "",
@@ -108,6 +114,7 @@ export async function getVenue(): Promise<VenueDetails> {
     name: patch.name ?? base.name,
     address,
     hours: patch.hours ?? base.hours,
+    openingHours: patch.openingHours ?? base.openingHours,
     notes: patch.notes ?? base.notes,
     phone: patch.phone === undefined ? base.phone : orUndefined(patch.phone),
     resyUrl: patch.resyUrl === undefined ? base.resyUrl : orUndefined(patch.resyUrl),

@@ -23,7 +23,7 @@ export function NeighborhoodMap({ className }: { className?: string }) {
   return (
     <div
       role="img"
-      aria-label="Map of the blocks around Angel Indian Restaurant, 75-18 37th Avenue, Jackson Heights — on 37th Avenue between 75th and 76th Street, three minutes from the 74th Street–Broadway subway station."
+      aria-label="Map of the blocks around Angel Indian Restaurant, 75-18 37th Avenue, Jackson Heights — on 37th Avenue by 75th Street, three minutes from the 74th Street–Broadway subway station."
       className={cn("nmap-frame", className)}
     >
       <span aria-hidden className="nmap-grid" />

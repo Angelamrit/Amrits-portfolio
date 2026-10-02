@@ -40,7 +40,9 @@ export function Wordmark({
         onNavigate?.();
         scrollHomeToTop(event);
       }}
-      aria-label="Amrit Pal Singh — home"
+      // Only when the name is not drawn: with it drawn, the link is named by its own
+      // text, which is what assistive technology and search engines expect to match.
+      aria-label={compact ? "Amrit Pal Singh — home" : undefined}
       className={cn("group relative inline-flex shrink-0 items-center gap-3.5 text-fg", className)}
     >
       <span aria-hidden className="relative grid size-11 shrink-0 place-items-center">

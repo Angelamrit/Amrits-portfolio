@@ -54,10 +54,20 @@ export const site: SiteConfig = {
     // returns its "we can't find that page" screen, which is a client-side 404 —
     // the URL still answers 200, so only loading it in a browser catches this.
     resyUrl: "https://resy.com/cities/new-york-ny/venues/angel-indian-restaurant-ny",
-    // The restaurant's new website. Every "Full menu" button on this site opens it.
-    menuUrl: "https://angel-restaurant-sand.vercel.app/menu",
+    // The restaurant's own website, on its own domain (the Vercel preview address
+    // it had before still works, but links should carry the real one). Every
+    // "Full menu" button on this site opens it.
+    menuUrl: "https://angelindianrestaurantnyc.com/menu",
     mapsUrl: "https://maps.google.com/?q=Angel+Indian+Restaurant+75-18+37th+Ave+Jackson+Heights+NY+11372",
-    hours: "Dinner only",
+    // Confirmed against the restaurant's own website and the September 2026
+    // project update; the telephone number is the one on the awning. Search
+    // engines compare these with Google Maps, Resy and Yelp, and a mismatch is
+    // read as an unreliable listing.
+    phone: "347-848-0098",
+    hours: "Tuesday to Sunday, 12–10 PM · Closed Monday",
+    // The same hours in the compact form search engines read; parsed by
+    // src/lib/seo/opening-hours.ts into the structured data. Editable in the dashboard.
+    openingHours: ["Tu-Su 12:00-22:00"],
     notes: ["Predominantly vegetarian", "100% Halal", "Full bar", "Chef's tasting menu"],
   },
   social: {
