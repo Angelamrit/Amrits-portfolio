@@ -52,11 +52,7 @@ const banquette: ImageAsset = {
   height: 1024,
 };
 
-<<<<<<< Updated upstream
 const registry = {
-=======
-export const images = {
->>>>>>> Stashed changes
   // ---- Chef ----
   /**
    * The home page hero (CB05C53F…): Chef Amrit at the range. Supplied by the chef. Not a
@@ -248,7 +244,6 @@ export const images = {
     width: 932,
     height: 563,
   },
-<<<<<<< Updated upstream
   /**
    * The Contact page's opening photograph (FE4D6BFF…), supplied by the chef. Not a placeholder.
    * Its own entry so it can change without touching the Angel page or the gallery.
@@ -270,19 +265,6 @@ export const images = {
     width: 1672,
     height: 941,
   },
-=======
-  /** The footer's photograph of Angel's dining room. */
-  angelDiningTables: banquette,
-  /** The same photograph on the Angel page's "Inside" card, kept as its own entry so either can change alone. */
-  angelBanquette: banquette,
-  /** The "Today" side of the then-and-now slider (12D03CBE…), supplied by the chef. Not a placeholder. */
-  angelFullRoom: {
-    src: "/images/restaurant/dining-room-full.jpg",
-    alt: "A full dining room at Angel: guests at tables along a banquette under pendant lights, a server taking an order",
-    width: 1672,
-    height: 941,
-  },
->>>>>>> Stashed changes
   /**
    * The storefront at dusk (outside2222), the 2019 side of the then-and-now slider. Supplied by
    * the chef. Not a placeholder. Anchored to keep the three lamps, the sign and the entrance,
@@ -303,7 +285,6 @@ export const images = {
     height: 1536,
   },
   diningRoomGreen: storefront,
-<<<<<<< Updated upstream
   /**
    * Real photograph of Angel's bar (12E9DD63…, replacing CC29AD12…), supplied by the chef. Not a
    * placeholder. On the Angel page beside "In the guide, and among peers." and the gallery's
@@ -312,12 +293,6 @@ export const images = {
   bar: {
     src: "/images/restaurant/bar-bright.jpg",
     alt: "The bar at Angel: Edison bulbs hanging from a wooden slat ceiling, lit shelves of bottles, a photograph of the chef and framed press features on the wall, and a slatted wood counter",
-=======
-  /** Real photograph of Angel's bar (CC29AD12…), supplied by the chef. Not a placeholder. */
-  bar: {
-    src: "/images/restaurant/bar.jpg",
-    alt: "The bar at Angel: Edison bulbs hanging from a wooden slat ceiling, shelves of bottles, framed press features on the wall and a slatted wood counter",
->>>>>>> Stashed changes
     width: 1024,
     height: 1536,
   },
@@ -330,7 +305,6 @@ export const images = {
     height: 1600,
   },
   // ---- Behind the scenes & plating ----
-<<<<<<< Updated upstream
   /** The storefront again, on the Angel page's story and a draft journal post's cover. */
   kitchenLine: storefront,
   /**
@@ -343,10 +317,6 @@ export const images = {
     width: 1086,
     height: 1448,
   },
-=======
-  /** The storefront again, on the gallery's "The line" tile and a draft journal post's cover. */
-  kitchenLine: storefront,
->>>>>>> Stashed changes
   prepOverhead: placeholder("prepOverhead.jpg", "Overhead of vegetables being prepped", 1600, 1067),
   platedDish: placeholder("platedDish.jpg", "Composed plate close-up", 1400, 1400),
   soupBowl: placeholder("soupBowl.jpg", "Soup bowl with herbs", 1400, 1400),

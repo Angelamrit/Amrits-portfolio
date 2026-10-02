@@ -58,17 +58,10 @@ export function CompareSlider({ before, after, ratio = "aspect-[4/3]", initial =
         className={cn("group relative cursor-ew-resize touch-pan-y select-none overflow-hidden rounded-frame border-gradient bg-sand shadow-glow-lg", ratio)}
       >
         {/* after (full) */}
-<<<<<<< Updated upstream
         <Image src={after.image.src} alt={after.image.alt} fill sizes={sizes} {...blurProps(after.image)} className="object-cover" style={after.image.position ? { objectPosition: after.image.position } : undefined} draggable={false} />
         {/* before (clipped) */}
         <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
           <Image src={before.image.src} alt={before.image.alt} fill sizes={sizes} {...blurProps(before.image)} className="object-cover" style={before.image.position ? { objectPosition: before.image.position } : undefined} draggable={false} />
-=======
-        <Image src={after.image.src} alt={after.image.alt} fill sizes={sizes} className="object-cover" style={after.image.position ? { objectPosition: after.image.position } : undefined} draggable={false} />
-        {/* before (clipped) */}
-        <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
-          <Image src={before.image.src} alt={before.image.alt} fill sizes={sizes} className="object-cover" style={before.image.position ? { objectPosition: before.image.position } : undefined} draggable={false} />
->>>>>>> Stashed changes
           <div aria-hidden className="absolute inset-0 bg-brown-deep/20" />
         </div>
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brown-deep/85 via-transparent to-brown-deep/20" />

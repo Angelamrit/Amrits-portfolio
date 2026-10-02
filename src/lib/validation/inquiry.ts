@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { topicOptions } from "@/lib/inquiry/topics";
-<<<<<<< Updated upstream
 import { isValidPhone, PHONE_ERROR } from "@/lib/inquiry/phone";
-=======
->>>>>>> Stashed changes
 
 // The topics live in a Zod-free module the contact form can import; see
 // `lib/inquiry/topics.ts`. Re-exported so the server side keeps one import site.

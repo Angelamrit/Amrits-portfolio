@@ -22,7 +22,6 @@ export async function Hero() {
   // hero photograph never needs these numbers edited by hand.
   const frame = { "--hero-aspect": `${width} / ${height}`, "--hero-h": `${((height / width) * 100).toFixed(3)}vw` } as CSSProperties;
   return (
-<<<<<<< Updated upstream
     // `section-lazy`: once the hero has scrolled away the browser stops drawing it
     // and its embers and slow drift pause (see `.section-lazy[data-skipped]` in
     // globals.css). Without it the eighteen embers kept animating off screen for the
@@ -36,9 +35,6 @@ export async function Hero() {
       style={frame}
       suppressHydrationWarning
     >
-=======
-    <section id="hero" className="relative flex min-h-[100svh] items-end overflow-hidden surface-brown-deep tone-dark grain" aria-label="Introduction" style={frame}>
->>>>>>> Stashed changes
       {/* The hero is the first thing anyone sees, so nothing in it waits for JavaScript:
           the photograph is visible from the first frame (it is the page's largest paint),
           and the text rises in with a CSS animation that starts the moment the page paints.
