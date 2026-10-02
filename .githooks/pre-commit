@@ -1,0 +1,14 @@
+#!/bin/sh
+# Refuses a commit that still holds merge-conflict markers. A `git stash pop`
+# that conflicts leaves them in the files, and once committed they break
+# `npm ci`, CI and every deploy (this happened in 5f523cd).
+#
+# Enabled per clone with: git config core.hooksPath .githooks
+
+if git diff --cached -U0 --no-color | grep -nE '^\+(<{7}|>{7})( |$)'; then
+  echo
+  echo "Commit refused: the lines above are unresolved merge-conflict markers."
+  echo "Resolve them (keep one side, delete the <<<<<<< ======= >>>>>>> lines),"
+  echo "then git add the files and commit again."
+  exit 1
+fi

@@ -10,6 +10,7 @@ Built with Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, `moti
 
 ```bash
 npm install
+git config core.hooksPath .githooks   # refuses commits holding merge-conflict markers
 cp .env.example .env.local   # optional, see below
 npm run dev                  # http://localhost:3000
 ```

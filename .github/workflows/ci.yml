@@ -19,6 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # A conflicted `git stash pop` that gets committed breaks everything below
+      # with a confusing error; this names the files instead.
+      - name: No merge-conflict markers
+        run: "! git grep -nE '^(<{7}|>{7})( |$)'"
+
       - uses: actions/setup-node@v4
         with:
           # 24 or newer: the test script relies on Node running the TypeScript
