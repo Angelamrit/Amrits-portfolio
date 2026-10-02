@@ -31,7 +31,7 @@ export const menus: Menu[] = [
     ],
     venue: "At Angel · New dining room",
     featured: true,
-    image: images.thaliOverhead,
+    image: images.mixVegKulcha,
   },
 ];
 

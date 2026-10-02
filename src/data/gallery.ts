@@ -22,7 +22,6 @@ export const gallery: GalleryItem[] = [
   { id: "g32", image: images.chefBehindTheBar, category: "the-chef", caption: "Behind the bar", span: "tall" },
   { id: "g33", image: images.angelBanquette, category: "private-dining", caption: "Set for service", span: "wide" },
   { id: "g34", image: images.chefInterview, category: "the-chef", caption: "In conversation", span: "wide" },
-  { id: "g01", image: images.thaliOverhead, category: "signature-dishes", caption: "A tasting of the house", featured: true, span: "tall" },
   { id: "g03", image: images.amritsariPaneerKulcha, category: "signature-dishes", caption: "Amritsari Paneer Kulcha", featured: true, span: "wide" },
   { id: "g04", image: images.tableCandles, category: "private-dining", caption: "A table, ready", featured: true },
   { id: "g06", image: images.mixVegKulcha, category: "signature-dishes", caption: "Mix Veg Kulcha", span: "wide" },
