@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import { getGallery } from "@/lib/content/gallery";
 import type { GalleryItem } from "@/types/content";
 import { cn } from "@/lib/cn";

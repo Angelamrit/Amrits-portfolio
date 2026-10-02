@@ -76,6 +76,32 @@ const REVEAL = `(function(){var S="[data-reveal]:not([data-shown]),[data-reveal-
  */
 const PAUSE_OFFSCREEN = `document.addEventListener("contentvisibilityautostatechange",function(e){e.target.toggleAttribute("data-skipped",e.skipped)},true);`;
 
+/*
+ * Downloads every photograph on the page in the background, once the page has
+ * finished loading, so a visitor who scrolls finds each picture already there.
+ *
+ * Photographs below the first screen are `loading="lazy"`: the browser only
+ * asks for one when it comes near the screen. With the server in Mumbai and
+ * the guests in New York, every one of those requests waits a quarter of a
+ * second just to cross the world before the file even starts, so on a fast
+ * scroll the pictures arrived one after another, visibly late. Lazy loading
+ * is still right for the first moments, when the first screen must win every
+ * race; it is only wrong afterwards, when the line sits idle.
+ *
+ * So after the `load` event, and once the browser is idle, this walks the
+ * page's lazy pictures from the top down and starts them three at a time, at
+ * low priority. Three leaves the browser's other connections free for anything
+ * the visitor scrolls to in the meantime, which the browser's own lazy loading
+ * still fetches at normal priority, ahead of this queue. Pictures added later
+ * (another page opened inside the site, the menus, the gallery viewer) join
+ * the queue as they appear. It reads no layout, so it never forces the
+ * browser to draw a section it is skipping (see PAUSE_OFFSCREEN).
+ *
+ * Skipped when the visitor has asked to save data or is on a 2G connection,
+ * where downloading pictures they may never scroll to would cost them.
+ */
+const PRELOAD_PHOTOS = `(function(){var c=navigator.connection;if(c&&(c.saveData||/2g/.test(c.effectiveType||"")))return;var d=document,q=[],seen=new WeakSet,active=0,MAX=3,on=0,L='img[loading="lazy"]';function add(r){var l=r.querySelectorAll?[].slice.call(r.querySelectorAll(L)):[];if(r.matches&&r.matches(L))l.unshift(r);for(var k=0;k<l.length;k++)if(!seen.has(l[k])){seen.add(l[k]);q.push(l[k])}if(on)pump()}function pump(){while(active<MAX&&q.length){var i=q.shift();if(i.isConnected&&!(i.complete&&i.naturalWidth>0))start(i)}}function start(i){active++;var t,fin=0,done=function(){if(fin)return;fin=1;clearTimeout(t);active--;pump()};i.addEventListener("load",done,{once:true});i.addEventListener("error",done,{once:true});t=setTimeout(done,8000);i.fetchPriority="low";i.loading="eager"}function go(){on=1;add(d);pump();new MutationObserver(function(rs){for(var k=0;k<rs.length;k++)rs[k].addedNodes.forEach(function(n){if(n.nodeType===1)add(n)})}).observe(d.body,{childList:true,subtree:true})}function later(){(window.requestIdleCallback||function(f){setTimeout(f,200)})(go,{timeout:1500})}if(d.readyState==="complete")later();else window.addEventListener("load",later,{once:true})})();`;
+
 export async function SiteShell({ children }: { children: React.ReactNode }) {
   const venue = await getVenue();
   return (
@@ -92,6 +118,8 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       {/* Must stay directly after <main>: see REVEAL. */}
       <script dangerouslySetInnerHTML={{ __html: REVEAL }} />
       <Footer />
+      {/* After the footer, so its photograph is in the page when this first looks. */}
+      <script dangerouslySetInnerHTML={{ __html: PRELOAD_PHOTOS }} />
       {/* The assistant belongs to the public site, so it mounts here rather than
           in the root layout — which is what keeps it off /admin. */}
       <ChatLauncher />

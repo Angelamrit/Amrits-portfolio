@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import { chef } from "@/data/chef";
 import { site } from "@/data/site";
 import { getVenue } from "@/lib/content/venue";

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowUpRight, FileText } from "lucide-react";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { useVenue } from "@/components/layout/VenueContext";
 import { CrossFade } from "@/components/ui/CrossFade";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
+import { usePrefetchImages } from "@/lib/images/use-prefetch-images";
 
 export type ResolvedCourse = {
   title: string;
@@ -101,6 +102,13 @@ export function MenuSwitcherView({ menus, fromUrl }: { menus: ResolvedMenu[]; fr
   const menu = menus.find((mn) => mn.slug === active) ?? menus[0];
   const current = menu.courses[Math.min(course, menu.courses.length - 1)];
   const image = current.image ?? menu.image;
+
+  // Only the showing course's photograph is in the page. Fetch the rest of this
+  // menu's ahead, for whichever layout is on screen, so the auto-advance and a
+  // tapped course never wait on a download. The `sizes` match the <Image>s below.
+  const coursePhotos = menu.courses.map((c) => c.image ?? menu.image);
+  usePrefetchImages(coursePhotos, "(min-width: 1280px) 34rem, (min-width: 1024px) 42vw, 100vw", { media: "(min-width: 1024px)" });
+  usePrefetchImages(coursePhotos, "(min-width: 640px) 90vw, 100vw", { media: "(max-width: 1023.98px)" });
 
   /* auto-advance through the courses */
   useEffect(() => {

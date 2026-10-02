@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import type { ImageAsset } from "@/types/content";
 import { cn } from "@/lib/cn";
 import { blurProps } from "@/lib/images/blur";

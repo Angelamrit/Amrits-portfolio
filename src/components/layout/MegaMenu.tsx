@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/cn";

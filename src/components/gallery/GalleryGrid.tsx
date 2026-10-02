@@ -1,12 +1,13 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { GalleryCategory, GalleryItem } from "@/types/content";
 import { cn } from "@/lib/cn";
 import { blurProps } from "@/lib/images/blur";
+import { usePrefetchImages } from "@/lib/images/use-prefetch-images";
 
 type Category = { value: GalleryCategory | "all"; label: string };
 
@@ -79,6 +80,15 @@ export function GalleryGridView({ items, categories, fromUrl }: { items: Gallery
   }, [openIndex, step]);
 
   const current = openIndex !== null ? visible[openIndex] : null;
+
+  // The viewer shows one large photograph at a time; fetch the one either side
+  // while this one is being looked at, so the arrows never land on a blur.
+  // Same `sizes` and `quality` as the viewer's <Image> below.
+  const neighbours =
+    openIndex === null || visible.length < 2
+      ? []
+      : [visible[(openIndex + 1) % visible.length].image, visible[(openIndex - 1 + visible.length) % visible.length].image];
+  usePrefetchImages(neighbours, "100vw", { quality: 85 });
 
   return (
     <div>

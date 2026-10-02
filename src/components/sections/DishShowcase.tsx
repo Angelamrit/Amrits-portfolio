@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import { ArrowUpRight } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { Dish } from "@/types/content";
@@ -9,6 +9,7 @@ import { blurProps } from "@/lib/images/blur";
 import { DietaryBadges } from "@/components/ui/Badge";
 import { CrossFade } from "@/components/ui/CrossFade";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
+import { usePrefetchImages } from "@/lib/images/use-prefetch-images";
 
 const INTERVAL = 5200;
 /** Matches Tailwind's `lg`: the side-by-side layout. Below it, the list is an accordion. */
@@ -34,6 +35,13 @@ export function DishShowcase({ dishes }: { dishes: Dish[] }) {
   const [paused, setPaused] = useState(false);
   const reduce = useReducedMotion();
   const items = useRef<(HTMLLIElement | null)[]>([]);
+
+  // Only the showing dish's photograph is in the page. Fetch the others ahead,
+  // for whichever layout is on screen, so the rotation and a tapped dish never
+  // wait on a download. The `sizes` strings match the two <Image>s below.
+  const photos = dishes.map((d) => d.image);
+  usePrefetchImages(photos, "55vw", { media: WIDE });
+  usePrefetchImages(photos, "(min-width: 640px) 90vw, 100vw", { media: "(max-width: 1023.98px)" });
 
   useEffect(() => {
     // Only the wide layout auto-advances: on the accordion it would open and

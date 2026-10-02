@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import { MoveHorizontal } from "lucide-react";
 import { useCallback, useRef, useState, type PointerEvent } from "react";
 import type { ImageAsset } from "@/types/content";

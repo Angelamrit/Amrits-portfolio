@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import { Play } from "lucide-react";
 import { useRef, useState } from "react";
 import { site } from "@/data/site";
