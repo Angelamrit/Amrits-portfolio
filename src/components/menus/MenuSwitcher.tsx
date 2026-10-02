@@ -13,6 +13,7 @@ import { useVenue } from "@/components/layout/VenueContext";
 import { CrossFade } from "@/components/ui/CrossFade";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { usePrefetchImages } from "@/lib/images/use-prefetch-images";
+import { useAccordion } from "@/lib/use-accordion";
 
 export type ResolvedCourse = {
   title: string;
@@ -74,12 +75,11 @@ export function MenuSwitcherView({ menus, fromUrl }: { menus: ResolvedMenu[]; fr
   const [active, setActive] = useState(validFromUrl ?? menus[0].slug);
   const [prevUrl, setPrevUrl] = useState(fromUrl);
   const [course, setCourse] = useState(0);
-  const [open, setOpen] = useState<number | null>(0);
-  /** The panel that is sliding shut, kept rendered until its transition ends. */
-  const [closing, setClosing] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
   const reduce = useReducedMotion();
   const items = useRef<(HTMLLIElement | null)[]>([]);
+  const accordion = useAccordion(items, { reduce });
+  const { open, closing, setOpen } = accordion;
 
   // Follow later ?menu= changes (e.g. the hero tiles or the header menu).
   if (fromUrl !== prevUrl) {
@@ -119,25 +119,16 @@ export function MenuSwitcherView({ menus, fromUrl }: { menus: ResolvedMenu[]; fr
     return () => window.clearInterval(t);
   }, [paused, reduce, menu.courses.length, active]);
 
-  useEffect(() => {
-    if (closing === null) return;
-    const t = window.setTimeout(() => setClosing(null), 520);
-    return () => window.clearTimeout(t);
-  }, [closing]);
+  // `course` only drives the laptop layout's large photograph, which is hidden
+  // on a phone. Changing it there re-rendered and crossfaded that hidden picture
+  // on every tap, in the same frame the panel had to start opening.
+  const follow = (i: number) => {
+    if (window.matchMedia(WIDE).matches) setCourse(i);
+  };
 
   const toggle = (i: number) => {
-    setCourse(i);
-    if (window.matchMedia(WIDE).matches) return;
-    const opening = open !== i;
-    setClosing(open);
-    setOpen(opening ? i : null);
-    if (!opening) return;
-    // A panel closing above this one pulls it upwards; once the heights have
-    // settled, bring the tapped course and its photograph into view.
-    window.setTimeout(
-      () => items.current[i]?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" }),
-      reduce ? 0 : 520,
-    );
+    if (window.matchMedia(WIDE).matches) setCourse(i);
+    else accordion.toggle(i);
   };
 
   /* sliding gold indicator under the menu tabs */
@@ -318,13 +309,13 @@ export function MenuSwitcherView({ menus, fromUrl }: { menus: ResolvedMenu[]; fr
                       >
                         <button
                           type="button"
-                          onMouseEnter={() => setCourse(i)}
-                          onFocus={() => setCourse(i)}
+                          onMouseEnter={() => follow(i)}
+                          onFocus={() => follow(i)}
                           onClick={() => toggle(i)}
                           aria-expanded={expanded}
                           aria-controls={panelId}
                           className={cn(
-                            "group relative grid w-full grid-cols-[2.25rem_1fr_auto] items-center gap-4 py-4 pl-3 text-left transition-colors duration-500 ease-luxe sm:grid-cols-[2.75rem_1fr_auto] md:py-5",
+                            "group relative grid w-full grid-cols-[2.25rem_1fr_auto] items-center gap-4 py-4 pl-3 text-left lg:transition-colors lg:duration-500 lg:ease-luxe sm:grid-cols-[2.75rem_1fr_auto] md:py-5",
                             // Wide layout follows the hover-driven `course`; the accordion follows `open`.
                             on ? "lg:text-fg" : "lg:text-fg/60 lg:hover:text-fg",
                             expanded ? "max-lg:text-fg" : "max-lg:text-fg/70",
@@ -340,7 +331,7 @@ export function MenuSwitcherView({ menus, fromUrl }: { menus: ResolvedMenu[]; fr
                           />
                           <span
                             className={cn(
-                              "font-display text-2xl leading-none transition-colors duration-500",
+                              "font-display text-2xl leading-none lg:transition-colors lg:duration-500",
                               on ? "lg:text-gold-gradient" : "lg:text-fg/35",
                               expanded ? "max-lg:text-gold-gradient" : "max-lg:text-fg/35",
                             )}
@@ -373,7 +364,7 @@ export function MenuSwitcherView({ menus, fromUrl }: { menus: ResolvedMenu[]; fr
                             </span>
                             <span
                               className={cn(
-                                "grid size-9 shrink-0 place-items-center rounded-full border transition-all duration-500 ease-luxe",
+                                "grid size-9 shrink-0 place-items-center rounded-full border transition-transform duration-500 ease-luxe lg:transition-all",
                                 on ? "lg:border-accent lg:bg-accent lg:text-gold-light lg:shadow-glow" : "lg:border-line lg:text-fg/40 lg:group-hover:border-accent",
                                 expanded
                                   ? "max-lg:rotate-90 max-lg:border-accent max-lg:bg-accent max-lg:text-gold-light max-lg:shadow-glow"

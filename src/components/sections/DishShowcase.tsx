@@ -10,6 +10,7 @@ import { DietaryBadges } from "@/components/ui/Badge";
 import { CrossFade } from "@/components/ui/CrossFade";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { usePrefetchImages } from "@/lib/images/use-prefetch-images";
+import { useAccordion } from "@/lib/use-accordion";
 
 const INTERVAL = 5200;
 /** Matches Tailwind's `lg`: the side-by-side layout. Below it, the list is an accordion. */
@@ -29,12 +30,11 @@ const WIDE = "(min-width: 1024px)";
  */
 export function DishShowcase({ dishes }: { dishes: Dish[] }) {
   const [active, setActive] = useState(0);
-  const [open, setOpen] = useState<number | null>(0);
-  /** The panel that is sliding shut, kept rendered until its transition ends. */
-  const [closing, setClosing] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
   const reduce = useReducedMotion();
   const items = useRef<(HTMLLIElement | null)[]>([]);
+  const accordion = useAccordion(items, { reduce });
+  const { open, closing } = accordion;
 
   // Only the showing dish's photograph is in the page. Fetch the others ahead,
   // for whichever layout is on screen, so the rotation and a tapped dish never
@@ -51,25 +51,16 @@ export function DishShowcase({ dishes }: { dishes: Dish[] }) {
     return () => window.clearInterval(t);
   }, [paused, reduce, dishes.length]);
 
-  useEffect(() => {
-    if (closing === null) return;
-    const t = window.setTimeout(() => setClosing(null), 520);
-    return () => window.clearTimeout(t);
-  }, [closing]);
+  // `active` only drives the laptop layout's large photograph, which is hidden
+  // on a phone. Changing it there re-rendered and crossfaded that hidden picture
+  // on every tap, in the same frame the panel had to start opening.
+  const follow = (i: number) => {
+    if (window.matchMedia(WIDE).matches) setActive(i);
+  };
 
   const toggle = (i: number) => {
-    setActive(i);
-    if (window.matchMedia(WIDE).matches) return;
-    const opening = open !== i;
-    setClosing(open);
-    setOpen(opening ? i : null);
-    if (!opening) return;
-    // A panel closing above this one pulls it upwards; once the heights have
-    // settled, bring the tapped dish and its photograph into view.
-    window.setTimeout(
-      () => items.current[i]?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "nearest" }),
-      reduce ? 0 : 520,
-    );
+    if (window.matchMedia(WIDE).matches) setActive(i);
+    else accordion.toggle(i);
   };
 
   const dish = dishes[active];
@@ -133,10 +124,10 @@ export function DishShowcase({ dishes }: { dishes: Dish[] }) {
                 aria-expanded={expanded}
                 aria-controls={panelId}
                 onClick={() => toggle(i)}
-                onFocus={() => setActive(i)}
-                onMouseEnter={() => setActive(i)}
+                onFocus={() => follow(i)}
+                onMouseEnter={() => follow(i)}
                 className={cn(
-                  "group relative flex w-full items-center gap-5 py-5 text-left transition-colors duration-500 md:py-6",
+                  "group relative flex w-full items-center gap-5 py-5 text-left md:py-6 lg:transition-colors lg:duration-500",
                   // Wide layout follows the hover-driven `active`; the accordion follows `open`.
                   on ? "lg:text-fg" : "lg:text-fg/55 lg:hover:text-fg",
                   expanded ? "max-lg:text-fg" : "max-lg:text-fg/70",
@@ -144,7 +135,7 @@ export function DishShowcase({ dishes }: { dishes: Dish[] }) {
               >
                 <span
                   className={cn(
-                    "w-8 font-display text-2xl transition-colors duration-500",
+                    "w-8 font-display text-2xl lg:transition-colors lg:duration-500",
                     on ? "lg:text-gold-gradient" : "lg:text-fg/35",
                     expanded ? "max-lg:text-gold-gradient" : "max-lg:text-fg/35",
                   )}
@@ -159,7 +150,7 @@ export function DishShowcase({ dishes }: { dishes: Dish[] }) {
                 </span>
                 <span
                   className={cn(
-                    "grid size-10 shrink-0 place-items-center rounded-full border transition-all duration-500 ease-luxe",
+                    "grid size-10 shrink-0 place-items-center rounded-full border transition-transform duration-500 ease-luxe lg:transition-all",
                     on ? "lg:border-accent lg:bg-accent lg:text-gold-light lg:shadow-glow" : "lg:border-line lg:text-fg/40 lg:group-hover:border-accent",
                     expanded
                       ? "max-lg:rotate-90 max-lg:border-accent max-lg:bg-accent max-lg:text-gold-light max-lg:shadow-glow"
