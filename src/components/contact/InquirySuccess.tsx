@@ -23,7 +23,9 @@ export function InquirySuccess({ name, email }: { name: string; email?: string }
         <p className="mt-4 max-w-md text-fg/70">{site.thankYou.message}</p>
         {email && (
           <p className="mt-4 text-sm text-fg/55">
-            A copy of this message, with Chef Amrit&rsquo;s video, is on its way to <span className="text-fg/80">{email}</span>.
+            {/* The video is only mentioned once one has been recorded (site.thankYou.videoUrl). */}
+            A copy of this message{site.thankYou.videoUrl ? <>, with Chef Amrit&rsquo;s video,</> : null} is on its way to{" "}
+            <span className="text-fg/80">{email}</span>.
           </p>
         )}
 
