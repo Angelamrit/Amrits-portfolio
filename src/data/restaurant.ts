@@ -18,7 +18,7 @@ export const restaurant: RestaurantProfile = {
     "The neighbourhood answered immediately. Angel paid its own rent in the very first month, and word travelled quickly through a borough that knows Indian food better than anywhere in America.",
     "He named the restaurant after his daughter. Every plate that leaves the kitchen carries her name, and he cooks accordingly: predominantly vegetarian, 100% Halal, and always simple but good.",
   ],
-  features: ["Predominantly vegetarian", "100% Halal", "Full bar", "Open Tuesday to Sunday", "Chef's tasting menu", "Housemade paneer"],
+  features: ["Predominantly vegetarian", "100% Halal", "Open Tuesday to Sunday", "Chef's tasting menu", "Housemade paneer"],
   facts: [
     { value: "2019", label: "Opened" },
     { value: "Growing", label: "Team" },
