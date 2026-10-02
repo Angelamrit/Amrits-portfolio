@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowLeft, KeyRound, ShieldCheck, TriangleAlert } from "lucide-react";
+import { currentSession } from "@/lib/admin/auth";
 import { adminConfigured } from "@/lib/admin/config";
 import { Heading, Em } from "@/components/ui/Heading";
 import { LoginForm } from "./LoginForm";
@@ -26,6 +28,10 @@ export default async function AdminLoginPage({
 }) {
   const { next } = await searchParams;
   const configured = adminConfigured();
+
+  // Already signed in — with a cookie issued under the password now in force,
+  // which is more than the proxy checks — so there is nothing to ask for.
+  if (configured && (await currentSession())) redirect("/admin");
 
   return (
     <main className="admin-room tone-dark relative flex min-h-dvh items-center justify-center overflow-hidden px-5 py-16">

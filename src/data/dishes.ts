@@ -13,7 +13,7 @@ export const dishes: Dish[] = [
     tagline: "The Indian classic",
     description:
       "Chickpeas simmered until the spice has gone all the way through, served with fried flat bread straight from the pan.",
-    image: images.pavBhaji,
+    image: images.choleBhatura,
     tags: ["vegetarian", "halal"],
     signature: true,
     order: 1,
@@ -24,7 +24,7 @@ export const dishes: Dish[] = [
     tagline: "Stuffed the Amritsari way",
     description:
       "Paneer-stuffed bread, served with chickpeas, pickle, yogurt and spices.",
-    image: images.paneerCurry,
+    image: images.amritsariPaneerKulcha,
     tags: ["vegetarian", "halal", "dairy"],
     signature: true,
     order: 2,
@@ -35,7 +35,7 @@ export const dishes: Dish[] = [
     tagline: "Bread, the way Amritsar bakes it",
     description:
       "Potato-stuffed bread, served with chickpeas, pickle, yogurt and spices.",
-    image: images.naanDal,
+    image: images.amritsariAlooKulcha,
     tags: ["vegetarian", "halal", "dairy"],
     signature: true,
     order: 3,
@@ -46,7 +46,7 @@ export const dishes: Dish[] = [
     tagline: "Everything the season gives",
     description:
       "Mixed vegetable–stuffed bread, served with chickpeas, pickle, yogurt and spices.",
-    image: images.curryNaan,
+    image: images.mixVegKulcha,
     tags: ["vegetarian", "halal", "dairy"],
     signature: true,
     order: 4,
@@ -68,7 +68,7 @@ export const dishes: Dish[] = [
     tagline: "Sealed, steamed, served",
     description:
       "Chicken layered with saffron basmati rice, sealed and slow-cooked in the dum tradition, served with raita.",
-    image: images.ricePlate,
+    image: images.chickenDumBiryani,
     tags: ["halal", "dairy"],
     signature: true,
     order: 6,
@@ -79,7 +79,7 @@ export const dishes: Dish[] = [
     tagline: "The one worth the wait",
     description:
       "Goat layered with saffron basmati rice, sealed and slow-cooked in the dum tradition, served with raita.",
-    image: images.curriesRice,
+    image: images.goatDumBiryani,
     tags: ["halal", "dairy"],
     signature: true,
     order: 7,

@@ -66,6 +66,7 @@ console.log(`
 
   ADMIN_PASSWORD_HASH=${encoded}
 
-  The password itself is not stored anywhere. Keep it somewhere safe —
-  generating a new hash is the only way back in if it is lost.
+  The password itself is not stored anywhere. It can be changed later from
+  the dashboard (Account > Change password); if it is ever lost, generating
+  a new hash here and setting it on the server is the way back in.
 `);

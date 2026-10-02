@@ -9,6 +9,7 @@ import {
   ExternalLink,
   House,
   Images,
+  KeyRound,
   LogOut,
   Menu as MenuIcon,
   Store,
@@ -48,6 +49,10 @@ const groups: { heading?: string; items: Item[] }[] = [
       { href: "/admin/restaurant", label: "Restaurant details", icon: Store },
       { href: "/admin/gallery", label: "Photos", icon: Images },
     ],
+  },
+  {
+    heading: "Account",
+    items: [{ href: "/admin/password", label: "Change password", icon: KeyRound }],
   },
 ];
 

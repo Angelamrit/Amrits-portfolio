@@ -272,7 +272,10 @@ export function GalleryManager({ items, categories }: Props) {
           onDelete={
             openItem.uploaded
               ? () => {
-                  if (!window.confirm("Delete this photograph? It is not in the site's code, so this cannot be undone.")) return;
+                  // On a server that keeps files, the photo goes to its trash for
+                  // 30 days (see `deleteBlob` in fs-store.ts), so this is honest
+                  // about recovery without promising the chef an undo button.
+                  if (!window.confirm("Delete this photograph from the website? Whoever looks after the server can still recover it for 30 days.")) return;
                   const data = new FormData();
                   data.set("id", openItem.id);
                   startTransition(() => deleteAction(data));

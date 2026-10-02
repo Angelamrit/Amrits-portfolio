@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Database, Eye, HardDriveDownload, ShieldCheck } from "lucide-react";
-import { SITE_TIME_ZONE_LABEL, getOverview, rangeFromKey } from "@/lib/analytics/aggregate";
+import { SITE_TIME_ZONE, SITE_TIME_ZONE_LABEL, getOverview, rangeFromKey } from "@/lib/analytics/aggregate";
 import { pageName } from "@/lib/analytics/page-names";
 import { credentialKind } from "@/lib/admin/config";
+import { credentials } from "@/lib/admin/credential";
 import { store } from "@/lib/store";
+import { backupsEnabled, latestBackup } from "@/lib/store/backup";
 import { BarList, ShareBars } from "@/components/admin/BarList";
 import { HourStrip } from "@/components/admin/HourStrip";
 import { LiveFeed } from "@/components/admin/LiveFeed";
@@ -33,7 +35,26 @@ export default async function VisitorsPage({
 }) {
   const { range: requested } = await searchParams;
   const range = rangeFromKey(requested);
-  const data = await getOverview(range.key);
+  const filesOnThisServer = store.kind === "Plain files" && !process.env.VERCEL;
+  const [data, credential, lastBackup] = await Promise.all([
+    getOverview(range.key),
+    credentials.active(),
+    filesOnThisServer && backupsEnabled() ? latestBackup().catch(() => null) : Promise.resolve(null),
+  ]);
+  // Only where this server backs itself up; on Vercel the cloud stores keep their own copies.
+  const backupNote = !filesOnThisServer
+    ? null
+    : !backupsEnabled()
+      ? "Daily backups run on the live server."
+      : lastBackup
+        ? `Backed up daily. Last backup ${new Date(lastBackup.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: SITE_TIME_ZONE })}.`
+        : "Backed up daily. The first backup is made a minute after the server starts.";
+  const signInNote =
+    credential?.source === "dashboard"
+      ? "Password set in the dashboard, stored as a scrypt hash."
+      : credentialKind() === "hash"
+        ? "Password stored as a scrypt hash."
+        : "Password set in plain text — a hash is safer.";
   // The instant the roll-up was taken, rather than a second reading of the
   // clock: the live feed's relative times must agree with the range that was
   // actually measured, and a render is not the place to read a clock.
@@ -227,6 +248,7 @@ export default async function VisitorsPage({
               {store.location && (
                 <span className="mt-0.5 block break-all font-mono text-[0.7rem] text-fg/45">{store.location}</span>
               )}
+              {backupNote && <span className="mt-1 block text-[0.76rem] text-fg/55">{backupNote}</span>}
             </span>
           </li>
           <li className="flex min-w-0 gap-3">
@@ -242,7 +264,7 @@ export default async function VisitorsPage({
             <HardDriveDownload aria-hidden className="mt-0.5 size-4 shrink-0 text-gold/70" strokeWidth={1.5} />
             <span className="text-[0.82rem] leading-relaxed text-fg/60">
               <span className="block text-fg/85">Sign-in</span>
-              {credentialKind() === "hash" ? "Password stored as a scrypt hash." : "Password set in plain text — a hash is safer."}
+              {signInNote}
             </span>
           </li>
         </ul>

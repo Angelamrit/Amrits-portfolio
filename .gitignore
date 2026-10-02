@@ -54,3 +54,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Daily backups of the dashboard data, when they are kept beside it (see src/lib/store/backup.ts).
+/.data-backups/

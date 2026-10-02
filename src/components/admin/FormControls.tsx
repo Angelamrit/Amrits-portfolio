@@ -1,7 +1,8 @@
 "use client";
 
 import { memo, useId, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
-import { Check, Minus, Plus } from "lucide-react";
+import { Check, Eye, EyeOff, Minus, Plus } from "lucide-react";
+import { MAX_PASSWORD_LENGTH } from "@/lib/admin/password-rules";
 import { cn } from "@/lib/cn";
 
 /**
@@ -105,6 +106,73 @@ export const TextField = memo(function TextField({
         aria-invalid={error ? true : undefined}
         className={control}
       />
+    </Shell>
+  );
+});
+
+/**
+ * A password box with its own show/hide switch.
+ *
+ * Hidden by default, as the browser expects, but a tap away from visible —
+ * a mistyped password is far more likely than someone reading over the chef's
+ * shoulder in his own kitchen. `name` is set because the form posts these
+ * boxes as they are, rather than through a JSON payload like the editors do:
+ * a password should not be serialised twice. `autoComplete` tells a password
+ * manager which box is which, so it offers to save the new one and not the old.
+ */
+export const PasswordField = memo(function PasswordField({
+  name,
+  label,
+  hint,
+  error,
+  value,
+  onChange,
+  onBlur,
+  autoComplete,
+  className,
+}: {
+  name: string;
+  label: string;
+  hint?: string;
+  error?: string;
+  value: string;
+  onChange: (value: string) => void;
+  onBlur?: () => void;
+  autoComplete: "current-password" | "new-password";
+  className?: string;
+}) {
+  const id = useId();
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <Shell label={label} hint={hint} error={error} htmlFor={id} className={className}>
+      <div className="relative">
+        <input
+          id={id}
+          name={name}
+          type={revealed ? "text" : "password"}
+          value={value}
+          maxLength={MAX_PASSWORD_LENGTH}
+          autoComplete={autoComplete}
+          spellCheck={false}
+          onChange={(event) => onChange(event.target.value)}
+          onBlur={onBlur}
+          aria-invalid={error ? true : undefined}
+          className={cn(control, "pr-12", !revealed && value && "tracking-[0.14em]")}
+        />
+        <button
+          type="button"
+          onClick={() => setRevealed((shown) => !shown)}
+          aria-label={revealed ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+          aria-pressed={revealed}
+          className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-fg/40 transition-colors duration-300 hover:text-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+        >
+          {revealed ? (
+            <EyeOff aria-hidden className="size-4" strokeWidth={1.6} />
+          ) : (
+            <Eye aria-hidden className="size-4" strokeWidth={1.6} />
+          )}
+        </button>
+      </div>
     </Shell>
   );
 });

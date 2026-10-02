@@ -53,7 +53,8 @@ export async function hashPassword(password: string): Promise<string> {
   return [PREFIX, N, R, P, salt.toString("base64url"), derived.toString("base64url")].join(":");
 }
 
-async function matchesHash(password: string, encoded: string): Promise<boolean> {
+/** Compares a password with one `scrypt:…` hash — the environment's, or the one the dashboard stored. */
+export async function verifyHash(password: string, encoded: string): Promise<boolean> {
   const parts = encoded.split(":");
   if (parts.length !== 6 || parts[0] !== PREFIX) return false;
 
@@ -72,16 +73,21 @@ async function matchesHash(password: string, encoded: string): Promise<boolean> 
 }
 
 /**
- * Compares a submitted password against whatever credential is configured.
+ * Compares a submitted password against the credential in the environment.
+ *
+ * Only that one: the password that actually opens the dashboard may instead be
+ * the one set on its "Change password" screen, and `credential.ts` is where
+ * the two are weighed against each other. Nothing but that module should call
+ * this.
  *
  * The plain-text branch still goes through `timingSafeEqual` rather than `===`.
  * A plain comparison returns as soon as two bytes differ, which leaks the
  * length of the correct prefix to anyone timing the responses precisely enough
  * — a slow way to guess a password one character at a time, but a real one.
  */
-export async function verifyPassword(submitted: string): Promise<boolean> {
+export async function verifyEnvPassword(submitted: string): Promise<boolean> {
   const encoded = passwordHash();
-  if (encoded) return matchesHash(submitted, encoded);
+  if (encoded) return verifyHash(submitted, encoded);
 
   const plain = plainPassword();
   if (!plain) return false;

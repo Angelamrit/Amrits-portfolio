@@ -16,12 +16,19 @@ import { SESSION_TTL_SECONDS, sessionSecret } from "./config";
  * What a cookie can and cannot do, stated plainly: the signature proves the
  * claims were issued by this server and have not been edited, and the `exp`
  * claim bounds how long that holds. It cannot be revoked before it expires.
- * The lever for "log everyone out now" is changing the password, because the
- * signing key is derived from the credential (see `config.ts`).
+ * The lever for "log everyone out now" is changing the password, two ways at
+ * once. A new credential on the server changes the signing key (see
+ * `config.ts`), so every old cookie fails right here. A password set on the
+ * dashboard's own screen cannot change the key — this module must stay free
+ * of storage — so every cookie instead names the credential it was issued
+ * under, in `cred`, and `auth.ts` refuses one that names a credential no
+ * longer in force (see `credential.ts`). The proxy checks the signature;
+ * the pages and actions behind it check both.
  */
 
 const ALGORITHM = { name: "HMAC", hash: "SHA-256" } as const;
-const VERSION = 1;
+/** Bumped when `cred` was added: a cookie from before cannot say which password it belongs to. */
+const VERSION = 2;
 
 export type SessionClaims = {
   v: number;
@@ -31,6 +38,8 @@ export type SessionClaims = {
   iat: number;
   /** Expires at, epoch seconds. */
   exp: number;
+  /** The credential this was issued under: `"env"`, or the id of a password set in the dashboard. */
+  cred: string;
 };
 
 const encoder = new TextEncoder();
@@ -62,13 +71,23 @@ function fromBase64Url(value: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
-/** Returns `undefined` when no credential is configured, which is how the dashboard stays shut by default. */
-export async function issueSession(now = Date.now()): Promise<string | undefined> {
+/**
+ * Issues a session under the named credential (see `SessionClaims.cred`).
+ * Returns `undefined` when no credential is configured, which is how the
+ * dashboard stays shut by default.
+ */
+export async function issueSession(credentialId: string, now = Date.now()): Promise<string | undefined> {
   const secret = sessionSecret();
   if (!secret) return undefined;
 
   const issuedAt = Math.floor(now / 1000);
-  const claims: SessionClaims = { v: VERSION, sub: "admin", iat: issuedAt, exp: issuedAt + SESSION_TTL_SECONDS };
+  const claims: SessionClaims = {
+    v: VERSION,
+    sub: "admin",
+    iat: issuedAt,
+    exp: issuedAt + SESSION_TTL_SECONDS,
+    cred: credentialId,
+  };
 
   const payload = toBase64Url(encoder.encode(JSON.stringify(claims)));
   const signature = await crypto.subtle.sign(ALGORITHM, await signingKey(secret), encoder.encode(payload));
@@ -116,6 +135,7 @@ export async function readSession(token: string | undefined | null, now = Date.n
   }
 
   if (claims.v !== VERSION || claims.sub !== "admin") return null;
+  if (typeof claims.cred !== "string" || claims.cred.length === 0) return null;
   if (typeof claims.exp !== "number" || claims.exp * 1000 <= now) return null;
 
   return claims;
