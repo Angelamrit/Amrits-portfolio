@@ -4,31 +4,17 @@ import { withPlaceholders } from "@/lib/images/placeholders";
 /**
  * IMAGE REGISTRY
  * ---------------------------------------------------------------------------
- * Every photograph on the site is referenced from here. All entries are
- * currently stock placeholders (Unsplash, stored in /public/images/placeholders)
- * and are flagged placeholder: true.
+ * Every photograph on the site is referenced from here, and every one of them
+ * is the chef's own. The stock placeholders the site was built with (and their
+ * folder, /public/images/placeholders) have been removed.
  *
- * TO SWAP IN REAL PHOTOGRAPHY:
+ * TO ADD A PHOTOGRAPH:
  *   1. Drop the file in /public/images/<group>/ (e.g. /public/images/chef/portrait.jpg)
  *   2. Replace the entry below with:
  *        { src: "/images/chef/portrait.jpg", alt: "...", width: 1600, height: 2000 }
  *   3. Nothing else needs to change.
  * ---------------------------------------------------------------------------
  */
-
-const placeholder = (
-  file: string,
-  alt: string,
-  width = 1600,
-  height = 1067,
-): ImageAsset => ({
-  src: `/images/placeholders/${file}`,
-  alt,
-  width,
-  height,
-  credit: "Unsplash",
-  placeholder: true,
-});
 
 /**
  * The original Jackson Heights location's storefront (18A916B0…), supplied by the chef. Not a
@@ -149,9 +135,6 @@ const registry = {
     width: 1448,
     height: 1086,
   },
-  dahiBatataPuri: placeholder("dahiBatataPuri.jpg", "Chaat plates on a blue table", 1400, 1400),
-  kalePakora: placeholder("kalePakora.jpg", "Golden fried snacks with green chilli", 1400, 1400),
-  lassuniGobi: placeholder("lassuniGobi.jpg", "Dark bowl of spiced vegetables with lime", 1400, 1400),
   /**
    * Vegetable Dum Biryani (veg_biryani), supplied by the chef. Not a placeholder.
    * The original is 16:9 and the dish frames are 4:3, and no crop of it kept
@@ -222,20 +205,6 @@ const registry = {
     width: 1448,
     height: 1086,
   },
-  housemadePaneer: placeholder("housemadePaneer.jpg", "Charred paneer tikka on a sizzling plate", 1400, 1400),
-  paneerCurry: placeholder("paneerCurry.jpg", "Paneer curry with rice on a grey plate", 1400, 1400),
-  karahi: placeholder("karahi.jpg", "Creamy curry in a copper karahi", 1400, 1400),
-  copperPot: placeholder("copperPot.jpg", "Curry in a copper pot with cream swirl", 1400, 1400),
-  thaliOverhead: placeholder("thaliOverhead.jpg", "Overhead thali of small bowls on a dark table", 1600, 2000),
-  thali: placeholder("thali.jpg", "Steel thali with roti and curries", 1400, 1400),
-  naanDal: placeholder("naanDal.jpg", "Fresh naan with bowls of dal", 1400, 1400),
-  curryNaan: placeholder("curryNaan.jpg", "Curry served with naan", 1400, 1400),
-  curryPan: placeholder("curryPan.jpg", "Vegetable curry in a pan with fresh coriander", 1400, 1400),
-  butterPaneerRice: placeholder("butterPaneerRice.jpg", "Butter paneer with rice and papad", 1400, 1400),
-  pavBhaji: placeholder("pavBhaji.jpg", "Pav bhaji with buttered buns", 1400, 1400),
-  dosa: placeholder("dosa.jpg", "Crisp dosa with chutneys", 1400, 1400),
-  curriesRice: placeholder("curriesRice.jpg", "Bowls of curry with rice", 1400, 1400),
-  ricePlate: placeholder("ricePlate.jpg", "Spiced rice on a silver plate", 1400, 1400),
   // ---- Restaurant & bar ----
   /** Real photograph of Angel's new dining room, supplied by the chef. Not a placeholder. */
   angelDiningRoom: {
@@ -317,9 +286,6 @@ const registry = {
     width: 1086,
     height: 1448,
   },
-  prepOverhead: placeholder("prepOverhead.jpg", "Overhead of vegetables being prepped", 1600, 1067),
-  platedDish: placeholder("platedDish.jpg", "Composed plate close-up", 1400, 1400),
-  soupBowl: placeholder("soupBowl.jpg", "Soup bowl with herbs", 1400, 1400),
 } satisfies Record<string, ImageAsset>;
 
 /**

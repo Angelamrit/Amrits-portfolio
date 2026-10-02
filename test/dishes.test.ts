@@ -25,7 +25,7 @@ const form = (overrides: Partial<import("@/lib/content/dishes").DishForm> = {}) 
   tags: ["vegetarian" as const],
   signature: true,
   visible: true,
-  imageKey: "platedDish",
+  imageKey: "foodDalNaan",
   ...overrides,
 });
 
@@ -134,7 +134,7 @@ describe("the dashboard's dish list", () => {
   });
 
   it("knows which photographs exist", async () => {
-    assert.equal(await dishes.isKnownImageKey("platedDish"), true);
+    assert.equal(await dishes.isKnownImageKey("foodDalNaan"), true);
     assert.equal(await dishes.isKnownImageKey("noSuchPicture"), false);
     assert.equal(await dishes.isKnownImageKey("up-0000000000000000"), false);
   });

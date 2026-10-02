@@ -95,7 +95,7 @@ export type AdminDish = Dish & {
 const ADDED_ID = /^d-[a-f0-9]{10}$/;
 
 /** Shown if a dish's photograph has gone — an upload deleted since it was chosen. */
-const FALLBACK_IMAGE: ImageAsset = images.platedDish;
+const FALLBACK_IMAGE: ImageAsset = images.foodDalNaan;
 
 const emptyDoc: DishesDoc = { version: 1, updatedAt: 0, patches: {}, added: [], hidden: [] };
 

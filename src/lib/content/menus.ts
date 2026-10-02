@@ -94,7 +94,7 @@ export type AdminMenu = Menu & {
 };
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const FALLBACK_IMAGE = images.thaliOverhead;
+const FALLBACK_IMAGE = images.foodNaanBiryani;
 
 const emptyDoc: MenusDoc = { version: 1, updatedAt: 0, patches: {}, added: [], hidden: [], order: [] };
 

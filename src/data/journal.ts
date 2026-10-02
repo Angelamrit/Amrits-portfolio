@@ -31,7 +31,7 @@ export const articles: Article[] = [
     excerpt: "Chickpeas, potatoes, fresh paneer and two more that decide what Angel cooks each season.",
     date: "2026-08-15",
     readingTime: 5,
-    cover: images.prepOverhead,
+    cover: images.chefKitchenPrep,
     status: "draft",
     isPlaceholder: true,
     blocks: [
@@ -54,7 +54,7 @@ export const articles: Article[] = [
     excerpt: "Chole Bhatura: chickpeas, fried bread and the fire of a six-burner stove in a tiny Jackson Heights kitchen.",
     date: "2026-07-20",
     readingTime: 4,
-    cover: images.pavBhaji,
+    cover: images.choleBhatura,
     status: "draft",
     isPlaceholder: true,
     blocks: [
@@ -69,7 +69,7 @@ export const articles: Article[] = [
     excerpt: "Seven courses, one journey: from the street food of India to the slow-cooked dishes of the regions.",
     date: "2026-06-30",
     readingTime: 6,
-    cover: images.thaliOverhead,
+    cover: images.foodNaanBiryani,
     status: "draft",
     isPlaceholder: true,
     blocks: [

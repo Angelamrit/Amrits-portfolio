@@ -56,7 +56,7 @@ All copy and images live in `src/data/`. Components only render what they are gi
 
 ### Swapping in real photography
 
-All images are stock placeholders stored in `public/images/placeholders/` and flagged `placeholder: true` in `src/data/images.ts`.
+Every photograph is the chef's own; the stock placeholders the site was built with have been removed. To add or replace one:
 
 1. Drop the real file in `public/images/<group>/` (for example `public/images/chef/portrait.jpg`).
 2. Replace that entry in `images.ts`:
