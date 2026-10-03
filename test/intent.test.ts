@@ -175,3 +175,33 @@ test("a follow-up with its own subject does not inherit the old handoff", () => 
     assert.equal(detectIntent(q, { previous: event }), null, `"${q}" should not inherit the event handoff`);
   }
 });
+
+test("asking who made this website hands off to Aceva Tech", () => {
+  // The studio credited in the footer. The reply is one fixed sentence; the
+  // button is what carries the visitor to them.
+  for (const q of [
+    "Who built this website?",
+    "who made this site",
+    "Tell me about Aceva",
+    "aceva?",
+    "designers behind this website",
+    "contact the developers",
+    "Who designed the website?",
+    // Added on request: the assistant itself, the founder, the studio, its office.
+    "who built you",
+    "what is aceva",
+    "where are aceva headquarter",
+    "where is Aceva's head office?",
+    "who is founder of this website",
+  ]) {
+    assert.deepEqual(detectIntent(q), { intent: "aceva" }, `"${q}" should hand off to Aceva`);
+  }
+});
+
+test("a birthday with an age and a headcount is still an event enquiry", () => {
+  // "40th" and "30" are an age and a party size; the handoff rests on "birthday".
+  assert.deepEqual(
+    detectIntent("I want to host my 40th birthday dinner for 30 guests"),
+    { intent: "event", experience: "dinner-parties" },
+  );
+});

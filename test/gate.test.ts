@@ -1,6 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { classifyInput, MAX_INPUT_LENGTH } from "../src/lib/chat/gate.ts";
+import {
+  classifyInput,
+  FAREWELL_REPLY,
+  GREETING_REPLY,
+  IDENTITY_REPLY,
+  MAX_INPUT_LENGTH,
+  SCOPE_REPLY,
+  THANKS_REPLY,
+} from "../src/lib/chat/gate.ts";
 
 /**
  * The knowledge base requires that these inputs never invoke the model.
@@ -232,7 +240,7 @@ test("every refusal is the same fixed sentence, whatever the reason", () => {
   // A closed world: the reply must not reveal *why* it was refused, so a prober
   // cannot tell an off-topic question from one the knowledge base simply lacks.
   const probes = [
-    "", "   ", "😀", "asdjkh 7788 !!!", "hi", "thanks", "what?", "why",
+    "", "   ", "😀", "asdjkh 7788 !!!", "what?", "why",
     "Who won the football match?", "Write me a python script", "fuck",
     "hekki", "a".repeat(MAX_INPUT_LENGTH + 1),
   ];
@@ -244,7 +252,18 @@ test("every refusal is the same fixed sentence, whatever the reason", () => {
     if (result.allow === false) seen.add(result.response);
   }
 
-  assert.deepEqual([...seen], ["Ask me about Chef Amrit or Angel Indian Restaurant."]);
+  assert.deepEqual([...seen], [SCOPE_REPLY]);
+
+  // Greetings are the deliberate exception: still refused without a model
+  // call, but warmly. A visitor saying hello is not probing the closed world.
+  for (const [probe, reply] of [["hi", GREETING_REPLY], ["thanks", THANKS_REPLY]] as const) {
+    const result = classifyInput(probe);
+    assert.equal(result.allow, false);
+    if (result.allow === false) {
+      assert.equal(result.reason, "greeting");
+      assert.equal(result.response, reply);
+    }
+  }
 });
 
 test("the refusal sentence carries nothing before or after it", () => {
@@ -401,4 +420,89 @@ test("an ambiguous off-topic word defers to the restaurant context", () => {
   // ...but on their own they are still a detour.
   blocked("What is the weather tomorrow", "off_topic");
   blocked("Which celebrity is most famous", "off_topic");
+});
+
+/**
+ * Greetings get a short, warm, fixed reply — and still never a model call.
+ */
+const greeted = (input: string, reply: string, opts = {}) => {
+  const result = classifyInput(input, opts);
+  assert.equal(result.allow, false, `"${input}" must be answered locally, not sent to the model`);
+  if (result.allow === false) {
+    assert.equal(result.reason, "greeting", `wrong reason for "${input}"`);
+    assert.equal(result.response, reply, `wrong reply for "${input}"`);
+  }
+};
+
+test("hello, in its many forms, gets the welcome", () => {
+  for (const q of ["hello", "Hi!", "hey there", "good morning", "good evening", "salaam", "Namaste", "how are you"]) {
+    greeted(q, GREETING_REPLY);
+  }
+  assert.match(GREETING_REPLY, /^Hello, and welcome to Chef Amrit's portfolio!/);
+  assert.match(GREETING_REPLY, /menu, opening hours, reservations or private dining/);
+});
+
+test("thanks and goodbye get their own replies", () => {
+  for (const q of ["thanks", "thank you", "thx", "cheers"]) greeted(q, THANKS_REPLY);
+  for (const q of ["bye", "goodbye", "ok bye"]) greeted(q, FAREWELL_REPLY);
+});
+
+test("filler around a greeting is still a greeting", () => {
+  // "hello there my friend" was refused with the scope sentence and "thanks a
+  // lot" cost a model call, because "my" and "lot" were not greeting words.
+  greeted("hello there my friend", GREETING_REPLY);
+  greeted("thanks a lot", THANKS_REPLY);
+  greeted("thank you very much", THANKS_REPLY);
+  greeted("ok thanks bye", THANKS_REPLY);
+  // Filler alone is not a greeting: at least one real greeting word is needed.
+  const r = classifyInput("my lot");
+  assert.equal(r.allow, false);
+  if (r.allow === false) assert.notEqual(r.reason, "greeting");
+});
+
+test("\"who are you?\" is answered locally, not refused as context-free", () => {
+  for (const q of ["who are you?", "Who are you", "who r u", "are you a bot?", "are you human?", "what are you"]) {
+    greeted(q, IDENTITY_REPLY);
+  }
+  assert.match(IDENTITY_REPLY, /assistant for Chef Amrit's portfolio/);
+  // A bare WH question is still context-free.
+  const r = classifyInput("who?");
+  assert.equal(r.allow, false);
+  if (r.allow === false) assert.equal(r.reason, "vague_wh");
+});
+
+test("a greeting mid-conversation is still answered locally", () => {
+  greeted("hi", GREETING_REPLY, { hasContext: true });
+  greeted("thanks", THANKS_REPLY, { hasContext: true });
+});
+
+test("the visitor's name is used only when it is plainly a name", () => {
+  greeted("hi, my name is Sara", GREETING_REPLY.replace("Hello,", "Hello Sara,"));
+  greeted("My name is sara", GREETING_REPLY.replace("Hello,", "Hello Sara,"));
+});
+
+test("\"I'm …\" and \"call me …\" are never read as a name", () => {
+  // "I'm hungry" must not become "Hello Hungry". The form is deliberately not
+  // matched, so the message goes to the model like any other sentence.
+  const result = classifyInput("I'm hungry");
+  assert.equal(result.allow, true);
+  for (const q of ["I'm hungry", "I am Sara", "im sara", "call me Omar"]) {
+    const r = classifyInput(q);
+    if (r.allow === false) assert.doesNotMatch(r.response, /Hello (?:Hungry|Sara|Omar)/);
+  }
+});
+
+test("an introduction with a real question still reaches the model", () => {
+  // The name clause is lifted out; what remains must be pure small talk for
+  // the local reply to apply.
+  for (const q of ["my name is Sara, what are your hours?", "hi, I'm Sara — do you have vegan dishes?"]) {
+    assert.equal(classifyInput(q).allow, true, `"${q}" should go to the model`);
+  }
+});
+
+test("greeting replies carry no internals and no refusal sentence", () => {
+  for (const reply of [GREETING_REPLY, THANKS_REPLY, FAREWELL_REPLY, IDENTITY_REPLY]) {
+    assert.doesNotMatch(reply, /knowledge base|prompt|model|api[_ -]?key|not verified/i);
+    assert.notEqual(reply, SCOPE_REPLY);
+  }
 });
