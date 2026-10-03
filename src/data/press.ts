@@ -241,10 +241,12 @@ export const barLaunch = {
   date: "January 2026",
   quote: "The addition of our full bar allows us to complete the dining experience.",
   offerings: [
-    { kind: "wine" as const, label: "Wine", blurb: "Whites and reds chosen to sit with the spice, not fight it." },
-    { kind: "cocktails" as const, label: "Cocktails", blurb: "House syrups and fresh spice alongside the classics, done properly." },
-    { kind: "beer" as const, label: "Beer", blurb: "Local and imported, built for the tandoor and the biryani." },
-    { kind: "mocktails" as const, label: "Mocktails", blurb: "Non-alcoholic, no less considered." },
+    { kind: "wine" as const, label: "Wine", blurb: "A crisp white to cool the chilli, or a red bold enough for the tandoor." },
+    { kind: "cocktails" as const, label: "Cocktails", blurb: "Mixed at the new bar: the drink in your hand when the first chaat lands." },
+    { kind: "beer" as const, label: "Beer", blurb: "Ice-cold and easy, the classic partner for a plate of biryani." },
+    // Non-alcoholic list copied from the restaurant's own menu
+    // (angelindianrestaurantnyc.com/menu, checked 2026-10-03).
+    { kind: "mocktails" as const, label: "Lassi & Chai", blurb: "Mango or salted Punjabi lassi, fresh lime soda, masala chai, and Thums Up." },
   ],
 };
 
