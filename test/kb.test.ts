@@ -13,7 +13,7 @@ import { SCOPE_REPLY } from "../src/lib/chat/gate.ts";
 import { MAX_OUTPUT_TOKENS } from "../src/lib/chat/client.ts";
 
 const KB_PATH = new URL(
-  "../src/lib/chat/kb-data/Amrit_Chatbot_Knowledge_Base_Final_v1.8.json",
+  "../src/lib/chat/kb-data/Amrit_Chatbot_Knowledge_Base_Final_v1.9.json",
   import.meta.url,
 );
 
@@ -26,7 +26,7 @@ const prompt = buildSystemInstruction(kb);
 // --- Validation -------------------------------------------------------------
 
 test("the supplied knowledge base loads and validates", () => {
-  assert.equal(KB_VERSION, "1.8");
+  assert.equal(KB_VERSION, "1.9");
   assert.ok(kb.facts.length >= 50);
   assert.ok(kb.menu_snapshot.items.length >= 80);
 });
@@ -260,7 +260,8 @@ test("secrets and instruction disclosure are forbidden", () => {
 test("the voice rules forbid internal vocabulary and filler", () => {
   assert.match(prompt, /polished, warm, conversational and concise/i);
   assert.match(prompt, /Never refer to your own workings/i);
-  assert.match(prompt, /Answer first, then offer at most one useful next step/i);
+  // Reworded with the host voice: one next step, offered when it fits.
+  assert.match(prompt, /Answer first, then offer one useful next step when it fits/i);
   assert.match(prompt, /never like documentation/i);
   for (const term of ["knowledge base", "snapshot", "record", "prompt", "model", "verification"]) {
     assert.ok(
@@ -451,4 +452,83 @@ test("the chat route asks for enough reasoning to quote a price correctly", () =
 
   // Reasoning models reject `temperature` with a 400, so it must not come back.
   assert.doesNotMatch(route, /temperature:/, "temperature is not a valid parameter for this model");
+});
+
+test("the website credit is in the knowledge base and reaches the model verbatim", () => {
+  // v1.9 holds four facts about the studio that built this site. Three come from
+  // acevatech.com (S16). The head office does NOT: no page of that site states a
+  // country — it was supplied by the project owner — so it is sourced to an
+  // owner statement (S17) with the status the KB already uses for owner-provided
+  // material. Sourcing it to the website was a grounding error, now pinned here.
+  const credit = kb.facts.find((f) => f.id === "website-001");
+  const office = kb.facts.find((f) => f.id === "website-002");
+  const contact = kb.facts.find((f) => f.id === "website-003");
+  const holdings = kb.facts.find((f) => f.id === "website-004");
+  assert.ok(credit && office && contact && holdings, "website-001..004 must exist");
+
+  assert.equal(credit?.status, "confirmed_current");
+  assert.match(credit?.fact ?? "", /designed and built by Aceva Tech/);
+  assert.doesNotMatch(credit?.fact ?? "", /https?:\/\//, "no URL in the fact the model reads");
+
+  assert.match(office?.fact ?? "", /head office is in Pakistan/);
+  assert.equal(office?.status, "confirmed_from_user_source", "owner-stated, so owner-sourced");
+  assert.deepEqual(office?.sources, ["S17"], "the website never states a country; it must not be the source");
+  assert.match(kb.sources.S17 ?? "", /^Project owner statement/);
+
+  assert.match(contact?.fact ?? "", /contact@acevatech\.com/);
+  assert.match(contact?.fact ?? "", /\+92 305 555 2230/);
+  assert.deepEqual(contact?.sources, ["S16"]);
+  assert.match(holdings?.fact ?? "", /software division of Aceva Holdings/);
+  assert.deepEqual(holdings?.sources, ["S16"]);
+  assert.match(kb.sources.S16 ?? "", /^https:\/\/acevatech\.com/, "the link is kept as a source");
+
+  assert.ok(prompt.includes("# Website credit"), "the prompt needs a website-credit section");
+  assert.ok(prompt.includes("\"This website was designed and built by Aceva Tech.\""), "the credit sentence, word for word");
+  assert.ok(prompt.includes("\"Aceva Tech's head office is in Pakistan.\""), "the head-office sentence, word for word");
+  assert.ok(prompt.includes("\"Aceva is the software division of Aceva Holdings.\""), "the Holdings line, word for word");
+  assert.match(prompt, /contact@acevatech\.com and \+92 305 555 2230/, "email and phone are sayable");
+  assert.match(prompt, /Do not include a link or web address/);
+  // Regression, twice: an open "tell me about Aceva" was read as asking for more
+  // than the fixed sentences and refused — which also withdraws the button.
+  assert.match(prompt, /"tell me about Aceva", "what is Aceva"/, "the open phrasings must be named");
+  assert.match(prompt, /general or open question about Aceva gets the credit sentence, never the refusal/);
+  assert.match(prompt, /Never add anything about the studio yourself/, "the studio must not be described further");
+  // "What is Aceva Holdings?" was refused; the Holdings line is the answer.
+  assert.match(prompt, /If asked what Aceva Holdings is, reply with exactly this/);
+});
+
+test("the model is told to read everyday synonyms for what they mean", () => {
+  // Behavioural regressions: "Who built Angel restaurant?", "Who is the
+  // founder of Angel?" and "What time does the kitchen close?" were refused as
+  // if the literal words were unsupported.
+  assert.match(prompt, /who "built", "founded", "started" or "opened" Angel is asking who owns and opened the restaurant/);
+  assert.match(prompt, /"when does the kitchen close" is asking for closing time/);
+  assert.match(prompt, /"who built Angel" is about the restaurant, never the studio/);
+});
+
+test("answer-quality rules: no appended refusal, exact price filters, attributed dinner-only", () => {
+  assert.match(prompt, /The refusal sentence is a whole reply, never a closing line/);
+  assert.match(prompt, /"Under \$5" does not include a \$5\.00 dish/);
+  assert.match(prompt, /"dinner-only" is what the brief says, so attribute it to the brief/);
+});
+
+test("an ordinal before an occasion is an age, and the model is told so", () => {
+  // Behavioural regression: "my 40th birthday" was read as the 40th of a month
+  // and the assistant asked which month. The prompt now names the case and
+  // gives the reply it should make instead.
+  assert.match(prompt, /An ordinal before an occasion is an age, not a date/);
+  assert.match(prompt, /never ask which month it falls in/);
+  assert.match(prompt, /we'd love to help with a 40th birthday dinner/);
+  assert.match(prompt, /for 30 guests.*party size, not a date/);
+});
+
+test("the assistant speaks as a warm, friendly host — not as Chef Amrit, and not as Angel", () => {
+  // The owner asked for "we're open…" and "you" — a friendly host's voice, never
+  // Chef Amrit's own. This is the portfolio's assistant: it is not given an
+  // Angel-restaurant identity, so the prompt must not call it a host *for Angel*.
+  assert.match(prompt, /speak as a warm, friendly host:/);
+  assert.doesNotMatch(prompt, /host for Angel/, "no Angel-restaurant identity was asked for");
+  assert.match(prompt, /never speak as him personally/);
+  assert.match(kb.answer_policy.response_style_rules.tone, /warm, friendly host/);
+  assert.ok(prompt.includes(kb.answer_policy.response_style_rules.tone), "the KB tone must reach the model");
 });

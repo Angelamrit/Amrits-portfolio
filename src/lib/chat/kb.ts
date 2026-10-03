@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import raw from "./kb-data/Amrit_Chatbot_Knowledge_Base_Final_v1.8.json" with { type: "json" };
+import raw from "./kb-data/Amrit_Chatbot_Knowledge_Base_Final_v1.9.json" with { type: "json" };
 
 /**
  * Knowledge base loader and validator.
@@ -24,7 +24,7 @@ import raw from "./kb-data/Amrit_Chatbot_Knowledge_Base_Final_v1.8.json" with { 
  * if the KB is ever replaced or revised without updating this constant, loading
  * throws rather than quietly serving unexpected content.
  */
-export const KB_VERSION = "1.8";
+export const KB_VERSION = "1.9";
 
 const factSchema = z.object({
   id: z.string(),

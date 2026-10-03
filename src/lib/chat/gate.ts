@@ -85,9 +85,63 @@ const GATE_RESPONSES: Record<GateReason, string> = {
   off_topic: SCOPE_REPLY,
 };
 
+/**
+ * Greetings, thanks and goodbyes get a short warm reply instead of the scope
+ * sentence, still without a model call. They are the one refusal that is not
+ * uninformative on purpose: a visitor saying hello is not probing, and meeting
+ * "hello" with "Ask me about Chef Amrit…" read as a brush-off.
+ */
+export const GREETING_REPLY =
+  "Hello, and welcome to Chef Amrit's portfolio! I can tell you about our menu, opening hours, reservations or private dining. What would you like to know?";
+export const THANKS_REPLY =
+  "You're very welcome! Is there anything else I can help you with?";
+export const FAREWELL_REPLY =
+  "Goodbye, and thank you for stopping by.";
+
+/**
+ * "Who are you?" is a question about the assistant, not a context-free one.
+ * It used to fall through the WH check and get the scope sentence, which told
+ * the visitor nothing. It is answered here, fixed and warm, without a model call.
+ */
+export const IDENTITY_REPLY =
+  "I'm the assistant for Chef Amrit's portfolio. I can tell you about our menu, opening hours, reservations or private dining. What would you like to know?";
+
+const IDENTITY_PHRASES = new Set([
+  "who are you",
+  "who r u",
+  "what are you",
+  "are you a bot",
+  "are you a robot",
+  "are you an ai",
+  "are you human",
+  "are you a human",
+  "are you real",
+  "who am i talking to",
+  "who is this",
+]);
+
+const THANKS_WORDS = new Set(["thanks", "thank", "thankyou", "thx", "ty", "cheers", "appreciated"]);
+const FAREWELL_WORDS = new Set(["bye", "goodbye", "cya", "later"]);
+
+/**
+ * A name is used only when the visitor plainly gives one — "my name is Sara".
+ * Nothing is inferred from "I'm …": "I'm hungry" must never become
+ * "Hello Hungry", so that form is deliberately not matched.
+ */
+const NAME_INTRO = /\bmy name is\s+([a-z][a-z'-]{1,30})\b/;
+
+function greetingReply(tokens: string[], name?: string): string {
+  if (tokens.some((t) => THANKS_WORDS.has(t))) return THANKS_REPLY;
+  if (tokens.some((t) => FAREWELL_WORDS.has(t))) return FAREWELL_REPLY;
+  if (!name) return GREETING_REPLY;
+  const proper = name[0].toUpperCase() + name.slice(1);
+  return GREETING_REPLY.replace("Hello,", `Hello ${proper},`);
+}
+
 /** Small talk that carries no question. A message made only of these is not answered. */
 const SMALL_TALK = new Set([
   "hi", "hii", "hiii", "hiya", "hello", "helo", "hey", "heya", "yo", "howdy", "greetings",
+  "salaam", "namaste",
   "good", "morning", "afternoon", "evening", "night", "day",
   "thanks", "thank", "thankyou", "thx", "ty", "cheers", "appreciated",
   "bye", "goodbye", "cya", "later",
@@ -136,6 +190,7 @@ const FILLER = new Set([
   "of", "for", "about", "me", "you", "your", "i", "and", "or", "please", "tell",
   "much", "many", "long", "far", "come", "on", "so", "then", "really", "up",
   "one", "ones", "some", "any", "else", "other", "more", "again", "too",
+  "my", "lot", "lots", "very",
   // Words that only refer back to something already said. They let a genuine
   // follow-up ("and the second one?") stay recognisable as structural now that
   // unrecognised input is no longer waved through mid-conversation.
@@ -328,6 +383,10 @@ function isGibberish(tokens: string[]): boolean {
   if (tokens.length === 0) return true;
 
   const wordish = tokens.filter((t) => {
+    // A known greeting or thank-you is a word by definition, whatever its
+    // letters: "thx" and "ty" have no vowel and failed the smash test below,
+    // so a visitor's thanks was answered as noise.
+    if (SMALL_TALK.has(t)) return true;
     if (!/\p{L}/u.test(t)) return false; // pure numbers and symbols are not words
     if (t.length <= 2) return /^(a|i|is|it|in|on|at|to|do|of|so|no|ok|hi|my|we|he|us)$/.test(t);
     if (/(.)\1{3,}/.test(t)) return false; // "aaaaa"
@@ -433,12 +492,33 @@ export function classifyInput(raw: string, options: GateOptions = {}): GateDecis
 
   if (isGibberish(tokens)) return block("gibberish");
 
+  const greet = (reply: string): GateDecision => ({ allow: false, reason: "greeting", response: reply });
+
   // Whole-phrase small talk is matched before the WH check so that "how are you"
   // reads as a greeting while a bare "how?" stays a context-free question.
-  if (SMALL_TALK_PHRASES.has(tokens.join(" "))) return block("greeting");
+  if (SMALL_TALK_PHRASES.has(tokens.join(" "))) return greet(greetingReply(tokens));
+  if (IDENTITY_PHRASES.has(tokens.join(" "))) return greet(IDENTITY_REPLY);
 
+  // Filler around small talk is still small talk: "hello there my friend" and
+  // "thanks a lot" carry no question, but "my" and "lot" were not greeting words,
+  // so the first was refused and the second cost a model call. At least one
+  // genuine greeting word is required, so filler alone never reads as a greeting.
   const hasWhWord = tokens.some((t) => WH_WORDS.has(t));
-  if (!hasWhWord && tokens.every((t) => SMALL_TALK.has(t))) return block("greeting");
+  const onlySmallTalkOrFiller = tokens.every((t) => SMALL_TALK.has(t) || FILLER.has(t));
+  if (!hasWhWord && onlySmallTalkOrFiller && tokens.some((t) => SMALL_TALK.has(t))) {
+    return greet(greetingReply(tokens));
+  }
+
+  // "hi, my name is Sara" — a greeting with an introduction and nothing else.
+  // The name clause is lifted out and the remainder must still be pure small
+  // talk, so "my name is Sara, what are your hours?" goes on to the model.
+  const intro = NAME_INTRO.exec(normalized);
+  if (intro) {
+    const rest = tokenize(normalized.replace(NAME_INTRO, " "));
+    if (!rest.some((t) => WH_WORDS.has(t)) && rest.every((t) => SMALL_TALK.has(t))) {
+      return greet(greetingReply(rest, intro[1]));
+    }
+  }
 
   if (inScope) return { allow: true, scopeSignal: true };
 

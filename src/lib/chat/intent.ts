@@ -1,5 +1,5 @@
 /**
- * Deterministic intent detection for the two actions the assistant can hand off.
+ * Deterministic intent detection for the three actions the assistant can hand off.
  *
  * Decided here rather than asked of the model so the call-to-action is reliable:
  * it follows what the visitor asked for, not how the reply happened to be
@@ -12,7 +12,7 @@
 
 import { SCOPE_REPLY } from "./gate.ts";
 
-export type ChatIntent = "resy" | "event";
+export type ChatIntent = "resy" | "event" | "aceva";
 
 /** Which occasion to preselect in the existing contact wizard, when it is clear. */
 export type EventExperience =
@@ -24,6 +24,28 @@ export type EventExperience =
   | "dinner-parties";
 
 export type IntentMatch = { intent: ChatIntent; experience?: EventExperience };
+
+/**
+ * The studio credited in the footer. A question about who made this site gets
+ * a Visit Aceva Tech button; the reply itself is one fixed sentence, so the
+ * button is the only thing that carries the visitor anywhere.
+ */
+export const ACEVA_URL = "https://acevatech.com";
+const ACEVA_TERMS = [
+  "aceva", "acevatech",
+  "who built this website", "who built this site", "who built the website", "who built the site",
+  "who made this website", "who made this site", "who created this website", "who created this site",
+  "who designed this website", "who designed this site", "who designed the website",
+  "who developed this website", "who developed this site", "built this website", "built the website",
+  "designed this website", "designed the website", "developed this website",
+  "designers behind this website", "designers behind the website", "designer behind this website",
+  "developers behind this website", "developers behind the website",
+  "contact the developers", "contact the developer", "contact the designers", "contact the designer",
+  "the developers", "the developer of this", "the designer of this", "web developer", "web designer",
+  // The assistant itself, and the people behind the site.
+  "who built you", "who made you", "who created you", "who developed you", "who designed you",
+  "founder of this website", "founder of the website", "founder of this site", "who founded this website",
+];
 
 /** A table at the restaurant: these route to Resy. */
 const TABLE_TERMS = ["table", "resy", "walk in", "walkin"];
@@ -115,6 +137,10 @@ export function detectIntent(raw: string, options: IntentOptions = {}): IntentMa
   const text = normalize(raw);
   if (!text) return null;
 
+  // Unambiguous and about this site rather than the restaurant, so it is
+  // decided before anything that could read "contact" or "event" into it.
+  if (ACEVA_TERMS.some((term) => text.includes(term))) return { intent: "aceva" };
+
   const wantsTable = TABLE_TERMS.some((term) => text.includes(term));
   const wantsBooking = BOOKING_TERMS.some((term) => text.includes(term));
 
@@ -159,10 +185,25 @@ export function detectIntent(raw: string, options: IntentOptions = {}): IntentMa
  * refusal sentence. The refusal is meant to be one sentence and nothing else,
  * so a refused reply carries no handoff.
  *
- * Routing is unchanged — this only withdraws a handoff the answer disowned.
+ * Routing is unchanged — this only withdraws a handoff the answer disowned, or
+ * swaps it for the one the answer actually names.
  */
 export function ctaForReply(cta: IntentMatch | undefined, replyText: string): IntentMatch | undefined {
-  return replyText === SCOPE_REPLY ? undefined : cta;
+  if (replyText === SCOPE_REPLY) return undefined;
+  if (!cta || cta.intent === "aceva") return cta;
+
+  // The keyword guess and the answer can disagree. "Book a table for a wedding
+  // party of 40" reads as a reservation on "book" + "table", but the answer
+  // — rightly — sends a forty-guest wedding to the enquiry form, and the
+  // visitor was shown a Reserve a Table button under words telling them to use
+  // Plan Your Celebration. The assistant is instructed to name the button it
+  // means, so when the words name only the other workflow, the button follows
+  // the words. When both are named, or neither, the guess stands.
+  const namesEvent = /Plan Your Celebration/i.test(replyText);
+  const namesResy = /Reserve a Table|\bResy\b/i.test(replyText);
+  if (cta.intent === "resy" && namesEvent && !namesResy) return { intent: "event" };
+  if (cta.intent === "event" && namesResy && !namesEvent) return { intent: "resy" };
+  return cta;
 }
 
 /** Kept for the reservation-specific checks; equivalent to a "resy" match. */
