@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 import { parseMarkdown, type Span } from "@/lib/chat/markdown";
 import { Button } from "@/components/ui/Button";
 import { useVenue } from "@/components/layout/VenueContext";
-import type { IntentMatch } from "@/lib/chat/intent";
+import { ACEVA_URL, type IntentMatch } from "@/lib/chat/intent";
 import type { ChatTurn } from "./useChat";
 
 function Spans({ spans }: { spans: Span[] }) {
@@ -102,6 +102,16 @@ function ChatCta({ cta }: { cta: IntentMatch }) {
     return (
       <Button href={resyUrl} variant="primary" size="sm" icon={false} className={ctaClass}>
         Reserve a Table
+      </Button>
+    );
+  }
+
+  // The studio credited in the footer. The reply is one fixed sentence that
+  // already names the link; this is the clickable version of it.
+  if (cta.intent === "aceva") {
+    return (
+      <Button href={ACEVA_URL} variant="primary" size="sm" icon={false} className={ctaClass}>
+        Visit Aceva Tech
       </Button>
     );
   }

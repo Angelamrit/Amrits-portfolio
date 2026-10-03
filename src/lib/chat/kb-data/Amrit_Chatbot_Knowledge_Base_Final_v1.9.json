@@ -1,7 +1,7 @@
 {
   "metadata": {
     "project": "Amrit Portfolio chatbot",
-    "version": "1.8",
+    "version": "1.9",
     "research_date": "2026-09-17",
     "purpose": "Source-backed master reference for Chef Amrit Pal Singh and Angel Indian Restaurant, including client-confirmed M. Ali project facts and strict chatbot guardrails.",
     "client_source_authority": "The project owner explicitly confirmed that all information supplied in the M. Ali brief is confirmed project information and must be treated as authoritative project knowledge.",
@@ -50,7 +50,7 @@
       "unsafe_or_illegal_requests": "Do not provide instructions that facilitate wrongdoing, fraud, credential theft, evasion, or other harmful activity merely because the request is presented as being related to the restaurant."
     },
     "response_style_rules": {
-      "tone": "Warm, professional, factual, concise, and helpful. Avoid hype and sales language unless the wording is directly sourced and clearly attributed.",
+      "tone": "Speak as a warm, friendly host — say \"we're open\", \"we'd love to\", and address the visitor as \"you\". Professional, factual and concise. Offer one useful next step when it fits. Never invent a fact to be friendlier. Avoid hype and sales language unless the wording is directly sourced and clearly attributed.",
       "first_person": "Do not speak as Chef Amrit. Use neutral assistant language.",
       "no_fabricated_persona": "Do not invent opinions, memories, experiences, preferences, behind-the-scenes stories, or personal anecdotes for Chef Amrit or the restaurant.",
       "answer_length": "Give the minimum detail needed to answer clearly. Provide additional verified detail when the user asks for a deeper explanation.",
@@ -612,6 +612,34 @@
         "S15"
       ],
       "usage": "Use for current visitor answers. Do not blend this current hours snapshot with the older M. Ali dinner-only launch description."
+    },
+    {
+      "id": "website-001",
+      "topic": "Website credit",
+      "fact": "This website was designed and built by Aceva Tech.",
+      "status": "confirmed_current",
+      "sources": ["S16"]
+    },
+    {
+      "id": "website-002",
+      "topic": "Website credit",
+      "fact": "Aceva Tech's head office is in Pakistan.",
+      "status": "confirmed_from_user_source",
+      "sources": ["S17"]
+    },
+    {
+      "id": "website-003",
+      "topic": "Website credit",
+      "fact": "Aceva Tech can be reached at contact@acevatech.com or +92 305 555 2230.",
+      "status": "confirmed_current",
+      "sources": ["S16"]
+    },
+    {
+      "id": "website-004",
+      "topic": "Website credit",
+      "fact": "Aceva is the software division of Aceva Holdings.",
+      "status": "confirmed_current",
+      "sources": ["S16"]
     }
   ],
   "pending_confirmation": [
@@ -1524,7 +1552,9 @@
     "S12": "https://indianfoodtimes.com/angel-indian-restaurant-opens-new-branch-in-jackson-heights-new-york-a-michelin-recognized-culinary-dream-by-chef-amrit",
     "S13": "M. Ali client-provided source brief — confirmed project source (17 September 2026)",
     "S14": "User-provided Angel Indian Restaurant menu images uploaded in this conversation (17 September 2026); direct menu source, exact edition/date not stated.",
-    "S15": "Project-provided current contact and hours update (17 September 2026); confirms current address, phone, email and weekly hours."
+    "S15": "Project-provided current contact and hours update (17 September 2026); confirms current address, phone, email and weekly hours.",
+    "S16": "https://acevatech.com — Aceva Tech, the studio that designed and built this portfolio website.",
+    "S17": "Project owner statement (October 2026); confirms that Aceva Tech's head office is in Pakistan. Not stated on acevatech.com, whose pages give only a +92 phone number."
   },
   "client_confirmed_brief": {
     "source_id": "S13",
