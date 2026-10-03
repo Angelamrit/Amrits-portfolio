@@ -17,6 +17,9 @@ import { SpotlightCard } from "@/components/ui/SpotlightCard";
 import { Wordmark } from "./Wordmark";
 import { BackToTop, LocalTime, SignatureName } from "./FooterClient";
 
+/** The studio that designed and built this site, credited on its own card below. */
+const STUDIO = { name: "Aceva Tech", href: "https://acevatech.com/" } as const;
+
 /**
  * The two credit cards that replaced the single "Recognition" card: one for
  * the restaurant's own web presence, one for the studio that built this site.
@@ -28,16 +31,17 @@ const externalLinkCards = [
     title: "Angel Indian Restaurant",
     icon: Globe,
     links: [
-      { kind: "web", label: "Official website", href: "https://www.angelindianrestaurant.com/" },
+      { kind: "web", label: "Official website", href: "https://angelindianrestaurantnyc.com/" },
       { kind: "instagram", label: "Instagram", href: "https://www.instagram.com/angel_indian_restaurant" },
     ],
   },
   {
     id: "studio",
-    title: "Aceva Tech",
+    title: STUDIO.name,
+    note: "Designed & developed this website.",
     icon: Code2,
     links: [
-      { kind: "web", label: "Website", href: "https://acevatech.com/" },
+      { kind: "web", label: "Website", href: STUDIO.href },
       { kind: "instagram", label: "Instagram", href: "https://www.instagram.com/acevatechnology" },
     ],
   },
@@ -52,7 +56,13 @@ export function Footer() {
   ].filter((s): s is { label: string; href: string; Icon: typeof InstagramIcon } => Boolean(s));
 
   return (
-    <footer aria-labelledby="footer-heading" className="section-lazy tone-dark grain relative overflow-hidden bg-gradient-to-b from-brown to-brown-deep">
+    // suppressHydrationWarning: the off-screen pause script may mark this
+    // `data-skipped` before React hydrates (see Section.tsx).
+    <footer
+      aria-labelledby="footer-heading"
+      className="section-lazy tone-dark grain relative overflow-hidden bg-gradient-to-b from-brown to-brown-deep"
+      suppressHydrationWarning
+    >
       <span aria-hidden className="hairline-center absolute inset-x-0 top-0 z-[3]" />
 
       {/* The dining room, its tables set, shown clearly, dissolving into the brown
@@ -104,7 +114,7 @@ export function Footer() {
             <SpotlightCard as="nav" aria-label="Footer" className="group/card relative h-full overflow-hidden p-7 md:p-8">
               <span aria-hidden className="orb orb-gold -right-[35%] -top-[30%] size-[75%] opacity-25" />
               <div className="relative">
-                <CardHeader title="Explore" icon={<Compass className="size-4" strokeWidth={1.5} />} />
+                <CardHeader size="lg" title="Explore" icon={<Compass className="size-4" strokeWidth={1.5} />} />
                 {/* No dividers: the rows are separated by space and lit on hover
                     instead, which keeps the resting state quiet. */}
                 <ul className="mt-5 grid gap-0.5">
@@ -150,7 +160,10 @@ export function Footer() {
                 aria-label={card.title}
                 className="group/card flex flex-1 flex-col justify-center p-6 md:p-7"
               >
-                <CardHeader title={card.title} icon={<card.icon className="size-4" strokeWidth={1.5} />} />
+                <CardHeader size="lg" title={card.title} icon={<card.icon className="size-4" strokeWidth={1.5} />} />
+                {"note" in card && (
+                  <p className="-mt-1 text-sm leading-relaxed text-fg/60">{card.note}</p>
+                )}
                 <ul className="mt-5 grid gap-2.5">
                   {card.links.map((link) => (
                     <li key={link.label}>
@@ -199,6 +212,24 @@ export function Footer() {
             <p className="text-xs text-fg/45">
               © {year} {chef.name}
             </p>
+            {/* The studio credit, set like the local-time line opposite, with the name in the display face. */}
+            <p className="flex items-center gap-3 font-sans text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-fg/80">
+              <span aria-hidden className="hidden h-3 w-px bg-gradient-to-b from-transparent via-gold/60 to-transparent md:block" />
+              <span>Designed &amp; crafted by</span>
+              <a
+                href={STUDIO.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group/studio inline-flex items-center gap-1 font-display text-lg font-medium normal-case italic tracking-normal text-gold-light transition-[filter] duration-500 ease-luxe hover:drop-shadow-[0_0_10px_rgba(226,189,108,0.6)]"
+              >
+                {STUDIO.name}
+                <ArrowUpRight
+                  aria-hidden
+                  className="size-3.5 text-gold-light opacity-90 transition-all duration-500 ease-luxe group-hover/studio:-translate-y-0.5 group-hover/studio:translate-x-0.5 group-hover/studio:opacity-100"
+                  strokeWidth={1.75}
+                />
+              </a>
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-6">
             <LocalTime place={restaurant.address.city} />
@@ -222,6 +253,7 @@ export function Footer() {
             <BackToTop />
           </div>
         </div>
+
       </Container>
     </footer>
   );

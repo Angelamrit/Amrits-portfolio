@@ -1,13 +1,25 @@
 import type { ReactNode } from "react";
+import { cn } from "@/lib/cn";
 
 /**
  * Eyebrow title and a glowing icon disc that brightens on hover. The parent
- * card must carry `group/card` for the hover states to trigger.
+ * card must carry `group/card` for the hover states to trigger. `size="lg"`
+ * sets the title larger, for cards read from further away (the footer's).
  */
-export function CardHeader({ id, title, icon }: { id?: string; title: string; icon: ReactNode }) {
+export function CardHeader({
+  id,
+  title,
+  icon,
+  size = "md",
+}: {
+  id?: string;
+  title: string;
+  icon: ReactNode;
+  size?: "md" | "lg";
+}) {
   return (
     <div className="relative flex items-center justify-between gap-4">
-      <h3 id={id} className="eyebrow">
+      <h3 id={id} className={cn("eyebrow", size === "lg" && "text-[0.875rem] leading-snug tracking-[0.2em]")}>
         {title}
       </h3>
       <span

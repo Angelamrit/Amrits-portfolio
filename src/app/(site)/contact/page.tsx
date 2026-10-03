@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CalendarCheck, MapPin, Phone } from "lucide-react";
+import { CalendarCheck, Mail, MapPin, Phone } from "lucide-react";
 import { chef } from "@/data/chef";
 import { images } from "@/data/images";
 import { getVenue } from "@/lib/content/venue";
@@ -34,8 +34,11 @@ export default async function ContactPage() {
           </>
         }
         lead="Chef Amrit cooks every night at Angel in Jackson Heights. He reads every message personally."
-        image={images.angelDiningRoom}
+        image={images.contactHero}
         cinematicImage
+        // A tall photograph: the frame takes its own shape so all of it shows,
+        // and without the slow zoom that would crop the lamps and the chairs.
+        imageRatio="natural"
       >
         <StatRow stats={chef.stats} glass className="max-w-xl" />
       </PageHero>
@@ -88,7 +91,11 @@ export default async function ContactPage() {
                 {(venue.phone || venue.contactEmail) && (
                   <Reveal delay={0.3}>
                     <SpotlightCard as="section" aria-labelledby="contact-call" className="group/card p-6 md:p-7">
-                      <CardHeader id="contact-call" title="Call or email" icon={<Phone className="size-4" strokeWidth={1.5} />} />
+                      <CardHeader
+                        id="contact-call"
+                        title={venue.phone && venue.contactEmail ? "Call or email" : venue.phone ? "Call" : "Email"}
+                        icon={venue.phone ? <Phone className="size-4" strokeWidth={1.5} /> : <Mail className="size-4" strokeWidth={1.5} />}
+                      />
                       <div className="mt-4 flex flex-col gap-2 text-sm">
                         {venue.phone && (
                           <a href={`tel:${venue.phone.replace(/[^\d+]/g, "")}`} className="text-fg/80 transition-colors hover:text-accent">

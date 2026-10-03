@@ -6,6 +6,19 @@ export type ImageAsset = {
   credit?: string;
   /** true while the image is a stock placeholder awaiting real photography */
   placeholder?: boolean;
+  /**
+   * Where to anchor the photo when a frame crops it, as a CSS object-position
+   * ("50% 31%"). Kept with the photo because the right crop depends on what is
+   * in it; without one the crop is centred.
+   */
+  position?: string;
+  /**
+   * A tiny blurred copy of the photograph as a data URL, drawn in its frame
+   * until the real file arrives (next/image's `placeholder="blur"`). Attached
+   * by the registry for the site's own photography and at upload time for the
+   * chef's; absent, the frame's background shows instead.
+   */
+  blurDataURL?: string;
 };
 
 export type Address = {
@@ -28,16 +41,24 @@ export type SiteConfig = {
     phone?: string;
     resyUrl?: string;
     mapsUrl?: string;
-    /** The restaurant's own full menu, with prices, on angelindianrestaurant.com. */
+    /** The restaurant's own full menu, with prices, on its own website. */
     menuUrl?: string;
     hours: string;
+    /** The same hours for search engines, one rule each, schema.org style: "Tu-Su 12:00-22:00". */
+    openingHours?: string[];
     notes: string[];
   };
   social: { instagram?: string; facebook?: string };
   contactEmail?: string;
   cta: { label: string; href: string };
   /** Personal thank-you video sent after a contact message and shown on the success screen. */
-  thankYou: { videoUrl: string; poster: ImageAsset; headline: string; message: string };
+  thankYou: {
+    /** The chef's clip under /public, or null until one is recorded; the page and the auto-reply then show the photo alone. */
+    videoUrl: string | null;
+    poster: ImageAsset;
+    headline: string;
+    message: string;
+  };
 };
 
 export type NavItem = {
@@ -66,11 +87,16 @@ export type RestaurantProfile = {
     description: string;
     highlights: string[];
     image: ImageAsset;
+    /**
+     * How this location's card reads under the outside/inside slider, on the Angel page and
+     * the home page. The header menu keeps `name` and `highlights`.
+     */
+    view: { label: string; title: string; description: string; highlights: string[]; image?: ImageAsset };
   }[];
   heroImage: ImageAsset;
   storyImage: ImageAsset;
   barImage: ImageAsset;
-  /** Before / after slider: the 2019 kitchen versus the new dining room. */
+  /** The drag-to-compare slider: the restaurant from outside, then inside. */
   thenNow: {
     before: { image: ImageAsset; label: string; caption: string };
     after: { image: ImageAsset; label: string; caption: string };
@@ -143,6 +169,7 @@ export type GalleryCategory =
   | "events"
   | "behind-the-scenes"
   | "chef-in-action"
+  | "the-chef"
   | "plating";
 
 export type GalleryItem = {

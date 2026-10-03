@@ -51,7 +51,8 @@ export function inquiryEmailText(data: InquiryInput) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Auto-reply to the guest, with Chef Amrit's personal video message   */
+/* Auto-reply to the guest, with Chef Amrit's photo — and his video    */
+/* message, once one has been recorded (site.thankYou.videoUrl).       */
 /* ------------------------------------------------------------------ */
 
 export function autoReplyHtml(data: InquiryInput, venue: VenueDetails) {
@@ -64,6 +65,7 @@ export function autoReplyHtml(data: InquiryInput, venue: VenueDetails) {
     <h1 style="margin:16px 0 0;font-family:Georgia,serif;font-weight:400;font-size:34px;line-height:1.1">Thank you, ${escape(data.name)}.</h1>
     <p style="margin:18px 0 0;font-size:16px;line-height:1.7;color:#e9dcc4">${escape(site.thankYou.message)}</p>
 
+${site.thankYou.videoUrl ? `
     <a href="${videoPage}" style="display:block;margin:28px 0 0;text-decoration:none;border:1px solid rgba(226,189,108,.4);border-radius:18px;overflow:hidden;background:#2c1b12">
       <img src="${poster}" alt="${escape(site.thankYou.headline)}" width="600" style="display:block;width:100%;height:auto;opacity:.85">
       <div style="padding:16px 20px;background:linear-gradient(90deg,#2c1b12,#1f130d)">
@@ -71,7 +73,9 @@ export function autoReplyHtml(data: InquiryInput, venue: VenueDetails) {
         <span style="display:block;margin-top:10px;font-family:Georgia,serif;font-size:18px;color:#f6efe2">${escape(site.thankYou.headline)}</span>
       </div>
     </a>
-
+` : `
+    <img src="${poster}" alt="${escape(site.thankYou.poster.alt)}" width="600" style="display:block;width:100%;height:auto;margin:28px 0 0;border:1px solid rgba(226,189,108,.4);border-radius:18px">
+`}
     <div style="margin:32px 0 0;padding:24px;border:1px solid rgba(246,239,226,.12);border-radius:18px;background:#2c1b12">
       <div style="font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#e2bd6c">Your message · ${escape(topicLabels[data.topic])}</div>
       <p style="margin:12px 0 0;font-size:14px;line-height:1.8;color:#e9dcc4;white-space:pre-wrap">${escape(data.message)}</p>
@@ -90,8 +94,7 @@ export function autoReplyText(data: InquiryInput, venue: VenueDetails) {
     ``,
     site.thankYou.message,
     ``,
-    `Watch Chef Amrit's video message: ${base}/thank-you`,
-    ``,
+    ...(site.thankYou.videoUrl ? [`Watch Chef Amrit's video message: ${base}/thank-you`, ``] : []),
     `Your message (${topicLabels[data.topic]}):`,
     data.message,
     ``,

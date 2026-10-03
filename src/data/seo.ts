@@ -52,7 +52,7 @@ export const seo = {
     title: "Press & Michelin Bib Gourmand | Chef Amrit Pal Singh",
     description:
       "Michelin Bib Gourmand, The Infatuation, Bon Appétit, Time Out New York and more: verified press coverage of Chef Amrit Pal Singh and Angel Indian Restaurant.",
-    card: { eyebrow: "Press & Recognition", title: "What the critics", accent: "actually wrote." },
+    card: { eyebrow: "Press & Recognition", title: "Noticed by", accent: "the critics." },
   },
   contact: {
     title: "Reserve a Table & Contact | Angel Indian Restaurant, Queens",

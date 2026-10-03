@@ -18,6 +18,15 @@ import { store } from "@/lib/store";
 /** A year. The key is generated per upload and never reused, so the bytes behind it never change. */
 const IMMUTABLE = "public, max-age=31536000, immutable";
 
+/**
+ * For the CDN in front of the site (Vercel's), which does not cache a
+ * function's response on `max-age` alone. A day, not a year: the bytes never
+ * change, but a photograph the chef deletes should stop being served by the
+ * CDN within a day rather than linger for a year. Each miss costs one function
+ * call and one read from Blob storage.
+ */
+const CDN_CACHE = "public, max-age=86400";
+
 export async function GET(_request: Request, { params }: { params: Promise<{ key: string }> }) {
   const { key } = await params;
 
@@ -37,6 +46,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ key
       "Content-Type": blob.contentType,
       "Content-Length": String(blob.bytes.byteLength),
       "Cache-Control": IMMUTABLE,
+      "CDN-Cache-Control": CDN_CACHE,
       // These are user-supplied bytes served from this origin. Sniffing is off
       // and the type is the one read from the file's own header, not the one
       // the browser claimed at upload time.

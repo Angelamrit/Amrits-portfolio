@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -13,6 +13,8 @@ export type MegaItem = {
   meta?: string;
   src: string;
   alt: string;
+  /** The photo's own crop anchor (ImageAsset.position), when it has one. */
+  position?: string;
 };
 
 export type MegaPanelData = {
@@ -87,6 +89,7 @@ export function MegaMenu({ panel, onNavigate }: { panel: MegaPanelData; onNaviga
                       fill
                       sizes="72px"
                       className="object-cover transition-transform duration-[1200ms] ease-luxe group-hover:scale-[1.12]"
+                      style={item.position ? { objectPosition: item.position } : undefined}
                     />
                     <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-brown-deep/70 to-transparent" />
                     <span aria-hidden className="absolute bottom-1 left-1.5 font-display text-[0.7rem] leading-none text-gold-light/90">

@@ -7,7 +7,8 @@ import { idleState, type EditorState } from "@/lib/content/state";
 import { resetVenueToOriginal, saveVenue } from "@/app/admin/(dashboard)/restaurant/actions";
 import { Panel } from "./Panel";
 import { SaveBar, useUnsavedChangesWarning } from "./SaveBar";
-import { TextField, useFieldSetters } from "./FormControls";
+import { TextArea, TextField, useFieldSetters } from "./FormControls";
+import { OPENING_HOURS_RULE } from "@/lib/seo/opening-hours";
 
 /**
  * The restaurant's details.
@@ -46,7 +47,11 @@ export function VenueEditor({ initial, isEdited }: { initial: VenueDraft; isEdit
   // One stable handler per field, so a keystroke re-renders only its own field.
   const set = useFieldSetters(initial, setDraft);
 
-  const patch: VenuePatch = { ...draft, notes: draft.notes.map((note) => note.trim()).filter(Boolean) };
+  const patch: VenuePatch = {
+    ...draft,
+    notes: draft.notes.map((note) => note.trim()).filter(Boolean),
+    openingHours: draft.openingHours.map((rule) => rule.trim()).filter(Boolean),
+  };
 
   // The server's rules, shown on the field that breaks them. A link typed as
   // "resy.com/…" without the https:// used to fail with a sentence in the save
@@ -59,6 +64,9 @@ export function VenueEditor({ initial, isEdited }: { initial: VenueDraft; isEdit
       draft.contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.contactEmail.trim())
         ? "That is not an email address."
         : undefined,
+    openingHours: draft.openingHours.some((rule) => rule.trim() && !OPENING_HOURS_RULE.test(rule.trim()))
+      ? 'Each line must look like "Tu-Su 12:00-22:00".'
+      : undefined,
     resyUrl: link(draft.resyUrl),
     menuUrl: link(draft.menuUrl),
     mapsUrl: link(draft.mapsUrl),
@@ -84,7 +92,16 @@ export function VenueEditor({ initial, isEdited }: { initial: VenueDraft; isEdit
             value={draft.hours}
             maxLength={120}
             onChange={set.hours}
-            hint={'Free text, shown in the header bar. e.g. "Dinner only".'}
+            hint={'Free text, shown on the Contact and Angel pages and in the footer. e.g. "Tuesday to Sunday, 12–10 PM · Closed Monday".'}
+            className="md:col-span-2"
+          />
+          <TextArea
+            label="Hours for search engines"
+            value={draft.openingHours.join("\n")}
+            rows={3}
+            error={errors.openingHours}
+            onChange={(value) => set.openingHours(value.split("\n"))}
+            hint='The same hours in the form Google reads, one rule per line: days as Mo Tu We Th Fr Sa Su, 24-hour times. e.g. "Tu-Su 12:00-22:00", or "Fr,Sa 17:00-23:00" on its own line for a later weekend close. Keep it matching the text above.'
             className="md:col-span-2"
           />
         </div>

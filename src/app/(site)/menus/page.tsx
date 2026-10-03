@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import { ArrowUpRight } from "lucide-react";
 import { getMenus } from "@/lib/content/menus";
 import { getDishes } from "@/lib/content/dishes";

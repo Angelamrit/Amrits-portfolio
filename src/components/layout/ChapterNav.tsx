@@ -5,33 +5,70 @@ import { cn } from "@/lib/cn";
 
 export type Chapter = { id: string; label: string };
 
+/** Matches Tailwind's `xl`, the breakpoint the rail is shown from (`hidden xl:block`). */
+const WIDE = "(min-width: 80rem)";
+
 /**
  * Fixed chapter rail for long story pages: shows "02 / 08", highlights the
  * chapter in view and jumps to any chapter on click. Labels slide out on hover
  * so the rail stays slim and never covers the content column.
+ *
+ * Nothing here runs per scroll event. The rail used to decide whether to show
+ * itself in a scroll listener that read `scrollY` and `innerHeight` on every
+ * event, and each of those reads forces the browser to finish any pending
+ * style and layout work there and then — on a phone that was the single
+ * largest cost of scrolling the home page, around 7ms of every scroll event,
+ * for a rail the phone never shows. Both decisions are now made by
+ * IntersectionObservers, which the browser answers off the main thread, and
+ * nothing at all is set up below the breakpoint the rail appears at.
  */
 export function ChapterNav({ chapters }: { chapters: Chapter[] }) {
   const [active, setActive] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const els = chapters.map((c) => document.getElementById(c.id)).filter((el): el is HTMLElement => el !== null);
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) setActive(e.target.id);
-        });
-      },
-      { rootMargin: "-35% 0px -55% 0px" },
-    );
-    els.forEach((el) => io.observe(el));
+    const wide = window.matchMedia(WIDE);
+    let stop: (() => void) | null = null;
 
-    const onScroll = () => setVisible(window.scrollY > window.innerHeight * 0.6);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const start = () => {
+      if (stop) return;
+      const els = chapters.map((c) => document.getElementById(c.id)).filter((el): el is HTMLElement => el !== null);
+      const current = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) if (e.isIntersecting) setActive(e.target.id);
+        },
+        { rootMargin: "-35% 0px -55% 0px" },
+      );
+      els.forEach((el) => current.observe(el));
+
+      // The rail appears once the opening screen has scrolled away: while the
+      // hero still reaches below the top 40% of the viewport it stays hidden.
+      // Without a hero the first chapter stands in for it.
+      const opening = document.getElementById("hero") ?? els[0];
+      const gate = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) setVisible(!e.isIntersecting);
+        },
+        { rootMargin: "-40% 0px 0px 0px" },
+      );
+      if (opening) gate.observe(opening);
+
+      stop = () => {
+        current.disconnect();
+        gate.disconnect();
+        stop = null;
+      };
+    };
+
+    const sync = () => {
+      if (wide.matches) start();
+      else stop?.();
+    };
+    sync();
+    wide.addEventListener("change", sync);
     return () => {
-      io.disconnect();
-      window.removeEventListener("scroll", onScroll);
+      wide.removeEventListener("change", sync);
+      stop?.();
     };
   }, [chapters]);
 
@@ -44,7 +81,7 @@ export function ChapterNav({ chapters }: { chapters: Chapter[] }) {
     <nav
       aria-label="Chapters"
       className={cn(
-        "group/nav tone-dark fixed right-4 top-1/2 z-[60] hidden -translate-y-1/2 transition-all duration-700 ease-luxe xl:block",
+        "group/nav tone-dark fixed right-4 top-1/2 z-[60] hidden -translate-y-1/2 transition-[transform,opacity] duration-700 ease-luxe xl:block",
         visible ? "translate-x-0 opacity-100" : "pointer-events-none translate-x-6 opacity-0",
       )}
     >

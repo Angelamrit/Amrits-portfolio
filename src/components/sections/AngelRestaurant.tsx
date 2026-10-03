@@ -80,17 +80,19 @@ export async function AngelRestaurant() {
           {/* Then and now */}
           <div className="lg:col-span-5">
             <Reveal delay={0.1}>
-              <p className="eyebrow mb-4 text-[0.6rem] text-gold-light/80">Drag to compare · 2019 to today</p>
-              <CompareSlider before={restaurant.thenNow.before} after={restaurant.thenNow.after} ratio="aspect-[4/3]" sizes="(min-width: 1024px) 40vw, 100vw" />
+              <p className="eyebrow mb-4 text-[0.6rem] text-gold-light/80">Drag to compare · outside and inside Angel</p>
+              {/* The handle starts at 72%, as on the Angel page, so the storefront's whole sign is in view. */}
+              <CompareSlider before={restaurant.thenNow.before} after={restaurant.thenNow.after} ratio="aspect-[4/3]" initial={72} sizes="(min-width: 1024px) 40vw, 100vw" />
             </Reveal>
             <RevealGroup className="mt-4 grid gap-3 sm:grid-cols-2">
+              {/* Under the outside/inside slider, so the cards read the same way as on the Angel page. */}
               {restaurant.locations.map((loc) => (
                 <RevealItem key={loc.name}>
                   <SpotlightCard className="h-full p-5" tilt={2}>
-                    <p className="eyebrow text-[0.55rem] text-muted">{loc.kind === "original" ? "The original room · 2019" : "The new dining room"}</p>
-                    <h3 className="mt-2 font-display text-xl font-normal text-gold-gradient">{loc.name}</h3>
+                    <p className="eyebrow text-[0.55rem] text-muted">{loc.view.label}</p>
+                    <h3 className="mt-2 font-display text-xl font-normal text-gold-gradient">{loc.view.title}</h3>
                     <ul className="mt-3 space-y-1 text-xs text-fg/70">
-                      {loc.highlights.map((h) => (
+                      {loc.view.highlights.map((h) => (
                         <li key={h} className="flex items-center gap-2">
                           <span aria-hidden className="size-1 rounded-full bg-gold" />
                           {h}

@@ -13,7 +13,11 @@ import {
 import { Check } from "lucide-react";
 import { requestChallenge, submitInquiry, type InquiryState } from "@/app/(site)/contact/actions";
 import { CHALLENGE_MIN_AGE_MS, solveProof } from "@/lib/inquiry/proof";
-import { topicLabels, topicOptions, type InquiryField, type Topic } from "@/lib/validation/inquiry";
+// The topics come from their own module and the field names as a type only, so
+// this form does not pull the Zod schema into the browser.
+import { topicLabels, topicOptions, type Topic } from "@/lib/inquiry/topics";
+import { cleanPhoneInput, PHONE_MAX_LENGTH } from "@/lib/inquiry/phone";
+import type { InquiryField } from "@/lib/validation/inquiry";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Field";
@@ -26,6 +30,22 @@ type Proof = { token: string; solution: string; readyAt: number };
 
 /** Headroom over the server's minimum age, so a fast network never lands a form a few milliseconds early. */
 const READY_MARGIN_MS = 250;
+
+/**
+ * Keeps the phone field to characters a phone number can hold: letters and
+ * symbols typed or pasted into it are dropped on the spot, and the caret stays
+ * where the guest was typing. The server checks again, since this is only a
+ * convenience for people using the form as intended.
+ */
+function filterPhone(event: FormEvent<HTMLInputElement>) {
+  const input = event.currentTarget;
+  const cleaned = cleanPhoneInput(input.value);
+  if (cleaned === input.value) return;
+  const caret = input.selectionStart ?? input.value.length;
+  const keptBeforeCaret = cleanPhoneInput(input.value.slice(0, caret)).length;
+  input.value = cleaned;
+  input.setSelectionRange(keptBeforeCaret, keptBeforeCaret);
+}
 
 /**
  * A single-screen message form. Chef Amrit cooks only at Angel, so this is for
@@ -196,7 +216,10 @@ export function ContactForm() {
             label="Phone"
             name="phone"
             type="tel"
+            inputMode="tel"
             autoComplete="tel"
+            maxLength={PHONE_MAX_LENGTH}
+            onInput={filterPhone}
             optional
             defaultValue={values?.phone}
             error={errors.phone}

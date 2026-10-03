@@ -45,6 +45,45 @@ function withTimeout<T>(work: Promise<T>, label: string): Promise<T> {
   return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
 }
 
+type Payload = Parameters<Resend["emails"]["send"]>[0];
+type SendResult = Awaited<ReturnType<Resend["emails"]["send"]>>;
+
+/**
+ * Resend's answer as one plain line. Logged as an object it printed as `{}`
+ * in the dev server's log file, which hid the one fact that mattered.
+ */
+function describe(error: { name?: string; message?: string; statusCode?: number | null }): string {
+  const status = error.statusCode == null ? "no response" : `HTTP ${error.statusCode}`;
+  return `${error.name ?? "error"} (${status}): ${error.message ?? "no message"}`;
+}
+
+function describeThrown(err: unknown): string {
+  if (err instanceof Error) return `${err.name}: ${err.message}${err.cause instanceof Error ? ` (cause: ${err.cause.message})` : ""}`;
+  return String(err);
+}
+
+/** A failure answered quickly enough to be worth one more try, inside the guest's wait. */
+const RETRY_WITHIN_MS = 4_000;
+const RETRY_PAUSE_MS = 800;
+
+/**
+ * One send, retried once when the request never reached Resend: a dropped
+ * connection or a failed lookup, which the SDK reports with no status code.
+ * Nothing was sent in that case, so the retry cannot deliver an email twice.
+ * Anything Resend actually answered — a refused sender, a bad address — is
+ * final and is not retried.
+ */
+async function sendWithRetry(apiKey: string, payload: Payload, label: string): Promise<SendResult> {
+  const started = Date.now();
+  const first = await withTimeout(resend(apiKey).emails.send(payload), label);
+  if (first.error && first.error.statusCode == null && Date.now() - started < RETRY_WITHIN_MS) {
+    console.warn(`[${label}] did not reach Resend (${describe(first.error)}); trying once more`);
+    await new Promise((resolve) => setTimeout(resolve, RETRY_PAUSE_MS));
+    return withTimeout(resend(apiKey).emails.send(payload), label);
+  }
+  return first;
+}
+
 /**
  * Sends the enquiry via Resend when configured; otherwise logs a dry run.
  * Never throws: a lost email should be visible in logs, not shown to a guest.
@@ -60,31 +99,32 @@ export async function sendInquiryEmail(data: InquiryInput): Promise<{ delivered:
   }
 
   try {
-    const { error } = await withTimeout(
-      resend(apiKey).emails.send({
+    const { error } = await sendWithRetry(
+      apiKey,
+      {
         from,
         to,
         replyTo: data.email,
         subject: `Website message — ${data.name} (${topicLabels[data.topic]})`,
         html: inquiryEmailHtml(data),
         text: inquiryEmailText(data),
-      }),
+      },
       "inquiry email",
     );
     if (error) {
-      console.error("[inquiry:resend-error]", error, inquiryEmailText(data));
+      console.error(`[inquiry:resend-error] ${describe(error)}`, inquiryEmailText(data));
       return { delivered: false };
     }
     return { delivered: true };
   } catch (err) {
-    console.error("[inquiry:resend-exception]", err, inquiryEmailText(data));
+    console.error(`[inquiry:resend-exception] ${describeThrown(err)}`, inquiryEmailText(data));
     return { delivered: false };
   }
 }
 
 /**
- * Personal auto-reply to the guest: Chef Amrit's thank-you message, a link to
- * his video, and a copy of what they wrote. Dry-runs to the console when unconfigured.
+ * Personal auto-reply to the guest: Chef Amrit's thank-you message, his video
+ * once one is recorded, and a copy of what they wrote. Dry-runs to the console when unconfigured.
  */
 export async function sendAutoReplyEmail(data: InquiryInput): Promise<{ delivered: boolean }> {
   const apiKey = env.RESEND_API_KEY;
@@ -101,24 +141,25 @@ export async function sendAutoReplyEmail(data: InquiryInput): Promise<{ delivere
     // a guest is never sent to a restaurant that has moved.
     const venue = await getVenue();
 
-    const { error } = await withTimeout(
-      resend(apiKey).emails.send({
+    const { error } = await sendWithRetry(
+      apiKey,
+      {
         from,
         to: data.email,
         ...(replyTo ? { replyTo } : {}),
         subject: `Thank you, ${data.name} — a message from Chef Amrit`,
         html: autoReplyHtml(data, venue),
         text: autoReplyText(data, venue),
-      }),
+      },
       "auto-reply",
     );
     if (error) {
-      console.error("[inquiry:auto-reply:resend-error]", error);
+      console.error(`[inquiry:auto-reply:resend-error] ${describe(error)}`);
       return { delivered: false };
     }
     return { delivered: true };
   } catch (err) {
-    console.error("[inquiry:auto-reply:exception]", err);
+    console.error(`[inquiry:auto-reply:exception] ${describeThrown(err)}`);
     return { delivered: false };
   }
 }

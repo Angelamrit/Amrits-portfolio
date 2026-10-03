@@ -91,7 +91,17 @@ export default function AboutPage() {
         <Container>
           <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-5">
-              <ImageFrame image={images.chefBehindTheBar} ratio="4/5" glow sizes="(min-width: 1024px) 40vw, (min-width: 640px) 28rem, 100vw" className="mx-auto w-full max-w-sm sm:max-w-md lg:max-w-none" />
+              {/* Square: the three photographs are 4:3, 2:3 and 4:5, and a square is the one
+                  frame that keeps every dish whole in all of them (4:5 cut the dal bowl; 5:4 cut
+                  the rice). */}
+              <ImageFrame
+                image={images.foodDalNaan}
+                cycle={[images.foodCopperPanCurry, images.foodNaanBiryani]}
+                ratio="1/1"
+                glow
+                sizes="(min-width: 1024px) 40vw, (min-width: 640px) 28rem, 100vw"
+                className="mx-auto w-full max-w-sm sm:max-w-md lg:max-w-none"
+              />
             </div>
             <div className="lg:col-span-6 lg:col-start-7">
               <Reveal>
@@ -133,7 +143,7 @@ export default function AboutPage() {
                 </Heading>
               </Reveal>
               <div className="mt-10">
-                <ImageFrame image={images.chefKitchenPrep} ratio="9/16" glow sizes="(min-width: 1024px) 30vw, 24rem" className="mx-auto max-w-sm lg:mx-0" />
+                <ImageFrame image={images.chefKitchenPrep} ratio="natural" glow sizes="(min-width: 1024px) 30vw, 24rem" className="mx-auto max-w-sm lg:mx-0" />
               </div>
             </div>
             <div className="lg:col-span-7 lg:col-start-6">

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import { Play } from "lucide-react";
 import { useRef, useState } from "react";
 import { site } from "@/data/site";
@@ -8,7 +8,9 @@ import { cn } from "@/lib/cn";
 
 /**
  * Chef Amrit's personal thank-you clip. Plays inline from the poster; if the
- * file has not been uploaded yet, it falls back to the poster and written note.
+ * file fails to load, it falls back to the poster and written note. Until a
+ * clip exists (`site.thankYou.videoUrl` is null) it is simply the photograph,
+ * with no play button promising a video that is not there.
  */
 export function ThankYouVideo({ className }: { className?: string }) {
   const { videoUrl, poster, headline } = site.thankYou;
@@ -23,8 +25,32 @@ export function ThankYouVideo({ className }: { className?: string }) {
       .catch(() => setState("missing"));
   };
 
+  const frame = cn("tone-dark relative overflow-hidden rounded-[1.5rem] border-gradient bg-sand shadow-glow-lg", className);
+
+  if (!videoUrl) {
+    return (
+      <div className={frame}>
+        <div className="relative aspect-video">
+          <Image
+            src={poster.src}
+            alt={poster.alt}
+            fill
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="object-cover"
+            style={poster.position ? { objectPosition: poster.position } : undefined}
+            priority
+          />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brown-deep/85 via-brown-deep/10 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 p-5 md:p-6">
+            <p className="font-display text-display-sm font-light text-fg">{headline}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={cn("tone-dark relative overflow-hidden rounded-[1.5rem] border-gradient bg-sand shadow-glow-lg", className)}>
+    <div className={frame}>
       <div className="relative aspect-video">
         {state !== "playing" && <Image src={poster.src} alt={poster.alt} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" priority />}
         <video

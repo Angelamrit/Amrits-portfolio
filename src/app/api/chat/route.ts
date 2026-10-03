@@ -23,10 +23,10 @@ import { checkRateLimit, checkUnscopedRateLimit, clientKey } from "@/lib/chat/ra
 export const dynamic = "force-dynamic";
 
 const CONTACT_FALLBACK =
-  "I can't reach the assistant right now. For anything you need, Angel Indian Restaurant can be reached on 347-848-0098 or at info@angelindianrestaurant.com, and the contact page on this site goes straight to the team.";
+  "I can't reach the assistant right now. For anything you need, Angel Indian Restaurant can be reached on 347-848-0098 or at angelrestaurant278@gmail.com, and the contact page on this site goes straight to the team.";
 
 const GENERIC_ERROR =
-  "Something went wrong on my side. Please try again, or contact Angel Indian Restaurant on 347-848-0098 or info@angelindianrestaurant.com.";
+  "Something went wrong on my side. Please try again, or contact Angel Indian Restaurant on 347-848-0098 or angelrestaurant278@gmail.com.";
 
 const BAD_REQUEST = "I couldn't read that message. Please try asking again.";
 

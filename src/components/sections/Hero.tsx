@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import { chef } from "@/data/chef";
 import { site } from "@/data/site";
 import { getVenue } from "@/lib/content/venue";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Embers } from "@/components/ui/Embers";
 import { ImageFrame } from "@/components/ui/ImageFrame";
+import { blurProps } from "@/lib/images/blur";
 import type { CSSProperties } from "react";
 
 const credentials = [
@@ -16,8 +17,24 @@ const credentials = [
 
 export async function Hero() {
   const venue = await getVenue();
+  const { width, height } = chef.heroImage;
+  // The upright layout sizes its band from the photograph's own proportions, so a new
+  // hero photograph never needs these numbers edited by hand.
+  const frame = { "--hero-aspect": `${width} / ${height}`, "--hero-h": `${((height / width) * 100).toFixed(3)}vw` } as CSSProperties;
   return (
-    <section id="hero" className="relative flex min-h-[100svh] items-end overflow-hidden surface-brown-deep tone-dark grain" aria-label="Introduction">
+    // `section-lazy`: once the hero has scrolled away the browser stops drawing it
+    // and its embers and slow drift pause (see `.section-lazy[data-skipped]` in
+    // globals.css). Without it the eighteen embers kept animating off screen for the
+    // whole visit, a style recalculation each on every frame of every scroll.
+    // `suppressHydrationWarning` covers the `data-skipped` flag the browser sets
+    // before React hydrates (see Section.tsx).
+    <section
+      id="hero"
+      className="section-lazy relative flex min-h-[100svh] items-end overflow-hidden surface-brown-deep tone-dark grain"
+      aria-label="Introduction"
+      style={frame}
+      suppressHydrationWarning
+    >
       {/* The hero is the first thing anyone sees, so nothing in it waits for JavaScript:
           the photograph is visible from the first frame (it is the page's largest paint),
           and the text rises in with a CSS animation that starts the moment the page paints.
@@ -35,8 +52,10 @@ export async function Hero() {
           the real one. The copy asks for exactly the file the sharp photograph does
           (same sizes, same quality), so the browser reuses that download and it
           costs nothing; and it is a still image, so the blur is drawn once rather
-          than on every frame. */}
-      <div aria-hidden className="absolute inset-0 hidden overflow-hidden portrait:block">
+          than on every frame. On a landscape screen it is invisible rather than
+          removed: it is never drawn either way, but kept at full width it still
+          matches its `sizes`, which is what keeps the two requests one. */}
+      <div aria-hidden className="invisible absolute inset-0 overflow-hidden portrait:visible">
         <Image
           src={chef.heroImage.src}
           alt=""
@@ -44,11 +63,12 @@ export async function Hero() {
           sizes="100vw"
           quality={72}
           loading="eager"
+          {...blurProps(chef.heroImage)}
           className="scale-125 object-cover opacity-70 blur-2xl brightness-[0.55] saturate-[1.3]"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-brown-deep/40 via-transparent to-brown-deep/60" />
       </div>
-      <div className="hero-photo absolute inset-0 portrait:top-[4.75rem] portrait:bottom-auto portrait:aspect-[1453/1082] portrait:w-full">
+      <div className="hero-photo absolute inset-0 portrait:top-[4.75rem] portrait:bottom-auto portrait:aspect-(--hero-aspect) portrait:w-full">
         <ImageFrame
           image={chef.heroImage}
           ratio="fill"
@@ -64,11 +84,14 @@ export async function Hero() {
       <div aria-hidden className="absolute inset-x-0 bottom-0 z-[1] h-1/2 bg-gradient-to-t from-brown-deep/90 to-transparent" />
       <Embers />
 
-      <Container className="relative z-[2] w-full pb-10 pt-32 md:pb-14 lg:pt-40 portrait:pt-[calc(4.75rem+74.5vw*0.8)]">
+      <Container className="relative z-[2] w-full pb-10 pt-32 md:pb-14 lg:pt-40 portrait:pt-[calc(4.75rem+var(--hero-h)*0.8)]">
         <div className="grid gap-10 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-8">
             <div className="hero-in" style={{ "--hero-delay": "0.05s" } as CSSProperties}>
               <h1 className="font-display text-display-lg font-light leading-[0.95] tracking-[-0.015em] text-fg">
+                {/* Read by search engines and screen readers, not drawn: the page's
+                    one heading says who he is, while the eye gets the name alone. */}
+                <span className="sr-only">Chef </span>
                 Amrit
                 <br />
                 <em className="font-normal italic text-gold-gradient">Pal Singh</em>

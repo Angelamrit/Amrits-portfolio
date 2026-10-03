@@ -1,11 +1,13 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { GalleryCategory, GalleryItem } from "@/types/content";
 import { cn } from "@/lib/cn";
+import { blurProps } from "@/lib/images/blur";
+import { usePrefetchImages } from "@/lib/images/use-prefetch-images";
 
 type Category = { value: GalleryCategory | "all"; label: string };
 
@@ -79,6 +81,15 @@ export function GalleryGridView({ items, categories, fromUrl }: { items: Gallery
 
   const current = openIndex !== null ? visible[openIndex] : null;
 
+  // The viewer shows one large photograph at a time; fetch the one either side
+  // while this one is being looked at, so the arrows never land on a blur.
+  // Same `sizes` and `quality` as the viewer's <Image> below.
+  const neighbours =
+    openIndex === null || visible.length < 2
+      ? []
+      : [visible[(openIndex + 1) % visible.length].image, visible[(openIndex - 1 + visible.length) % visible.length].image];
+  usePrefetchImages(neighbours, "100vw", { quality: 85 });
+
   return (
     <div>
       <div className="flex flex-wrap items-center gap-4">
@@ -134,7 +145,9 @@ export function GalleryGridView({ items, categories, fromUrl }: { items: Gallery
                     alt={item.image.alt}
                     fill
                     sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    {...blurProps(item.image)}
                     className="object-cover transition-transform duration-[1400ms] ease-luxe group-hover:scale-[1.05]"
+                    style={item.image.position ? { objectPosition: item.image.position } : undefined}
                   />
                   <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brown-deep/80 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                   {item.caption && (
@@ -160,7 +173,7 @@ export function GalleryGridView({ items, categories, fromUrl }: { items: Gallery
         {current && (
           <div className="relative flex h-full w-full flex-col items-center justify-center px-4 py-16 sm:px-16">
             <div className="relative h-full w-full max-w-6xl overflow-hidden rounded-frame">
-              <Image key={current.id} src={current.image.src} alt={current.image.alt} fill sizes="100vw" quality={85} className="object-contain" />
+              <Image key={current.id} src={current.image.src} alt={current.image.alt} fill sizes="100vw" quality={85} {...blurProps(current.image)} className="object-contain" />
             </div>
             <p className="glass mt-4 rounded-pill px-5 py-2 eyebrow text-fg/80">
               {current.caption ?? current.image.alt} · {openIndex! + 1} / {visible.length}

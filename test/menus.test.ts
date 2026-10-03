@@ -25,7 +25,7 @@ const form = (overrides: Partial<Form> = {}): Form => ({
   notes: ["Served 12 to 3."],
   featured: false,
   visible: true,
-  imageKey: "thaliOverhead",
+  imageKey: "foodNaanBiryani",
   courses: [
     { title: "Start", dishId: shipped[0].courses[0].dishId, status: "confirmed" },
     { title: "Soup", name: "Chef's soup", status: "draft" },

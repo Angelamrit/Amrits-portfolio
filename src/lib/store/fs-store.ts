@@ -1,7 +1,8 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
-import { mkdir, readFile, readdir, rename, rm, stat, writeFile, appendFile } from "node:fs/promises";
+import { mkdir, open, readFile, readdir, rename, rm, stat, appendFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { safeDay, safeName, serialise } from "./shared";
 import type { BlobInfo, StoredBlob, Store } from "./types";
 
 /**
@@ -20,11 +21,32 @@ import type { BlobInfo, StoredBlob, Store } from "./types";
  *   content/<name>.json      one document per editable area of the site
  *   analytics/<YYYY-MM-DD>.jsonl   one pageview per line
  *   uploads/<key>            uploaded photography, with a .meta.json sidecar
+ *   history/<name>/<time>.json   the previous versions of each document,
+ *                            the last HISTORY_KEEP of them (see `keepHistory`)
+ *   trash/uploads/<time>__<key>  deleted photographs, kept TRASH_DAYS days
+ *
+ * Nothing here is ever lost to a crash or a slip of the finger: every write
+ * reaches the disk before it counts, every content save keeps the version it
+ * replaced, and a deleted photograph goes to the trash rather than away.
+ * Losing the disk itself is what `backup.ts` is for.
  */
 
 const DEFAULT_DIR = ".data";
 
-function resolveRoot(): string {
+/** How many earlier versions of each content document are kept. */
+export const HISTORY_KEEP = 30;
+
+/** How long a deleted photograph stays in the trash before `backup.ts` empties it. */
+export const TRASH_DAYS = 30;
+
+/**
+ * Documents with no history. The analytics salt is replaced every day by
+ * design and its old values are worthless; the dashboard password's old
+ * hashes are worth nothing to keep and something to leak.
+ */
+const NO_HISTORY = new Set(["analytics-salt", "admin-credential"]);
+
+export function resolveRoot(): string {
   const configured = process.env.DATA_DIR?.trim();
   // The bundler sees a path it cannot predict and, by default, responds by
   // tracing the entire project into the server output — every source file and
@@ -32,19 +54,6 @@ function resolveRoot(): string {
   // runtime value (it is an environment variable naming a directory that does
   // not exist at build time), so tracing it could never find anything useful.
   return resolve(/* turbopackIgnore: true */ process.cwd(), configured && configured.length > 0 ? configured : DEFAULT_DIR);
-}
-
-/**
- * Names arrive from route params and form fields, so they are never trusted to
- * stay inside the data directory. Only this alphabet is allowed, which rules
- * out `..`, absolute paths, NUL bytes and Windows drive letters in one check
- * rather than trying to spot each of them.
- */
-function safeName(name: string): string {
-  if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/.test(name) || name.includes("..")) {
-    throw new Error(`Unsafe store key: ${JSON.stringify(name)}`);
-  }
-  return name;
 }
 
 /**
@@ -57,37 +66,46 @@ async function writeAtomic(path: string, contents: string | Uint8Array) {
   await mkdir(dirname(path), { recursive: true });
   const temp = `${path}.${randomBytes(6).toString("hex")}.tmp`;
   try {
-    await writeFile(temp, contents);
+    // Flushed to the disk before the rename, not just handed to the operating
+    // system. Without the sync a power cut can land between the two and leave
+    // the renamed file empty — a rename is atomic, but only over bytes that
+    // have actually been written.
+    const handle = await open(temp, "w");
+    try {
+      await handle.writeFile(contents);
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
     await rename(temp, path);
   } catch (error) {
     await rm(temp, { force: true }).catch(() => {});
     throw error;
   }
+  await syncDirectory(dirname(path));
 }
 
 /**
- * Serialises work per key.
- *
- * Two admin tabs saving the same menu at the same moment, or two visits landing
- * in the same millisecond, would otherwise interleave a read-modify-write and
- * lose one of them. Chaining onto the previous promise for that key is enough
- * here because a single Node process serves the writes; if this ever runs on
- * several instances the file adapter is already the wrong answer and the
- * interface in `types.ts` is the seam to replace.
+ * Makes a rename itself durable: on Linux the new name lives in the directory,
+ * and the directory has to be flushed too. Windows cannot open a directory
+ * this way and does not need to, so a failure here is ignored.
  */
-const queues = new Map<string, Promise<unknown>>();
+async function syncDirectory(dir: string) {
+  try {
+    const handle = await open(dir, "r");
+    try {
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+  } catch {
+    // Not supported on this platform.
+  }
+}
 
-function serialise<T>(key: string, work: () => Promise<T>): Promise<T> {
-  const previous = queues.get(key) ?? Promise.resolve();
-  // `work` runs whether the previous write resolved or rejected: one failure
-  // must not poison every later write to the same key. The swallowed copy is
-  // what the next caller waits on, so the chain never carries a rejection.
-  const next = previous.then(work, work);
-  queues.set(
-    key,
-    next.catch(() => {}),
-  );
-  return next;
+/** A sortable, filename-safe moment, unique even for two saves in one millisecond. */
+function stamp(now = Date.now()): string {
+  return `${new Date(now).toISOString().replace(/[:.]/g, "-")}_${randomBytes(3).toString("hex")}`;
 }
 
 async function readIfPresent(path: string): Promise<string | null> {
@@ -104,11 +122,33 @@ export function createFsStore(): Store {
   const contentDir = join(root, "content");
   const analyticsDir = join(root, "analytics");
   const uploadsDir = join(root, "uploads");
+  const historyDir = join(root, "history");
+  const trashDir = join(root, "trash", "uploads");
+
+  /**
+   * Keeps the version a save is about to replace. Best effort on purpose: a
+   * history that cannot be written is logged, and the save still goes ahead,
+   * because refusing the chef's edit would lose more than it protects.
+   */
+  async function keepHistory(name: string, previous: string | null, next?: string) {
+    if (previous === null || NO_HISTORY.has(name) || previous === next) return;
+    try {
+      const dir = join(historyDir, safeName(name));
+      await writeAtomic(join(dir, `${stamp()}.json`), previous);
+      const versions = (await readdir(dir)).filter((f) => f.endsWith(".json")).sort();
+      await Promise.all(versions.slice(0, -HISTORY_KEEP).map((f) => rm(join(dir, f), { force: true })));
+    } catch (error) {
+      console.error(`[store] could not keep the previous version of ${name}:`, error);
+    }
+  }
 
   // A data directory inside the OS temp folder, or the serverless `/tmp`, is
   // wiped without warning. Worth knowing about on the dashboard rather than
   // discovering when a month of numbers disappears.
   const looksEphemeral = /(^|[\\/])(tmp|temp)([\\/]|$)/i.test(root);
+  // On Vercel the project directory is read-only: every write fails outright.
+  // This adapter only runs there when the cloud storage keys are missing.
+  const onVercel = Boolean(process.env.VERCEL);
 
   async function listEventDays(): Promise<string[]> {
     try {
@@ -126,7 +166,12 @@ export function createFsStore(): Store {
   return {
     kind: "Plain files",
     location: root,
-    durable: !looksEphemeral,
+    durable: !looksEphemeral && !onVercel,
+    warning: onVercel
+      ? "Saving is switched off: this site is on Vercel, where the dashboard keeps its data in Upstash Redis and Vercel Blob, and they are not connected yet. Connect both to the project (see .env.example) and redeploy."
+      : looksEphemeral
+        ? "This server is writing to a temporary folder, so edits and visitor numbers will be lost when it restarts. Set DATA_DIR to a directory that persists."
+        : undefined,
 
     async readDoc<T>(name: string): Promise<T | null> {
       const raw = await readIfPresent(join(contentDir, `${safeName(name)}.json`));
@@ -143,7 +188,11 @@ export function createFsStore(): Store {
 
     async writeDoc<T>(name: string, value: T): Promise<void> {
       const path = join(contentDir, `${safeName(name)}.json`);
-      await serialise(path, () => writeAtomic(path, `${JSON.stringify(value, null, 2)}\n`));
+      const next = `${JSON.stringify(value, null, 2)}\n`;
+      await serialise(path, async () => {
+        await keepHistory(name, await readIfPresent(path), next);
+        await writeAtomic(path, next);
+      });
     },
 
     async updateDoc<T>(name: string, change: (current: T | null) => T): Promise<T> {
@@ -162,17 +211,23 @@ export function createFsStore(): Store {
           }
         }
         const next = change(current);
-        await writeAtomic(path, `${JSON.stringify(next, null, 2)}\n`);
+        const serialised = `${JSON.stringify(next, null, 2)}\n`;
+        await keepHistory(name, raw, serialised);
+        await writeAtomic(path, serialised);
         return next;
       });
     },
 
     async deleteDoc(name: string): Promise<void> {
-      await rm(join(contentDir, `${safeName(name)}.json`), { force: true });
+      const path = join(contentDir, `${safeName(name)}.json`);
+      await serialise(path, async () => {
+        await keepHistory(name, await readIfPresent(path));
+        await rm(path, { force: true });
+      });
     },
 
     async appendEvent(day: string, line: string): Promise<void> {
-      const path = join(analyticsDir, `${safeName(day)}.jsonl`);
+      const path = join(analyticsDir, `${safeDay(day)}.jsonl`);
       await serialise(path, async () => {
         await mkdir(analyticsDir, { recursive: true });
         await appendFile(path, `${line}\n`);
@@ -180,7 +235,7 @@ export function createFsStore(): Store {
     },
 
     async readEvents(day: string): Promise<string[]> {
-      const raw = await readIfPresent(join(analyticsDir, `${safeName(day)}.jsonl`));
+      const raw = await readIfPresent(join(analyticsDir, `${safeDay(day)}.jsonl`));
       if (raw === null) return [];
       return raw.split("\n").filter((line) => line.length > 0);
     },
@@ -250,10 +305,23 @@ export function createFsStore(): Store {
       return infos.filter((i): i is BlobInfo => i !== null).sort((a, b) => b.uploadedAt - a.uploadedAt);
     },
 
+    /**
+     * Moves the photograph to the trash rather than deleting it, so a photo
+     * removed by mistake can be put back for TRASH_DAYS days — including one
+     * uploaded and deleted on the same day, which no nightly backup has seen.
+     */
     async deleteBlob(key: string): Promise<void> {
       const safe = safeName(key);
-      await rm(join(uploadsDir, safe), { force: true });
-      await rm(join(uploadsDir, `${safe}.meta.json`), { force: true });
+      const prefix = `${stamp()}__`;
+      await mkdir(trashDir, { recursive: true });
+      for (const file of [safe, `${safe}.meta.json`]) {
+        try {
+          await rename(join(uploadsDir, file), join(trashDir, `${prefix}${file}`));
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+        }
+      }
+      await syncDirectory(trashDir);
     },
   };
 }

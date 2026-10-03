@@ -80,6 +80,21 @@ const assetCacheHeaders = [
   { key: "Cache-Control", value: `public, max-age=${ASSET_CACHE_TTL}, stale-while-revalidate=${ASSET_SWR}` },
 ];
 
+/**
+ * The one hostname the site answers to. The server also accepts `www.`, and
+ * until the redirect below existed both addresses served the same pages as
+ * two separate sites in Google's eyes, splitting whatever ranking they earn.
+ * Taken from the same variable that sets the canonical URL in src/data/site.ts.
+ */
+const canonicalHost = (() => {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://chefamritpalsingh.com";
+  try {
+    return new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`).host;
+  } catch {
+    return "chefamritpalsingh.com";
+  }
+})();
+
 const nextConfig: NextConfig = {
   // A stray package-lock.json in the user's home directory confuses workspace detection.
   turbopack: { root: __dirname },
@@ -93,6 +108,12 @@ const nextConfig: NextConfig = {
     // WebP only: AVIF encoding is several times slower per image on first request.
     formats: ["image/webp"],
     qualities: [65, 72, 75, 78, 85],
+    // The default list runs on to 2048 and 3840. No photograph here is wider than
+    // 2400px, so those widths can never be sharper than 1920, yet every <img> on
+    // the site listed them in its srcset (the home page's photo strip alone
+    // carried 44KB of srcset), and a large screen asking for 3840 made the
+    // optimizer do its most expensive resize for nothing.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     // Match the upstream max-age above rather than the 4-hour default. The
     // optimizer's cache has no invalidation hook, so this stays deliberately
     // short-lived rather than set to a year.
@@ -103,6 +124,18 @@ const nextConfig: NextConfig = {
   // shared URLs, bookmarks — land somewhere useful instead of a 404.
   async redirects() {
     return [
+      // www. to the bare domain, keeping the path and query. Permanent, so
+      // search engines move any ranking the www. address has gathered across.
+      ...(canonicalHost.startsWith("www.")
+        ? []
+        : [
+            {
+              source: "/:path*",
+              has: [{ type: "host" as const, value: `www.${canonicalHost}` }],
+              destination: `https://${canonicalHost}/:path*`,
+              permanent: true,
+            },
+          ]),
       { source: "/experiences", destination: "/angel", permanent: true },
       { source: "/experiences/:path*", destination: "/angel", permanent: true },
       { source: "/admin/bookings", destination: "/admin", permanent: true },

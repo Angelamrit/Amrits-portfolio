@@ -105,7 +105,7 @@ test("the client visibility rule is carried into the system instruction", () => 
 test("current operational facts are present and are the dated source", () => {
   assert.ok(prompt.includes("75-18 37th Ave, Jackson Heights, NY 11372"));
   assert.ok(prompt.includes("347-848-0098"));
-  assert.ok(prompt.includes("info@angelindianrestaurant.com"));
+  assert.ok(prompt.includes("angelrestaurant278@gmail.com"));
   assert.match(prompt, /Monday: Closed/);
   assert.match(prompt, /Tuesday: 12:00 PM-10:00 PM/);
 });

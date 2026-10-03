@@ -1,9 +1,10 @@
 "use client";
 
-import Image from "next/image";
+import Image from "@/components/ui/SiteImage";
 import { useEffect, useState, type CSSProperties } from "react";
 import type { ImageAsset } from "@/types/content";
 import { cn } from "@/lib/cn";
+import { blurProps } from "@/lib/images/blur";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { CrossFade } from "./CrossFade";
 
@@ -36,7 +37,7 @@ export function FilmstripFrame({ images, interval = 2600, sizes = "(min-width: 7
     <div className={cn("absolute inset-0", className)}>
       <CrossFade id={frame.src} className="absolute inset-0" duration={1100}>
         <div className="filmstrip-drift absolute inset-0" style={{ "--drift-duration": `${(interval + 1100) / 1000}s` } as CSSProperties}>
-          <Image src={frame.src} alt={frame.alt} fill sizes={sizes} quality={78} className="object-cover opacity-90" />
+          <Image src={frame.src} alt={frame.alt} fill sizes={sizes} quality={78} {...blurProps(frame)} className="object-cover opacity-90" />
         </div>
       </CrossFade>
 

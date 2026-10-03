@@ -21,7 +21,7 @@ const imagesByKey = images as Record<string, ImageAsset>;
 
 export const isUploadKey = (key: string) => key.startsWith("up-");
 
-/** The pictures that ship with the site, with a readable label: "paneerCurry" → "Paneer curry". */
+/** The pictures that ship with the site, with a readable label: "choleBhatura" → "Chole bhatura". */
 const shippedChoices: PictureChoice[] = Object.entries(images).map(([key, image]) => ({
   key,
   src: image.src,

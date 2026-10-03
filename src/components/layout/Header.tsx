@@ -43,6 +43,7 @@ async function buildPanels(): Promise<MegaPanelData[]> {
         meta: loc.kind === "original" ? "Since October 2019" : "New dining room",
         src: loc.image.src,
         alt: loc.image.alt,
+        position: loc.image.position,
       })),
     },
     {
