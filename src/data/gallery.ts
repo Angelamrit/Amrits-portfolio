@@ -33,7 +33,6 @@ export const gallery: GalleryItem[] = [
   { id: "g36", image: images.vegetableDumBiryani, category: "signature-dishes", caption: "Vegetable Dum Biryani", span: "wide" },
   { id: "g37", image: images.chickenDumBiryani, category: "signature-dishes", caption: "Chicken Dum Biryani", span: "wide" },
   { id: "g38", image: images.goatDumBiryani, category: "signature-dishes", caption: "Goat Dum Biryani", span: "wide" },
-  { id: "g09", image: images.chefFlame, category: "chef-in-action", caption: "Open flame", span: "wide" },
   { id: "g14", image: images.storefrontDay, category: "private-dining", caption: "Angel on 37th Avenue", span: "tall" },
   { id: "g16", image: images.angelDiningRoom, category: "private-dining", caption: "The new dining room", span: "wide" },
   { id: "g17", image: images.bar, category: "private-dining", caption: "The bar", span: "tall" },
