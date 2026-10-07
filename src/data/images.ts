@@ -112,18 +112,6 @@ const registry = {
     // crops from the middle; anchoring near the top keeps his cap and eyes in view.
     position: "50% 8%",
   },
-  /**
-   * The gallery's "Open flame" tile: the chef in a black cap at the range,
-   * flame rising from the pan. A different photograph from the home hero.
-   * Supplied by the chef. (Its old file in /images/placeholders was deleted by
-   * mistake in d13009d; this web copy was restored from that file's history.)
-   */
-  chefFlame: {
-    src: "/images/chef/chef-flame.jpg",
-    alt: "Chef Amrit Pal Singh at the range, flame rising from the pan in his hand",
-    width: 1453,
-    height: 1082,
-  },
   // ---- Dishes ----
   /**
    * Chole Bhatura at Angel (chole_bhature), supplied by the chef. Not a placeholder. It is the

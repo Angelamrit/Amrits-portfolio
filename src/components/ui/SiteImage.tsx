@@ -12,5 +12,8 @@ import { capPixelDensity } from "@/lib/images/sizes";
 export default function Image({ sizes, ...props }: ImageProps) {
   // A `fill` picture without `sizes` is treated by Next as 100vw; cap that too.
   const slot = sizes ?? (props.fill ? "100vw" : undefined);
-  return <NextImage {...props} sizes={slot ? capPixelDensity(slot) : undefined} />;
+  // The shell's PRELOAD_PHOTOS script flips lazy pictures to `loading="eager"` /
+  // `fetchPriority="low"` once the page has loaded, which can land before React
+  // hydrates (slow in dev); tell React to expect that rather than warn.
+  return <NextImage suppressHydrationWarning {...props} sizes={slot ? capPixelDensity(slot) : undefined} />;
 }
